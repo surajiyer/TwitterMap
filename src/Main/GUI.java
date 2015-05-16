@@ -15,7 +15,6 @@ import com.teamdev.jxbrowser.chromium.events.ProvisionalLoadingEvent;
 import com.teamdev.jxbrowser.chromium.events.StartLoadingEvent;
 import com.teamdev.jxbrowser.chromium.swing.BrowserView;
 import utils.GoogleMaps;
-import static utils.GoogleMaps.setMarker;
 import java.awt.BorderLayout;
 import java.io.BufferedReader;
 import java.io.File;
@@ -27,6 +26,7 @@ import java.net.UnknownHostException;
 import java.text.ParseException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
@@ -76,11 +76,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
             public void onProvisionalLoadingFrame(ProvisionalLoadingEvent ple) {}
 
             @Override
-            public void onFinishLoadingFrame(FinishLoadingEvent fle) {
-                if (fle.isMainFrame()) {
-                    bListener.onBrowserLoadSuccess();
-                }
-            }
+            public void onFinishLoadingFrame(FinishLoadingEvent fle) {}
 
             @Override
             public void onFailLoadingFrame(FailLoadingEvent fle) {
@@ -129,6 +125,10 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         // Add the map view to the GUI frame and load the map URL.
         mapPanel.add(new BrowserView(browser), BorderLayout.CENTER);
         browser.loadURL(map);
+        
+        // Open all hidden dialogs at start
+        keywordsDialog.setVisible(true);
+        setMarkerDialog.setVisible(true);
     }
 
     /**
@@ -142,9 +142,11 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
 
         fileChooser = new javax.swing.JFileChooser();
         keywordsDialog = new javax.swing.JDialog();
-        loadedKeywordLabelScroller = new javax.swing.JScrollPane();
-        loadedKeywordsLabel = new javax.swing.JLabel();
+        removeKeywordsButton = new javax.swing.JButton();
         clearAllKeywordsButton = new javax.swing.JButton();
+        loadedKeywordsPanel = new javax.swing.JPanel();
+        loadedKeywordsScrollPane = new javax.swing.JScrollPane();
+        loadedKeywordsList = new javax.swing.JList();
         setMarkerDialog = new javax.swing.JDialog();
         enterLatitudeLabel = new javax.swing.JLabel();
         enterLongitudeLabel = new javax.swing.JLabel();
@@ -178,7 +180,6 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         removeFileMarkersButton = new javax.swing.JMenuItem();
         runMenu = new javax.swing.JMenu();
         startStopButton1 = new javax.swing.JMenuItem();
-        jSeparator4 = new javax.swing.JPopupMenu.Separator();
 
         fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("Normal text file (*.txt)", "txt"));
 
@@ -186,15 +187,12 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         keywordsDialog.setIconImage(new javax.swing.ImageIcon(getClass().getResource("/res/keyboard_24.png")).getImage());
         keywordsDialog.setResizable(false);
 
-        loadedKeywordLabelScroller.setViewportBorder(javax.swing.BorderFactory.createTitledBorder("Loaded Keywords"));
-        loadedKeywordLabelScroller.getVerticalScrollBar().setUnitIncrement(16);
-
-        loadedKeywordsLabel.setText("<html><ul></ul>");
-        loadedKeywordsLabel.setMinimumSize(new java.awt.Dimension(256, 128));
-        loadedKeywordsLabel.setPreferredSize(new java.awt.Dimension(256, 128));
-        loadedKeywordLabelScroller.setViewportView(loadedKeywordsLabel);
-
-        keywordsDialog.getContentPane().add(loadedKeywordLabelScroller, java.awt.BorderLayout.CENTER);
+        removeKeywordsButton.setText("Remove Keyword(s)");
+        removeKeywordsButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                removeKeywordsButtonActionPerformed(evt);
+            }
+        });
 
         clearAllKeywordsButton.setText("Clear all keywords");
         clearAllKeywordsButton.addActionListener(new java.awt.event.ActionListener() {
@@ -202,7 +200,49 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
                 clearAllKeywordsButtonActionPerformed(evt);
             }
         });
-        keywordsDialog.getContentPane().add(clearAllKeywordsButton, java.awt.BorderLayout.PAGE_END);
+
+        loadedKeywordsPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Loaded Keywords"));
+
+        loadedKeywordsList.setModel(keywordsListModel);
+        loadedKeywordsScrollPane.setViewportView(loadedKeywordsList);
+
+        javax.swing.GroupLayout loadedKeywordsPanelLayout = new javax.swing.GroupLayout(loadedKeywordsPanel);
+        loadedKeywordsPanel.setLayout(loadedKeywordsPanelLayout);
+        loadedKeywordsPanelLayout.setHorizontalGroup(
+            loadedKeywordsPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(loadedKeywordsScrollPane)
+        );
+        loadedKeywordsPanelLayout.setVerticalGroup(
+            loadedKeywordsPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(loadedKeywordsScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 121, Short.MAX_VALUE)
+        );
+
+        javax.swing.GroupLayout keywordsDialogLayout = new javax.swing.GroupLayout(keywordsDialog.getContentPane());
+        keywordsDialog.getContentPane().setLayout(keywordsDialogLayout);
+        keywordsDialogLayout.setHorizontalGroup(
+            keywordsDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(keywordsDialogLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(keywordsDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(loadedKeywordsPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(keywordsDialogLayout.createSequentialGroup()
+                        .addComponent(removeKeywordsButton)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(clearAllKeywordsButton)
+                        .addGap(0, 0, Short.MAX_VALUE)))
+                .addContainerGap())
+        );
+        keywordsDialogLayout.setVerticalGroup(
+            keywordsDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, keywordsDialogLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(loadedKeywordsPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(keywordsDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(removeKeywordsButton, javax.swing.GroupLayout.PREFERRED_SIZE, 34, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(clearAllKeywordsButton, javax.swing.GroupLayout.PREFERRED_SIZE, 34, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap())
+        );
 
         keywordsDialog.pack();
 
@@ -215,11 +255,6 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         enterLongitudeLabel.setText("Enter Longitude:");
 
         latTextField.setFormatterFactory(new javax.swing.text.DefaultFormatterFactory(new javax.swing.text.NumberFormatter(new java.text.DecimalFormat("#0.00000000"))));
-        latTextField.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                latTextFieldActionPerformed(evt);
-            }
-        });
 
         longTextField.setFormatterFactory(new javax.swing.text.DefaultFormatterFactory(new javax.swing.text.NumberFormatter(new java.text.DecimalFormat("#0.00000000"))));
 
@@ -269,6 +304,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
         setIconImage(new ImageIcon(getClass().getResource("/res/twitter_icon.png")).getImage());
         setMinimumSize(new java.awt.Dimension(400, 300));
+        setPreferredSize(new java.awt.Dimension(1280, 720));
 
         keywordPanel.setBackground(enterKeywordTextField.getBackground());
         keywordPanel.setBorder(javax.swing.BorderFactory.createEtchedBorder(new java.awt.Color(102, 102, 102), null));
@@ -378,7 +414,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
             .addGroup(controlPanelLayout.createSequentialGroup()
                 .addGap(4, 4, 4)
                 .addComponent(keywordPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 942, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 1006, Short.MAX_VALUE)
                 .addComponent(startStopButton2)
                 .addGap(4, 4, 4))
             .addGroup(controlPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -492,7 +528,6 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
             }
         });
         runMenu.add(startStopButton1);
-        runMenu.add(jSeparator4);
 
         menuBar.add(runMenu);
 
@@ -514,7 +549,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jSeparator6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(0, 0, 0)
-                .addComponent(mapPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addComponent(mapPanel, javax.swing.GroupLayout.DEFAULT_SIZE, 650, Short.MAX_VALUE))
         );
 
         pack();
@@ -558,7 +593,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         // Start/Stop the twitter stream.
         switch (startStopButton1.getText()) {
             case "Stop":
-                bListener.stopTwitter();
+                bListener.stopTwitterStream();
                 break;
             case "Start":
                 boolean reachable = false;
@@ -573,7 +608,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
                     JOptionPane.showMessageDialog(null, "No Internet Conenction.",
                             "Error", JOptionPane.ERROR_MESSAGE);
                 }
-                bListener.startTwitter();
+                bListener.startTwitterStream();
                 break;
         }
     }//GEN-LAST:event_startStopButton1ActionPerformed
@@ -598,7 +633,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
                     "Warning", JOptionPane.WARNING_MESSAGE);
             return;
         }
-        bListener.setRunningTime(l*timeScale);
+        bListener.setRunningTime((long)l*timeScale);
         enterRunTextField.setText("");
         String s = enterRunTextField.getToolTipText();
         s = s.substring(0, s.lastIndexOf(":")+2);
@@ -613,10 +648,10 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         // Start/Stop the twitter stream.
         switch (startStopButton2.getText()) {
             case "Stop":
-                bListener.stopTwitter();
+                bListener.stopTwitterStream();
                 break;
             case "Start":
-                bListener.startTwitter();
+                bListener.startTwitterStream();
                 break;
         }
     }//GEN-LAST:event_startStopButton2ActionPerformed
@@ -632,11 +667,9 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
     }//GEN-LAST:event_clearButton1ActionPerformed
 
     private void clearAllKeywordsButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_clearAllKeywordsButtonActionPerformed
-        bListener.clearAllKeywords();
-        loadedKeywordsLabel.setText("<html><ul></ul>");
-        enterKeywordTextField.setToolTipText("<html>\n" +
-            "Input the keywords to search for in tweets here and hit ENTER.<br/>\n" +
-            "Loaded Keywords:<br/>\n");
+        for(int i = keywordsListModel.getSize()-1; i >=0; i--) {
+            bListener.removeKeyword(keywordsListModel.remove(i));
+        }
     }//GEN-LAST:event_clearAllKeywordsButtonActionPerformed
 
     private void setUserMarkerButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_setUserMarkerButtonActionPerformed
@@ -651,25 +684,24 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         System.out.println(latTextField.getValue());
         String latitude = latTextField.getValue().toString();
         String longitude = longTextField.getValue().toString();
-        setMarker(browser, latitude, longitude, "User defined Marker", "user");
+        GoogleMaps.setMarker(browser, latitude, longitude, "User defined Marker", "user");
         longTextField.setText("");
         latTextField.setText("");
     }//GEN-LAST:event_setUserMarkerButtonActionPerformed
 
     private void enterKeywordTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_enterKeywordTextFieldActionPerformed
-        String s = loadedKeywordsLabel.getText();
+        String keyword = enterKeywordTextField.getText();
+        bListener.addKeyword(keyword, true);
+        keywordsListModel.addElement(keyword);
+        enterKeywordTextField.setText("");
+        /*String s = loadedKeywordsList.
         String t = enterKeywordTextField.getToolTipText();
-        s = s.substring(0,s.length()-5) + "<li><b>" + enterKeywordTextField.getText()+"</b></ul>";
+        s = s.substring(0,s.length()-5) + "<li><b>" + keyword+"</b></ul>";
         t = t.substring(0, t.lastIndexOf(":")+7) + s.substring(6,s.length());
         bListener.addKeyword(enterKeywordTextField.getText());
         loadedKeywordsLabel.setText(s);
-        enterKeywordTextField.setText("");
-        enterKeywordTextField.setToolTipText(t);
+        enterKeywordTextField.setToolTipText(t);*/
     }//GEN-LAST:event_enterKeywordTextFieldActionPerformed
-
-    private void latTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_latTextFieldActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_latTextFieldActionPerformed
 
     private void timeSpinnerStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_timeSpinnerStateChanged
         switch((String)timeSpinner.getValue()) {
@@ -684,6 +716,13 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
                 break;
         }
     }//GEN-LAST:event_timeSpinnerStateChanged
+
+    private void removeKeywordsButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_removeKeywordsButtonActionPerformed
+        int[] selectedIndices = loadedKeywordsList.getSelectedIndices();
+        for(int i = selectedIndices.length-1; i >= 0; i--) {
+            bListener.removeKeyword(keywordsListModel.remove(selectedIndices[i]));
+        }
+    }//GEN-LAST:event_removeKeywordsButtonActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton clearAllKeywordsButton;
@@ -700,21 +739,23 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
     private javax.swing.JPopupMenu.Separator jSeparator1;
     private javax.swing.JPopupMenu.Separator jSeparator2;
     private javax.swing.JPopupMenu.Separator jSeparator3;
-    private javax.swing.JPopupMenu.Separator jSeparator4;
     private javax.swing.JSeparator jSeparator6;
     private javax.swing.JPanel keywordPanel;
     private javax.swing.JDialog keywordsDialog;
     private javax.swing.JMenuItem keywordsMenuItem;
     private javax.swing.JFormattedTextField latTextField;
     private javax.swing.JMenuItem loadFileMarkersButton;
-    private javax.swing.JScrollPane loadedKeywordLabelScroller;
-    private javax.swing.JLabel loadedKeywordsLabel;
+    private DefaultListModel<String> keywordsListModel = new DefaultListModel();
+    private javax.swing.JList loadedKeywordsList;
+    private javax.swing.JPanel loadedKeywordsPanel;
+    private javax.swing.JScrollPane loadedKeywordsScrollPane;
     private javax.swing.JFormattedTextField longTextField;
     private javax.swing.JPanel mapPanel;
     private javax.swing.JMenu markersMenu;
     private javax.swing.JMenuBar menuBar;
     private javax.swing.JMenuItem removeAllMarkersButton;
     private javax.swing.JMenuItem removeFileMarkersButton;
+    private javax.swing.JButton removeKeywordsButton;
     private javax.swing.JMenuItem removeTwitterMarkersButton;
     private javax.swing.JMenuItem removeUserMarkersButton;
     private javax.swing.JMenu runMenu;
@@ -728,25 +769,19 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
     // End of variables declaration//GEN-END:variables
 
     /**
-     * GUI the coordinates of the new tweet on the map.
-     * 
-     * @param coordinates coordinates of the location from where the tweet
-     * was sent.
-     * @param title the tweet message
+     * Create a new map marker when a new tweet with Geo-location comes in.
      */
     @Override
-    public void newTweet(String coordinates, String title) {
-        int commaIndex = coordinates.indexOf(",");
-        String lat = coordinates.substring(1, commaIndex);
-        String lon = coordinates.substring(commaIndex+1, coordinates.length()-1);
-        setMarker(browser, lat, lon, title, "tweet");
+    public void newTweet(String lat, String lon, String title) {
+        //int commaIndex = coordinates.indexOf(",");
+        //String lat = coordinates.substring(1, commaIndex);
+        //String lon = coordinates.substring(commaIndex+1, coordinates.length()-1);
+        GoogleMaps.setMarker(browser, lat, lon, title, "tweet");
     }
 
     /**
      * Enables, disables and modifies certain UI elements based on the running 
      * status of the twitter stream.
-     * 
-     * @param isRunning true if the twitter stream is running otherwise false.
      */
     @Override
     public void setRunningStatus(boolean isRunning) {
@@ -782,17 +817,16 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
      * the program, will ask him to confirm his choice. If the user confirms,
      * it will delete the temporary file otherwise it will again ask him to 
      * select a save directory.
-     * 
-     * @param f the file to save.
      */
     @Override
-    public void loggingCompleted(File f) {
+    public void loggingCompleted(File tweets_file, File users_file) {
         boolean confirmed;
         do{
             fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
             int retValue = fileChooser.showSaveDialog(null);
             if(retValue == JFileChooser.APPROVE_OPTION) {
-                f.renameTo(new File(fileChooser.getSelectedFile()+"\\"+f.getName()));
+                tweets_file.renameTo(new File(fileChooser.getSelectedFile()+"\\"+tweets_file.getName()));
+                users_file.renameTo(new File(fileChooser.getSelectedFile()+"\\"+users_file.getName()));
                 confirmed = true;
             } else {
                 JDialog.setDefaultLookAndFeelDecorated(true);
@@ -800,8 +834,10 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
                         + " don't want to save the file?", "Confirm", 
                         JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
                 confirmed = choice == JOptionPane.YES_OPTION;
-                if(confirmed)
-                    f.delete();
+                if(confirmed) {
+                    tweets_file.delete();
+                    users_file.delete();
+                }
             }
         }while(!confirmed);
         fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
@@ -835,7 +871,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
                         int commaIndex = coordinate.indexOf(",");
                         String lat = coordinate.substring(0, commaIndex);
                         String lon = coordinate.substring(commaIndex+1, coordinate.length());
-                        setMarker(browser, lat, lon, "Marker loaded from "+f.getName(), "file");
+                        GoogleMaps.setMarker(browser, lat, lon, "Marker loaded from "+f.getName(), "file");
                     }
                 } catch (IOException ex) {
                     JDialog.setDefaultLookAndFeelDecorated(true);

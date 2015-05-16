@@ -16,10 +16,11 @@ public interface TweetListener {
     /**
      * Do something when a new tweet arrives from the twitter stream.
      * 
-     * @param coordinates the location from where the tweet was generated.
+     * @param lat the latitude of the coordinate.
+     * @param lon the longitude of the coordinate.
      * @param title the message within the tweet.
      */
-    public void newTweet(String coordinates, String title);
+    public void newTweet(String lat, String lon, String title);
     
     /**
      * If it cannot establish a connection to the twitter stream.
@@ -34,7 +35,8 @@ public interface TweetListener {
     
     /**
      * When logging has completed, save the file to user-defined location.
-     * @param f the file which has to saved.
+     * @param tweets_file the file that stores the tweets.
+     * @param users_file the file that stores the users who tweeted.
      */
-    public void loggingCompleted(File f);
+    public void loggingCompleted(File tweets_file, File users_file);
 }

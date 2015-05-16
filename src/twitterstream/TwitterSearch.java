@@ -5,24 +5,21 @@
  */
 package twitterstream;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.Writer;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.JDialog;
 import javax.swing.JOptionPane;
 import org.apache.commons.lang3.ArrayUtils;
 import twitter4j.FilterQuery;
+import twitter4j.GeoLocation;
 import twitter4j.StallWarning;
 import twitter4j.Status;
 import twitter4j.StatusDeletionNotice;
@@ -37,57 +34,67 @@ import static utils.translate.translate_all;
  *
  * @author s139662
  */
-public class TwitterSearch {
-    
-    /** Output file name date format. */
-    private final SimpleDateFormat sdf;
-    
+public class TwitterSearch implements StatusListener {
+
+    // Generate a twitter stream object to connect to the streaming API.
+    TwitterStream twitterStream;
+
+    /** Date formats for file naming and console output. */
+    private final SimpleDateFormat console_format, file_name_format;
+
     /** List of keywords to search for. */
-    private final Map<String, ArrayList<String>> keywords;
-    
+    private final Map<String, List<String>> keywords;
+
+    private final String DATA_SEPERATOR = ";&;";
+
     /** A tweet arrival event sListener */
     private TweetListener listener;
-    
-    /** Running time of twitter stream in milliseconds. */
-    private double runtime;
-    
+
+    /** Start time and running time of twitter stream in milliseconds. */
+    private long startTime, runTime;
+
     /** To check if the twitter stream is/should be stopped. */
-    private boolean STOPPED = true;
-    
+    private boolean ENABLED;
+
+    /** Writer objects to write the twitter stream data to file. */
+    File tweets_file, users_file;
+    Writer tweets_writer, users_writer;
+
     public TwitterSearch() {
-        this.keywords = new HashMap<>();
-        this.sdf = new SimpleDateFormat("hh:mm:ss");
-        this.runtime = 0d;
+        twitterStream = new TwitterStreamFactory(getAuth()).getInstance();
+        twitterStream.addListener(this);
+        keywords = new HashMap<>();
+        console_format = new SimpleDateFormat("hh:mm:ss");
+        file_name_format = new SimpleDateFormat("dd-MM-yy_HH-mm");
+        ENABLED = false;
     }
-    
+
     /** Gets configuration builder for authentication */
     private Configuration getAuth() {
-        /** Twitter API key */
-        final String CONSUMER_KEY    = "0ofktWKMWWZwv3lb2BGxeSsxz";
-        /** Twitter API Secret */
-        final String CONSUMER_SECRET = "VuyOjrVy9aPdiQoFXOw7HCS0ZHeUShfl7Bs5UktqEGDpIDUnMj";
-        /** Twitter Token key */
-        final String TOKEN_KEY       = "3063962920-rxltQ88TXf5BrvCiC2BBhm5A9ZiHgsMJOpmFTrl";
-        /** Twitter Token Secret */
-        final String TOKEN_SECRET    = "Y4WALWynF1hZyW9NDV21E7qtRVhGt1cvumj7jVpPpAe3I";
-        
         final ConfigurationBuilder cb = new ConfigurationBuilder();
-        cb.setOAuthConsumerKey(CONSUMER_KEY);
-        cb.setOAuthConsumerSecret(CONSUMER_SECRET);
-        cb.setOAuthAccessToken(TOKEN_KEY);
-        cb.setOAuthAccessTokenSecret(TOKEN_SECRET);
-        
+        cb.setOAuthConsumerKey("0ofktWKMWWZwv3lb2BGxeSsxz");
+        cb.setOAuthConsumerSecret("VuyOjrVy9aPdiQoFXOw7HCS0ZHeUShfl7Bs5UktqEGDpIDUnMj");
+        cb.setOAuthAccessToken("3063962920-rxltQ88TXf5BrvCiC2BBhm5A9ZiHgsMJOpmFTrl");
+        cb.setOAuthAccessTokenSecret("Y4WALWynF1hZyW9NDV21E7qtRVhGt1cvumj7jVpPpAe3I");
+
         return cb.build();
     }
-    
+
     /**
      * Add keyword to search for in twitter stream.
      * @param keyword the keyword to search for.
+     * @param translate translate keywords to {Dutch, French, Chinese, Spanish, 
+     * Hindi, Italian, Tamil, Russian, Arabic, German, Japanese, Korean, 
+     * Lithuanian, Vietnamese} if true to expand search.
      */
-    public void addKeyword(String keyword) {
-        keywords.put(keyword, (ArrayList<String>) Arrays.asList(translate_all(keyword)));
+    public void addKeyword(String keyword, boolean translate) {
+        if(translate)
+            keywords.put(keyword, Arrays.asList(translate_all(keyword)));
+        else {
+            keywords.put(keyword, null);
+        }
     }
-    
+
     /**
      * Remove individual keywords from set of keywords.
      * @param keyword the keyword to remove.
@@ -95,32 +102,100 @@ public class TwitterSearch {
     public void removeKeyword(String keyword) {
         keywords.remove(keyword);
     }
-    
+
     /**
      * Remove all existing keywords.
      */
     public void removeAllKeywords() {
         keywords.clear();
     }
+
+    /**
+     * Set the running time of the twitter streaming API (in milliseconds)
+     * @param ms the time in milliseconds
+     */
+    public void setRuntime(long ms) {
+        runTime = ms;
+    }
     
+    /**
+     * If the Twitter streaming API is running, it returns true otherwise false.
+     * @return true if twitter stream is enabled.
+     */
+    public boolean isRunning() {
+        return ENABLED;
+    }
+
     /**
      * Start reading the twitter stream.
      */
     public void enable() {
-        STOPPED = false;
-        listener.setRunningStatus(STOPPED);
+
+        // Check if at least 1 keyword exists.
+        if(keywords.isEmpty()) {
+            JDialog.setDefaultLookAndFeelDecorated(true);
+            JOptionPane.showMessageDialog(null, "Oops! You forgot to specify "
+                                          + "minimum 1 keyword to search for.", "Warning", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        // Create new files to write the data to.
+        startTime = System.currentTimeMillis();
+        tweets_file = new File(System.getenv("TMP")+"\\Tweets_"+
+                               file_name_format.format(new Date(startTime)) + ".csv");
+        users_file = new File(System.getenv("TMP")+"\\Users_"+
+                              file_name_format.format(new Date(startTime)) + ".csv");
+
+        try {
+            tweets_writer = new FileWriter(tweets_file);
+            users_writer = new FileWriter(users_file);
+        } catch (IOException e) {
+            System.out.println(console_format.format(new Date( System.currentTimeMillis())) +
+                               " ERROR: Failed to create files to write data to.");
+            try {
+                tweets_writer.close();
+                users_writer.close();
+            } catch (IOException ignore) {}
+            return;
+        }
+
+        // Create a new streaming filter query (i.e. keywords to track, locations etc.)
+        FilterQuery fq = new FilterQuery();
+        String[] keys = keywords.keySet().toArray(new String[0]);
+        for(List<String> keyList : keywords.values()) {
+            if(keyList == null) continue;
+            keys = ArrayUtils.addAll(keys, keyList.toArray(new String[0]));
+        }
+        fq.track(keys);
+
+        // Start the twitter stream.
+        twitterStream.filter(fq);
+
+        // Set twitter stream running status.
+        listener.setRunningStatus(ENABLED = true);
+        System.out.println(console_format.format(new Date(startTime)) + " INFO: Twitter Stream Started.");
     }
-    
+
     /**
      * Stop reading the twitter stream.
      */
     public void disable() {
-        STOPPED = true;
-        listener.setRunningStatus(STOPPED);
-        System.out.println(sdf.format(new Date( System.currentTimeMillis())) + 
-                    " INFO: Twitter Stream Stopped.");
+
+        // Stop the twitter stream.
+        twitterStream.shutdown();
+
+        //
+        try {
+            tweets_writer.close();
+            users_writer.close();
+            listener.loggingCompleted(tweets_file, users_file);
+        } catch (IOException ignore) {}
+
+        // Set twitter stream running status.
+        listener.setRunningStatus(ENABLED = false);
+        System.out.println(console_format.format(new Date( System.currentTimeMillis())) + " INFO: Twitter Stream Stopped.");
     }
-    
+
     /**
      * Set the tweet sListener for each generated tweets.
      * @param t object of a class that implements the TweetListener class.
@@ -128,83 +203,48 @@ public class TwitterSearch {
     public void setListener(TweetListener t) {
         this.listener = t;
     }
-    
-    public void start() {
-        if(keywords.isEmpty()) {
+
+    @Override
+    public void onStatus(Status status) {
+        if (runTime != 0 && System.currentTimeMillis() >= startTime + runTime) {
             disable();
-            JDialog.setDefaultLookAndFeelDecorated(true);
-            JOptionPane.showMessageDialog(null, "Oops! You forgot to specify "
-                    + "minimum 1 keyword to search for.", "Warning", JOptionPane.WARNING_MESSAGE);
             return;
         }
-        
-        TwitterStream twitterStream = new TwitterStreamFactory(getAuth()).getInstance();
-        // Create a reader and a filewriterto read Twitter's stream
-        File output = null;
-        Writer writer = null;
-        // Used as offset for runtime, and unique file naming.
-        long startTime = System.currentTimeMillis();
-        
-        // Create output file
-        SimpleDateFormat f = new SimpleDateFormat("dd-MM-yy_HH-mm");
-        output = new File(System.getenv("TMP")+"\\Tweets_Coordinates_"+f.format(new Date(startTime)) + ".txt");
+
+        // Notify listeners of new coordinates
+        if(status.getGeoLocation() != null) {
+            GeoLocation geo = status.getGeoLocation();
+            System.out.println(geo.toString());
+            listener.newTweet(Double.toString(geo.getLatitude()),
+                    Double.toString(geo.getLongitude()), status.getText());
+        }
+
         try {
-            writer = new FileWriter(output);
-        } catch (IOException e) {
-            System.out.println(sdf.format(new Date( System.currentTimeMillis())) + 
-                    " ERROR: Failed to create file or write stream to file.");
-            try {
-                writer.close();
-                listener.loggingCompleted(output);
-            } catch (IOException ignore) {}
+            tweets_writer.write(new TweetEntity(DATA_SEPERATOR, status, null).toString());
+            users_writer.write(new UserEntity(DATA_SEPERATOR, status.getUser()).toString());
+        } catch(IOException ex) {
+            System.out.println(console_format.format(new Date( System.currentTimeMillis())) +
+                               " ERROR: Failed to write stream data to file.");
             disable();
-            return;
         }
-        
-        StatusListener sListener = new StatusListener() {
+    }
 
-            @Override
-            public void onStatus(Status status) {
-                if (STOPPED || (runtime != 0 && System.currentTimeMillis() >= startTime + runtime)) {
-                    System.out.println(sdf.format(new Date( System.currentTimeMillis())) + " INFO: Twitter Stream Stopped.");
-                    twitterStream.shutdown();
-                }
-            }
+    @Override
+    public void onDeletionNotice(StatusDeletionNotice sdn) {}
 
-            @Override
-            public void onDeletionNotice(StatusDeletionNotice sdn) {
-                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-            }
+    @Override
+    public void onTrackLimitationNotice(int i) {}
 
-            @Override
-            public void onTrackLimitationNotice(int i) {
-                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-            }
+    @Override
+    public void onScrubGeo(long l, long l1) {}
 
-            @Override
-            public void onScrubGeo(long l, long l1) {
-                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-            }
+    @Override
+    public void onStallWarning(StallWarning sw) {}
 
-            @Override
-            public void onStallWarning(StallWarning sw) {
-                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-            }
-
-            @Override
-            public void onException(Exception excptn) {
-                System.out.println(sdf.format(new Date( System.currentTimeMillis())) + 
-                        " ERROR: Connection to Twitter public stream failed.");
-                disable();
-            }
-        };
-        twitterStream.addListener(sListener);
-        FilterQuery fq = new FilterQuery();
-        String[] keys = keywords.keySet().toArray(new String[0]);
-        for(ArrayList<String> keyList : keywords.values()) {
-            keys = ArrayUtils.addAll(keys, keyList.toArray(new String[0]));
-        }
-        fq.track(keys);
-        twitterStream.filter(fq);
+    @Override
+    public void onException(Exception excptn) {
+        System.out.println(console_format.format(new Date( System.currentTimeMillis())) +
+                           " ERROR: Connection to Twitter public stream failed.");
+        disable();
     }
 }

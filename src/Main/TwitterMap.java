@@ -1,7 +1,6 @@
 package Main;
 
-
-import twitterstream.TwitterFilterStream;
+import twitterstream.TwitterSearch;
 
 /**
  *
@@ -10,13 +9,13 @@ import twitterstream.TwitterFilterStream;
 public class TwitterMap implements BrowserListener {
     
     private final GUI gui;
-    private final TwitterFilterStream tStream;
+    private final TwitterSearch tStream;
     
     public TwitterMap() {
         // initialize the GUI frame
         gui = new GUI(this);
         // initialize the twitter stream.
-        tStream = new TwitterFilterStream();
+        tStream = new TwitterSearch();
     }
     
     public void run() {
@@ -34,26 +33,22 @@ public class TwitterMap implements BrowserListener {
 
     @Override
     public void onBrowserLoadFailed() {
-        stopTwitter();
+        stopTwitterStream();
     }
 
     @Override
-    public void startTwitter() {
+    public void startTwitterStream() {
         tStream.enable();
-        new Thread(tStream).start();
     }
 
     @Override
-    public void stopTwitter() {
+    public void stopTwitterStream() {
         tStream.disable();
     }
-    
-    @Override
-    public void onBrowserLoadSuccess() {}
 
     @Override
-    public void addKeyword(String s) {
-        tStream.addKeyword(s);
+    public void addKeyword(String s, boolean translate) {
+        tStream.addKeyword(s, translate);
     }
 
     @Override
@@ -62,13 +57,13 @@ public class TwitterMap implements BrowserListener {
     }
 
     @Override
-    public void setRunningTime(double t) {
+    public void setRunningTime(long t) {
         tStream.setRuntime(t);
     }
 
     @Override
     public void removeKeyword(String s) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        tStream.removeKeyword(s);
     }
     
 }

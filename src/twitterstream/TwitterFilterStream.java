@@ -211,7 +211,7 @@ public class TwitterFilterStream implements Runnable {
                         coord = obj.getJSONObject("geo").getJSONArray("coordinates");
 
                         // Notify listeners of new coordinates
-                        listener.newTweet(coord.toString(), obj.getString("text"));
+                        //listener.newTweet(coord.toString(), obj.getString("text"));
 
                         // Print the coordinates to an output file
                         if (logging) {
@@ -253,7 +253,7 @@ public class TwitterFilterStream implements Runnable {
             if (logging) {
                 try {
                     writer.close();
-                    listener.loggingCompleted(output);
+                    //listener.loggingCompleted(output);
                 } catch (IOException ignore) {}
             }
             disable();

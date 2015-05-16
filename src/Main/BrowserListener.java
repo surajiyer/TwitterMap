@@ -19,26 +19,21 @@ public interface BrowserListener {
     public void onBrowserLoadFailed();
     
     /**
-     * When browser loads Google maps correctly, it must start the twitter 
-     * stream.
-     */
-    public void onBrowserLoadSuccess();
-    
-    /**
      * Start Twitter Stream.
      */
-    public void startTwitter();
+    public void startTwitterStream();
     
     /**
      * Stop Twitter Stream.
      */
-    public void stopTwitter();
+    public void stopTwitterStream();
     
     /**
      * Add a new keyword to 
      * @param s 
+     * @param translate 
      */
-    public void addKeyword(String s);
+    public void addKeyword(String s, boolean translate);
     
     /**
      * Remove specific keyword.
@@ -55,5 +50,5 @@ public interface BrowserListener {
      * Set the running time of the twitter stream.
      * @param t the running time in milliseconds.
      */
-    public void setRunningTime(double t);
+    public void setRunningTime(long t);
 }
