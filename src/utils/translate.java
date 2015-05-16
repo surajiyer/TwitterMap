@@ -46,12 +46,6 @@ public class translate {
         return result;
     }
     
-    /*public static void main(String[] args){
-        String text = "Hello";
-        System.out.println(text+" >> "+translate(text,"auto","zh"));//simple example to see if it works
-        System.out.println(text+" >> "+translate(text,"auto","fr"));
-    }*/
-    
     /**
      * Return an array of translated versions of the given text based on predefined
      * language codes.
@@ -67,5 +61,19 @@ public class translate {
             translated[i] = translate(to_translate, "auto", language_codes[i]);
         }
         return translated;
+    }
+    
+    /**
+     * Get the number of language codes defined.
+     * @return the number of language codes.
+     */
+    public static int getNumberOfLanguages() {
+        return language_codes.length;
+    }
+    
+    public static void main(String[] args){
+        String text = "Hello";
+        System.out.println(text+" >> "+translate(text,"auto","zh")); //simple example to see if it works
+        System.out.println(text+" >> "+translate(text,"auto","fr"));
     }
 }

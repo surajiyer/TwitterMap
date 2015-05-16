@@ -21,7 +21,6 @@ public class TwitterMap implements BrowserListener {
     
     public void run() {
         // Set the twitter stream parameters
-        //tStream1.addKeyword("the"); // Set keywords; space = AND, comma = OR
         tStream.setRuntime(0); // Runtime in ms; 0 = unlimited.
         tStream.setListener(gui);
         
@@ -63,13 +62,13 @@ public class TwitterMap implements BrowserListener {
     }
 
     @Override
-    public void setLogging(boolean enabled) {
-        tStream.logTweets(enabled);
+    public void setRunningTime(double t) {
+        tStream.setRuntime(t);
     }
 
     @Override
-    public void setRunningTime(double t) {
-        tStream.setRuntime(t);
+    public void removeKeyword(String s) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
     
 }

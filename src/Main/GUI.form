@@ -284,14 +284,6 @@
             </MenuItem>
             <MenuItem class="javax.swing.JPopupMenu$Separator" name="jSeparator4">
             </MenuItem>
-            <MenuItem class="javax.swing.JCheckBoxMenuItem" name="loggingCheckBox1">
-              <Properties>
-                <Property name="text" type="java.lang.String" value="Enable Logging"/>
-              </Properties>
-              <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="loggingCheckBox1ActionPerformed"/>
-              </Events>
-            </MenuItem>
           </SubComponents>
         </Menu>
       </SubComponents>
@@ -357,9 +349,7 @@
               <Group type="102" alignment="0" attributes="0">
                   <EmptySpace min="-2" pref="4" max="-2" attributes="0"/>
                   <Component id="keywordPanel" min="-2" max="-2" attributes="0"/>
-                  <EmptySpace min="-2" pref="258" max="-2" attributes="0"/>
-                  <Component id="loggingCheckBox2" min="-2" max="-2" attributes="0"/>
-                  <EmptySpace pref="533" max="32767" attributes="0"/>
+                  <EmptySpace pref="942" max="32767" attributes="0"/>
                   <Component id="startStopButton2" min="-2" max="-2" attributes="0"/>
                   <EmptySpace min="-2" pref="4" max="-2" attributes="0"/>
               </Group>
@@ -374,10 +364,7 @@
         </DimensionLayout>
         <DimensionLayout dim="1">
           <Group type="103" groupAlignment="0" attributes="0">
-              <Group type="103" alignment="0" groupAlignment="3" attributes="0">
-                  <Component id="startStopButton2" alignment="3" min="-2" pref="30" max="-2" attributes="0"/>
-                  <Component id="loggingCheckBox2" alignment="3" max="32767" attributes="0"/>
-              </Group>
+              <Component id="startStopButton2" alignment="0" min="-2" pref="30" max="-2" attributes="0"/>
               <Component id="keywordPanel" alignment="0" max="32767" attributes="0"/>
               <Group type="103" rootIndex="1" groupAlignment="0" attributes="0">
                   <Group type="102" alignment="0" attributes="0">
@@ -427,7 +414,7 @@
           <SubComponents>
             <Component class="javax.swing.JTextField" name="enterKeywordTextField">
               <Properties>
-                <Property name="toolTipText" type="java.lang.String" value="&lt;html&gt;&#xa;Input the keywords to search for in tweets here and hit ENTER.&lt;br/&gt;&#xa;Loaded Keywords:&lt;br/&gt;&#xa;"/>
+                <Property name="toolTipText" type="java.lang.String" value="&lt;html&gt;&#xa;Input the keywords to search for in tweets here and hit ENTER. Each keyword entered will be strung together using commas.&lt;br/&gt;&#xa;You can think of commas as logical ORs, while spaces within keywords are equivalent to logical ANDs (e.g. &#x2018;the twitter&#x2019; is the&lt;br/&gt;&#xa;AND twitter, and &#x2018;the,twitter&#x2019; is the OR twitter).&lt;br/&gt;&#xa;Loaded Keywords:&lt;br/&gt;&#xa;"/>
                 <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
                   <Border info="null"/>
                 </Property>
@@ -557,15 +544,6 @@
           </Properties>
           <Events>
             <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="startStopButton2ActionPerformed"/>
-          </Events>
-        </Component>
-        <Component class="javax.swing.JCheckBox" name="loggingCheckBox2">
-          <Properties>
-            <Property name="text" type="java.lang.String" value="Enable Logging to file"/>
-            <Property name="toolTipText" type="java.lang.String" value="Output the file?"/>
-          </Properties>
-          <Events>
-            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="loggingCheckBox2ActionPerformed"/>
           </Events>
         </Component>
       </SubComponents>

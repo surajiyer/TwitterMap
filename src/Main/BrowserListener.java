@@ -41,15 +41,15 @@ public interface BrowserListener {
     public void addKeyword(String s);
     
     /**
+     * Remove specific keyword.
+     * @param s the keyword to remove (if it exists)
+     */
+    public void removeKeyword(String s);
+    
+    /**
      * Clear all keywords.
      */
     public void clearAllKeywords();
-    
-    /**
-     * Enable or disable logging to a file from the twitter stream.
-     * @param enabled true if logging is enabled otherwise false.
-     */
-    public void setLogging(boolean enabled);
     
     /**
      * Set the running time of the twitter stream.

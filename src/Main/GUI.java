@@ -160,7 +160,6 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         clearButton2 = new javax.swing.JButton();
         timeSpinner = new javax.swing.JSpinner();
         startStopButton2 = new javax.swing.JButton();
-        loggingCheckBox2 = new javax.swing.JCheckBox();
         jSeparator6 = new javax.swing.JSeparator();
         mapPanel = new javax.swing.JPanel();
         menuBar = new javax.swing.JMenuBar();
@@ -180,7 +179,6 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         runMenu = new javax.swing.JMenu();
         startStopButton1 = new javax.swing.JMenuItem();
         jSeparator4 = new javax.swing.JPopupMenu.Separator();
-        loggingCheckBox1 = new javax.swing.JCheckBoxMenuItem();
 
         fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("Normal text file (*.txt)", "txt"));
 
@@ -276,7 +274,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         keywordPanel.setBorder(javax.swing.BorderFactory.createEtchedBorder(new java.awt.Color(102, 102, 102), null));
         keywordPanel.setPreferredSize(new java.awt.Dimension(205, 30));
 
-        enterKeywordTextField.setToolTipText("<html>\nInput the keywords to search for in tweets here and hit ENTER.<br/>\nLoaded Keywords:<br/>\n");
+        enterKeywordTextField.setToolTipText("<html>\nInput the keywords to search for in tweets here and hit ENTER. Each keyword entered will be strung together using commas.<br/>\nYou can think of commas as logical ORs, while spaces within keywords are equivalent to logical ANDs (e.g. ‘the twitter’ is the<br/>\nAND twitter, and ‘the,twitter’ is the OR twitter).<br/>\nLoaded Keywords:<br/>\n");
         enterKeywordTextField.setBorder(null);
         enterKeywordTextField.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -373,14 +371,6 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
             }
         });
 
-        loggingCheckBox2.setText("Enable Logging to file");
-        loggingCheckBox2.setToolTipText("Output the file?");
-        loggingCheckBox2.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                loggingCheckBox2ActionPerformed(evt);
-            }
-        });
-
         javax.swing.GroupLayout controlPanelLayout = new javax.swing.GroupLayout(controlPanel);
         controlPanel.setLayout(controlPanelLayout);
         controlPanelLayout.setHorizontalGroup(
@@ -388,9 +378,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
             .addGroup(controlPanelLayout.createSequentialGroup()
                 .addGap(4, 4, 4)
                 .addComponent(keywordPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(258, 258, 258)
-                .addComponent(loggingCheckBox2)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 533, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 942, Short.MAX_VALUE)
                 .addComponent(startStopButton2)
                 .addGap(4, 4, 4))
             .addGroup(controlPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -401,9 +389,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         );
         controlPanelLayout.setVerticalGroup(
             controlPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(controlPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                .addComponent(startStopButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addComponent(loggingCheckBox2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addComponent(startStopButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
             .addComponent(keywordPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addGroup(controlPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(controlPanelLayout.createSequentialGroup()
@@ -507,14 +493,6 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         });
         runMenu.add(startStopButton1);
         runMenu.add(jSeparator4);
-
-        loggingCheckBox1.setText("Enable Logging");
-        loggingCheckBox1.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                loggingCheckBox1ActionPerformed(evt);
-            }
-        });
-        runMenu.add(loggingCheckBox1);
 
         menuBar.add(runMenu);
 
@@ -643,22 +621,6 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         }
     }//GEN-LAST:event_startStopButton2ActionPerformed
 
-    private void loggingCheckBox2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loggingCheckBox2ActionPerformed
-        boolean checked = loggingCheckBox2.isSelected();
-        // enable/disable logging to output file.
-        bListener.setLogging(checked);
-        // set the same selected value for the same checkbox in the Run menu.
-        loggingCheckBox1.setSelected(checked);
-    }//GEN-LAST:event_loggingCheckBox2ActionPerformed
-
-    private void loggingCheckBox1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loggingCheckBox1ActionPerformed
-        boolean checked = loggingCheckBox1.isSelected();
-        // enable/disable logging to output file.
-        bListener.setLogging(checked);
-        // set the same selected value for the same checkbox in the control panel.
-        loggingCheckBox2.setSelected(checked);
-    }//GEN-LAST:event_loggingCheckBox1ActionPerformed
-
     private void exitMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_exitMenuItemActionPerformed
         // Exit the program.
         System.exit(0);
@@ -747,8 +709,6 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
     private javax.swing.JMenuItem loadFileMarkersButton;
     private javax.swing.JScrollPane loadedKeywordLabelScroller;
     private javax.swing.JLabel loadedKeywordsLabel;
-    private javax.swing.JCheckBoxMenuItem loggingCheckBox1;
-    private javax.swing.JCheckBox loggingCheckBox2;
     private javax.swing.JFormattedTextField longTextField;
     private javax.swing.JPanel mapPanel;
     private javax.swing.JMenu markersMenu;
@@ -800,8 +760,6 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
             clearAllKeywordsButton.setEnabled(false);
             removeTwitterMarkersButton.setEnabled(false);
             removeAllMarkersButton.setEnabled(false);
-            loggingCheckBox1.setEnabled(false);
-            loggingCheckBox2.setEnabled(false);
             enterRunTextField.setEnabled(false);
         }
         else {
@@ -813,8 +771,6 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
             clearAllKeywordsButton.setEnabled(true);
             removeTwitterMarkersButton.setEnabled(true);
             removeAllMarkersButton.setEnabled(true);
-            loggingCheckBox1.setEnabled(true);
-            loggingCheckBox2.setEnabled(true);
             enterRunTextField.setEnabled(true);
         }
     }
