@@ -153,6 +153,8 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         latTextField = new javax.swing.JFormattedTextField();
         longTextField = new javax.swing.JFormattedTextField();
         setUserMarkerButton = new javax.swing.JButton();
+        loadingErrorPanel = new javax.swing.JPanel();
+        tryAgainButton = new javax.swing.JButton();
         controlPanel = new javax.swing.JPanel();
         keywordPanel = new javax.swing.JPanel();
         enterKeywordTextField = new HintTextField("Enter Keyword here...");
@@ -298,6 +300,29 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         );
 
         setMarkerDialog.pack();
+
+        tryAgainButton.setText("jButton1");
+
+        javax.swing.GroupLayout loadingErrorPanelLayout = new javax.swing.GroupLayout(loadingErrorPanel);
+        loadingErrorPanel.setLayout(loadingErrorPanelLayout);
+        loadingErrorPanelLayout.setHorizontalGroup(
+            loadingErrorPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 1280, Short.MAX_VALUE)
+            .addGroup(loadingErrorPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(loadingErrorPanelLayout.createSequentialGroup()
+                    .addGap(0, 0, Short.MAX_VALUE)
+                    .addComponent(tryAgainButton, javax.swing.GroupLayout.PREFERRED_SIZE, 1280, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGap(0, 0, Short.MAX_VALUE)))
+        );
+        loadingErrorPanelLayout.setVerticalGroup(
+            loadingErrorPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 650, Short.MAX_VALUE)
+            .addGroup(loadingErrorPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(loadingErrorPanelLayout.createSequentialGroup()
+                    .addGap(0, 0, Short.MAX_VALUE)
+                    .addComponent(tryAgainButton, javax.swing.GroupLayout.PREFERRED_SIZE, 650, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGap(0, 0, Short.MAX_VALUE)))
+        );
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Twitter Map");
@@ -749,6 +774,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
     private javax.swing.JList loadedKeywordsList;
     private javax.swing.JPanel loadedKeywordsPanel;
     private javax.swing.JScrollPane loadedKeywordsScrollPane;
+    private javax.swing.JPanel loadingErrorPanel;
     private javax.swing.JFormattedTextField longTextField;
     private javax.swing.JPanel mapPanel;
     private javax.swing.JMenu markersMenu;
@@ -766,6 +792,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
     private javax.swing.JMenuItem startStopButton1;
     private javax.swing.JButton startStopButton2;
     private javax.swing.JSpinner timeSpinner;
+    private javax.swing.JButton tryAgainButton;
     // End of variables declaration//GEN-END:variables
 
     /**
@@ -785,17 +812,17 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
      */
     @Override
     public void setRunningStatus(boolean isRunning) {
-        isRunning = !isRunning;
         if(isRunning) {
             startStopButton1.setIcon(stop);
             startStopButton1.setText("Stop");
             startStopButton2.setIcon(stop);
             startStopButton2.setText("Stop");
             enterKeywordTextField.setEnabled(false);
-            clearAllKeywordsButton.setEnabled(false);
-            removeTwitterMarkersButton.setEnabled(false);
-            removeAllMarkersButton.setEnabled(false);
             enterRunTextField.setEnabled(false);
+            removeKeywordsButton.setEnabled(false);
+            clearAllKeywordsButton.setEnabled(false);
+            removeAllMarkersButton.setEnabled(false);
+            removeTwitterMarkersButton.setEnabled(false);
         }
         else {
             startStopButton1.setIcon(start);
@@ -803,10 +830,11 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
             startStopButton2.setIcon(start);
             startStopButton2.setText("Start");
             enterKeywordTextField.setEnabled(true);
-            clearAllKeywordsButton.setEnabled(true);
-            removeTwitterMarkersButton.setEnabled(true);
-            removeAllMarkersButton.setEnabled(true);
             enterRunTextField.setEnabled(true);
+            removeKeywordsButton.setEnabled(true);
+            clearAllKeywordsButton.setEnabled(true);
+            removeAllMarkersButton.setEnabled(true);
+            removeTwitterMarkersButton.setEnabled(true);
         }
     }
 

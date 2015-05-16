@@ -6,9 +6,8 @@
 package twitterstream;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.Writer;
+import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
@@ -58,7 +57,7 @@ public class TwitterSearch implements StatusListener {
 
     /** Writer objects to write the twitter stream data to file. */
     File tweets_file, users_file;
-    Writer tweets_writer, users_writer;
+    PrintWriter tweets_writer, users_writer;
 
     public TwitterSearch() {
         twitterStream = new TwitterStreamFactory(getAuth()).getInstance();
@@ -147,15 +146,13 @@ public class TwitterSearch implements StatusListener {
                               file_name_format.format(new Date(startTime)) + ".csv");
 
         try {
-            tweets_writer = new FileWriter(tweets_file);
-            users_writer = new FileWriter(users_file);
+            tweets_writer = new PrintWriter(tweets_file);
+            users_writer = new PrintWriter(users_file);
         } catch (IOException e) {
             System.out.println(console_format.format(new Date( System.currentTimeMillis())) +
                                " ERROR: Failed to create files to write data to.");
-            try {
-                tweets_writer.close();
-                users_writer.close();
-            } catch (IOException ignore) {}
+            tweets_writer.close();
+            users_writer.close();
             return;
         }
 
@@ -184,12 +181,10 @@ public class TwitterSearch implements StatusListener {
         // Stop the twitter stream.
         twitterStream.shutdown();
 
-        //
-        try {
-            tweets_writer.close();
-            users_writer.close();
-            listener.loggingCompleted(tweets_file, users_file);
-        } catch (IOException ignore) {}
+        // close the file output streams.
+        tweets_writer.close();
+        users_writer.close();
+        listener.loggingCompleted(tweets_file, users_file);
 
         // Set twitter stream running status.
         listener.setRunningStatus(ENABLED = false);
@@ -219,12 +214,15 @@ public class TwitterSearch implements StatusListener {
                     Double.toString(geo.getLongitude()), status.getText());
         }
 
-        try {
-            tweets_writer.write(new TweetEntity(DATA_SEPERATOR, status, null).toString());
-            users_writer.write(new UserEntity(DATA_SEPERATOR, status.getUser()).toString());
-        } catch(IOException ex) {
-            System.out.println(console_format.format(new Date( System.currentTimeMillis())) +
-                               " ERROR: Failed to write stream data to file.");
+        tweets_writer.write(new TweetEntity(DATA_SEPERATOR, status, null).toString());
+        tweets_writer.println();
+        users_writer.write(new UserEntity(DATA_SEPERATOR, status.getUser()).toString());
+        users_writer.println();
+        
+        // Stop the twitter stream if any error(s) while writing to file.
+        if(tweets_writer.checkError() || users_writer.checkError()) {
+            System.out.println(console_format.format(new Date(System.currentTimeMillis())) +
+                    " ERROR: Failed to write stream data to file.");
             disable();
         }
     }
