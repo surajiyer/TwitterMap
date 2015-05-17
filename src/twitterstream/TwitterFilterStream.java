@@ -8,6 +8,8 @@ import java.io.InputStreamReader;
 import java.io.Writer;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JDialog;
 import javax.swing.JOptionPane;
 import org.json.*;
@@ -66,8 +68,13 @@ public class TwitterFilterStream implements Runnable {
      */
     public void addKeyword(String keyword) {
         keywords.add(keyword);
-        for(String s : translate_all(keyword)) {
-            keywords.add(s);
+        try {
+            for(String s : translate_all(keyword)) {
+                keywords.add(s);
+            }
+        } catch (Exception ex) {
+            JDialog.setDefaultLookAndFeelDecorated(true);
+            JOptionPane.showMessageDialog(null, "Could not translate the keyword.", "Warning", JOptionPane.WARNING_MESSAGE);
         }
     }
     

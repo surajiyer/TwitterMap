@@ -33,7 +33,7 @@ public class TwitterMap implements BrowserListener {
 
     @Override
     public void onBrowserLoadFailed() {
-        stopTwitterStream();
+        tStream.disable();
     }
 
     @Override

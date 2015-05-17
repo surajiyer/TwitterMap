@@ -203,29 +203,35 @@
       </SubComponents>
     </Container>
     <Container class="javax.swing.JPanel" name="loadingErrorPanel">
+      <Properties>
+        <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+          <Dimension value="[1280, 650]"/>
+        </Property>
+      </Properties>
 
       <Layout>
         <DimensionLayout dim="0">
           <Group type="103" groupAlignment="0" attributes="0">
-              <EmptySpace min="0" pref="1280" max="32767" attributes="0"/>
-              <Group type="103" rootIndex="1" groupAlignment="0" attributes="0">
-                  <Group type="102" attributes="0">
-                      <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
-                      <Component id="tryAgainButton" min="-2" pref="1280" max="-2" attributes="0"/>
-                      <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
-                  </Group>
+              <Group type="102" alignment="0" attributes="0">
+                  <EmptySpace min="-2" pref="570" max="-2" attributes="0"/>
+                  <Component id="tryAgainButton" min="-2" pref="150" max="-2" attributes="0"/>
+                  <EmptySpace max="32767" attributes="0"/>
+              </Group>
+              <Group type="102" alignment="1" attributes="0">
+                  <EmptySpace pref="395" max="32767" attributes="0"/>
+                  <Component id="jLabel1" min="-2" max="-2" attributes="0"/>
+                  <EmptySpace min="-2" pref="373" max="-2" attributes="0"/>
               </Group>
           </Group>
         </DimensionLayout>
         <DimensionLayout dim="1">
           <Group type="103" groupAlignment="0" attributes="0">
-              <EmptySpace min="0" pref="650" max="32767" attributes="0"/>
-              <Group type="103" rootIndex="1" groupAlignment="0" attributes="0">
-                  <Group type="102" attributes="0">
-                      <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
-                      <Component id="tryAgainButton" min="-2" pref="650" max="-2" attributes="0"/>
-                      <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
-                  </Group>
+              <Group type="102" alignment="1" attributes="0">
+                  <EmptySpace pref="59" max="32767" attributes="0"/>
+                  <Component id="jLabel1" min="-2" max="-2" attributes="0"/>
+                  <EmptySpace max="-2" attributes="0"/>
+                  <Component id="tryAgainButton" min="-2" pref="40" max="-2" attributes="0"/>
+                  <EmptySpace min="-2" pref="183" max="-2" attributes="0"/>
               </Group>
           </Group>
         </DimensionLayout>
@@ -233,7 +239,20 @@
       <SubComponents>
         <Component class="javax.swing.JButton" name="tryAgainButton">
           <Properties>
-            <Property name="text" type="java.lang.String" value="jButton1"/>
+            <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+              <Font name="Tahoma" size="14" style="0"/>
+            </Property>
+            <Property name="text" type="java.lang.String" value="Try Again"/>
+          </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="tryAgainButtonActionPerformed"/>
+          </Events>
+        </Component>
+        <Component class="javax.swing.JLabel" name="jLabel1">
+          <Properties>
+            <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
+              <Image iconType="3" name="/res/no_internet.png"/>
+            </Property>
           </Properties>
         </Component>
       </SubComponents>
@@ -254,6 +273,16 @@
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="keywordsMenuItemActionPerformed"/>
+              </Events>
+            </MenuItem>
+            <MenuItem class="javax.swing.JCheckBoxMenuItem" name="systrayCheckBox">
+              <Properties>
+                <Property name="selected" type="boolean" value="true"/>
+                <Property name="text" type="java.lang.String" value="Minimize to system tray"/>
+                <Property name="toolTipText" type="java.lang.String" value="Enable/Disable minimizing to system tray."/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="systrayCheckBoxActionPerformed"/>
               </Events>
             </MenuItem>
             <MenuItem class="javax.swing.JPopupMenu$Separator" name="jSeparator1">
@@ -497,7 +526,7 @@
           <SubComponents>
             <Component class="javax.swing.JTextField" name="enterKeywordTextField">
               <Properties>
-                <Property name="toolTipText" type="java.lang.String" value="&lt;html&gt;&#xa;Input the keywords to search for in tweets here and hit ENTER. Each keyword entered will be strung together using commas.&lt;br/&gt;&#xa;You can think of commas as logical ORs, while spaces within keywords are equivalent to logical ANDs (e.g. &#x2018;the twitter&#x2019; is the&lt;br/&gt;&#xa;AND twitter, and &#x2018;the,twitter&#x2019; is the OR twitter).&lt;br/&gt;&#xa;Loaded Keywords:&lt;br/&gt;&#xa;"/>
+                <Property name="toolTipText" type="java.lang.String" value="Input the keywords to search for in tweets here and hit ENTER. Each keyword entered will be strung together using commas. You can think of commas as logical ORs, while spaces within keywords are equivalent to logical ANDs (e.g. &#x2018;the twitter&#x2019; is the AND twitter, and &#x2018;the,twitter&#x2019; is the OR twitter).&#xa;"/>
                 <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
                   <Border info="null"/>
                 </Property>

@@ -46,6 +46,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
     
     /** Browser object from JxBrowser library */
     private final Browser browser;
+    private final BrowserView browserView;
     private final BrowserListener bListener;
     
     /** Image icons for the start/stop button. */
@@ -66,6 +67,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         
         // Create a browser, its associated UI view object and the browser listener.
         browser = new Browser();
+        browserView = new BrowserView(browser);
         bListener = bl;
         browser.addLoadListener(new LoadListener() {
 
@@ -76,14 +78,22 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
             public void onProvisionalLoadingFrame(ProvisionalLoadingEvent ple) {}
 
             @Override
-            public void onFinishLoadingFrame(FinishLoadingEvent fle) {}
+            public void onFinishLoadingFrame(FinishLoadingEvent fle) {
+                mapPanel.remove(loadingErrorPanel);
+                mapPanel.add(browserView, BorderLayout.CENTER);
+                revalidate();
+                repaint();
+            }
 
             @Override
             public void onFailLoadingFrame(FailLoadingEvent fle) {
-                if (fle.isMainFrame()) {
+                //if (fle.isMainFrame()) {
                     bListener.onBrowserLoadFailed();
-                    browser.loadURL(map);
-                }
+                    mapPanel.remove(browserView);
+                    mapPanel.add(loadingErrorPanel, BorderLayout.CENTER);
+                    revalidate();
+                    repaint();
+                //}
             }
 
             @Override
@@ -123,7 +133,6 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         timeScale = 60000; // 1min = 60000ms
         
         // Add the map view to the GUI frame and load the map URL.
-        mapPanel.add(new BrowserView(browser), BorderLayout.CENTER);
         browser.loadURL(map);
         
         // Open all hidden dialogs at start
@@ -155,6 +164,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         setUserMarkerButton = new javax.swing.JButton();
         loadingErrorPanel = new javax.swing.JPanel();
         tryAgainButton = new javax.swing.JButton();
+        jLabel1 = new javax.swing.JLabel();
         controlPanel = new javax.swing.JPanel();
         keywordPanel = new javax.swing.JPanel();
         enterKeywordTextField = new HintTextField("Enter Keyword here...");
@@ -169,6 +179,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         menuBar = new javax.swing.JMenuBar();
         fileMenu = new javax.swing.JMenu();
         keywordsMenuItem = new javax.swing.JMenuItem();
+        systrayCheckBox = new javax.swing.JCheckBoxMenuItem();
         jSeparator1 = new javax.swing.JPopupMenu.Separator();
         exitMenuItem = new javax.swing.JMenuItem();
         markersMenu = new javax.swing.JMenu();
@@ -301,27 +312,39 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
 
         setMarkerDialog.pack();
 
-        tryAgainButton.setText("jButton1");
+        loadingErrorPanel.setPreferredSize(new java.awt.Dimension(1280, 650));
+
+        tryAgainButton.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+        tryAgainButton.setText("Try Again");
+        tryAgainButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                tryAgainButtonActionPerformed(evt);
+            }
+        });
+
+        jLabel1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/res/no_internet.png"))); // NOI18N
 
         javax.swing.GroupLayout loadingErrorPanelLayout = new javax.swing.GroupLayout(loadingErrorPanel);
         loadingErrorPanel.setLayout(loadingErrorPanelLayout);
         loadingErrorPanelLayout.setHorizontalGroup(
             loadingErrorPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 1280, Short.MAX_VALUE)
-            .addGroup(loadingErrorPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(loadingErrorPanelLayout.createSequentialGroup()
-                    .addGap(0, 0, Short.MAX_VALUE)
-                    .addComponent(tryAgainButton, javax.swing.GroupLayout.PREFERRED_SIZE, 1280, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGap(0, 0, Short.MAX_VALUE)))
+            .addGroup(loadingErrorPanelLayout.createSequentialGroup()
+                .addGap(570, 570, 570)
+                .addComponent(tryAgainButton, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, loadingErrorPanelLayout.createSequentialGroup()
+                .addContainerGap(395, Short.MAX_VALUE)
+                .addComponent(jLabel1)
+                .addGap(373, 373, 373))
         );
         loadingErrorPanelLayout.setVerticalGroup(
             loadingErrorPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 650, Short.MAX_VALUE)
-            .addGroup(loadingErrorPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(loadingErrorPanelLayout.createSequentialGroup()
-                    .addGap(0, 0, Short.MAX_VALUE)
-                    .addComponent(tryAgainButton, javax.swing.GroupLayout.PREFERRED_SIZE, 650, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGap(0, 0, Short.MAX_VALUE)))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, loadingErrorPanelLayout.createSequentialGroup()
+                .addContainerGap(59, Short.MAX_VALUE)
+                .addComponent(jLabel1)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(tryAgainButton, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(183, 183, 183))
         );
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -335,7 +358,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         keywordPanel.setBorder(javax.swing.BorderFactory.createEtchedBorder(new java.awt.Color(102, 102, 102), null));
         keywordPanel.setPreferredSize(new java.awt.Dimension(205, 30));
 
-        enterKeywordTextField.setToolTipText("<html>\nInput the keywords to search for in tweets here and hit ENTER. Each keyword entered will be strung together using commas.<br/>\nYou can think of commas as logical ORs, while spaces within keywords are equivalent to logical ANDs (e.g. ‘the twitter’ is the<br/>\nAND twitter, and ‘the,twitter’ is the OR twitter).<br/>\nLoaded Keywords:<br/>\n");
+        enterKeywordTextField.setToolTipText("Input the keywords to search for in tweets here and hit ENTER. Each keyword entered will be strung together using commas. You can think of commas as logical ORs, while spaces within keywords are equivalent to logical ANDs (e.g. ‘the twitter’ is the AND twitter, and ‘the,twitter’ is the OR twitter).\n");
         enterKeywordTextField.setBorder(null);
         enterKeywordTextField.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -470,6 +493,16 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
             }
         });
         fileMenu.add(keywordsMenuItem);
+
+        systrayCheckBox.setSelected(true);
+        systrayCheckBox.setText("Minimize to system tray");
+        systrayCheckBox.setToolTipText("Enable/Disable minimizing to system tray.");
+        systrayCheckBox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                systrayCheckBoxActionPerformed(evt);
+            }
+        });
+        fileMenu.add(systrayCheckBox);
         fileMenu.add(jSeparator1);
 
         exitMenuItem.setIcon(new javax.swing.ImageIcon(getClass().getResource("/res/1427240871_exit-to-app-128_16x16.png"))); // NOI18N
@@ -719,13 +752,6 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         bListener.addKeyword(keyword, true);
         keywordsListModel.addElement(keyword);
         enterKeywordTextField.setText("");
-        /*String s = loadedKeywordsList.
-        String t = enterKeywordTextField.getToolTipText();
-        s = s.substring(0,s.length()-5) + "<li><b>" + keyword+"</b></ul>";
-        t = t.substring(0, t.lastIndexOf(":")+7) + s.substring(6,s.length());
-        bListener.addKeyword(enterKeywordTextField.getText());
-        loadedKeywordsLabel.setText(s);
-        enterKeywordTextField.setToolTipText(t);*/
     }//GEN-LAST:event_enterKeywordTextFieldActionPerformed
 
     private void timeSpinnerStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_timeSpinnerStateChanged
@@ -749,6 +775,14 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         }
     }//GEN-LAST:event_removeKeywordsButtonActionPerformed
 
+    private void systrayCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_systrayCheckBoxActionPerformed
+        
+    }//GEN-LAST:event_systrayCheckBoxActionPerformed
+
+    private void tryAgainButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tryAgainButtonActionPerformed
+        browser.loadURL(map);
+    }//GEN-LAST:event_tryAgainButtonActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton clearAllKeywordsButton;
     private javax.swing.JButton clearButton1;
@@ -761,6 +795,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
     private javax.swing.JMenuItem exitMenuItem;
     private javax.swing.JFileChooser fileChooser;
     private javax.swing.JMenu fileMenu;
+    private javax.swing.JLabel jLabel1;
     private javax.swing.JPopupMenu.Separator jSeparator1;
     private javax.swing.JPopupMenu.Separator jSeparator2;
     private javax.swing.JPopupMenu.Separator jSeparator3;
@@ -791,6 +826,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
     private javax.swing.JButton setUserMarkerButton;
     private javax.swing.JMenuItem startStopButton1;
     private javax.swing.JButton startStopButton2;
+    private javax.swing.JCheckBoxMenuItem systrayCheckBox;
     private javax.swing.JSpinner timeSpinner;
     private javax.swing.JButton tryAgainButton;
     // End of variables declaration//GEN-END:variables

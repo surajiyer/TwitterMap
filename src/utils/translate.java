@@ -15,8 +15,9 @@ public class translate {
      * @param from_language the language code from which it has to be translated
      * @param to_language the language to which it has to be translated
      * @return 
+     * @throws java.lang.Exception if it cannot reach the google translate server.
      */
-    public static String translate(String to_translate, String from_language, String to_language){
+    public static String translate(String to_translate, String from_language, String to_language) throws Exception{
         String page, result, hl, sl, q;
         
         String before_trans = "class=\"t0\">";
@@ -35,12 +36,8 @@ public class translate {
         
         String query = String.format("https://translate.google.com/m?hl=%s&sl=%s&q=%s", hl,sl,q);
         
-        try {
-            page = URLConnectionReader.getText(query);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "";
-        }
+        page = URLConnectionReader.getText(query);
+        
         result = page.substring(page.indexOf(before_trans)+before_trans.length());
         result = result.split("<")[0];
         return result;
@@ -54,8 +51,9 @@ public class translate {
      * @return an array of translated versions of given text in the order 
      * {Dutch, French, Chinese, Spanish, Hindi, Italian, Tamil, Russian, Arabic,
      * German, Japanese, Korean, Lithuanian, Vietnamese}
+     * @throws java.lang.Exception if it cannot reach the google translate server.
      */
-    public static String[] translate_all(String to_translate) {
+    public static String[] translate_all(String to_translate) throws Exception {
         String[] translated = new String[language_codes.length];
         for(int i=0; i<language_codes.length; i++) {
             translated[i] = translate(to_translate, "auto", language_codes[i]);
@@ -71,7 +69,7 @@ public class translate {
         return language_codes.length;
     }
     
-    public static void main(String[] args){
+    public static void main(String[] args) throws Exception {
         String text = "Hello";
         System.out.println(text+" >> "+translate(text,"auto","zh")); //simple example to see if it works
         System.out.println(text+" >> "+translate(text,"auto","fr"));
