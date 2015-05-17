@@ -14,6 +14,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JDialog;
 import javax.swing.JOptionPane;
 import org.apache.commons.lang3.ArrayUtils;
@@ -88,7 +90,13 @@ public class TwitterSearch implements StatusListener {
      */
     public void addKeyword(String keyword, boolean translate) {
         if(translate)
-            keywords.put(keyword, Arrays.asList(translate_all(keyword)));
+            try {
+                keywords.put(keyword, Arrays.asList(translate_all(keyword)));
+            } catch (Exception ex) {
+                keywords.put(keyword, null);
+                JDialog.setDefaultLookAndFeelDecorated(true);
+                JOptionPane.showMessageDialog(null, "Could not translate the keyword.", "Warning", JOptionPane.WARNING_MESSAGE);
+            }
         else {
             keywords.put(keyword, null);
         }
@@ -209,7 +217,6 @@ public class TwitterSearch implements StatusListener {
         // Notify listeners of new coordinates
         if(status.getGeoLocation() != null) {
             GeoLocation geo = status.getGeoLocation();
-            System.out.println(geo.toString());
             listener.newTweet(Double.toString(geo.getLatitude()),
                     Double.toString(geo.getLongitude()), status.getText());
         }
