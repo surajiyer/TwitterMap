@@ -429,6 +429,7 @@
     <AuxValue name="FormSettings_listenerGenerationStyle" type="java.lang.Integer" value="0"/>
     <AuxValue name="FormSettings_variablesLocal" type="java.lang.Boolean" value="false"/>
     <AuxValue name="FormSettings_variablesModifier" type="java.lang.Integer" value="2"/>
+    <AuxValue name="designerSize" type="java.awt.Dimension" value="-84,-19,0,5,115,114,0,18,106,97,118,97,46,97,119,116,46,68,105,109,101,110,115,105,111,110,65,-114,-39,-41,-84,95,68,20,2,0,2,73,0,6,104,101,105,103,104,116,73,0,5,119,105,100,116,104,120,112,0,0,2,-43,0,0,5,0"/>
   </AuxValues>
 
   <Layout>
@@ -443,11 +444,12 @@
       <Group type="103" groupAlignment="0" attributes="0">
           <Group type="102" alignment="0" attributes="0">
               <EmptySpace min="-2" pref="5" max="-2" attributes="0"/>
-              <Component id="controlPanel" min="-2" max="-2" attributes="0"/>
+              <Component id="controlPanel" min="-2" pref="32" max="-2" attributes="0"/>
               <EmptySpace max="-2" attributes="0"/>
               <Component id="jSeparator6" min="-2" max="-2" attributes="0"/>
               <EmptySpace min="0" pref="0" max="-2" attributes="0"/>
-              <Component id="mapPanel" pref="650" max="32767" attributes="0"/>
+              <Component id="mapPanel" min="-2" pref="653" max="-2" attributes="0"/>
+              <EmptySpace min="0" pref="0" max="-2" attributes="0"/>
           </Group>
       </Group>
     </DimensionLayout>
@@ -461,7 +463,9 @@
               <Group type="102" alignment="0" attributes="0">
                   <EmptySpace min="-2" pref="4" max="-2" attributes="0"/>
                   <Component id="keywordPanel" min="-2" max="-2" attributes="0"/>
-                  <EmptySpace pref="1006" max="32767" attributes="0"/>
+                  <EmptySpace min="-2" pref="257" max="-2" attributes="0"/>
+                  <Component id="displayMapButton" min="-2" pref="34" max="-2" attributes="0"/>
+                  <EmptySpace pref="715" max="32767" attributes="0"/>
                   <Component id="startStopButton2" min="-2" max="-2" attributes="0"/>
                   <EmptySpace min="-2" pref="4" max="-2" attributes="0"/>
               </Group>
@@ -476,12 +480,20 @@
         </DimensionLayout>
         <DimensionLayout dim="1">
           <Group type="103" groupAlignment="0" attributes="0">
-              <Component id="startStopButton2" alignment="0" min="-2" pref="30" max="-2" attributes="0"/>
-              <Component id="keywordPanel" alignment="0" max="32767" attributes="0"/>
+              <Group type="102" alignment="0" attributes="0">
+                  <Group type="103" groupAlignment="1" attributes="0">
+                      <Component id="startStopButton2" alignment="0" min="-2" pref="33" max="-2" attributes="0"/>
+                      <Group type="103" alignment="0" groupAlignment="1" max="-2" attributes="0">
+                          <Component id="displayMapButton" alignment="0" pref="0" max="32767" attributes="0"/>
+                          <Component id="keywordPanel" alignment="0" max="32767" attributes="0"/>
+                      </Group>
+                  </Group>
+                  <EmptySpace max="32767" attributes="0"/>
+              </Group>
               <Group type="103" rootIndex="1" groupAlignment="0" attributes="0">
                   <Group type="102" alignment="0" attributes="0">
                       <Component id="runtimePanel" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
+                      <EmptySpace min="0" pref="13" max="32767" attributes="0"/>
                   </Group>
               </Group>
           </Group>
@@ -526,7 +538,7 @@
           <SubComponents>
             <Component class="javax.swing.JTextField" name="enterKeywordTextField">
               <Properties>
-                <Property name="toolTipText" type="java.lang.String" value="Input the keywords to search for in tweets here and hit ENTER. Each keyword entered will be strung together using commas. You can think of commas as logical ORs, while spaces within keywords are equivalent to logical ANDs (e.g. &#x2018;the twitter&#x2019; is the AND twitter, and &#x2018;the,twitter&#x2019; is the OR twitter).&#xa;"/>
+                <Property name="toolTipText" type="java.lang.String" value="Input the keywords to search for in tweets here and hit ENTER. Each&#xa;keyword entered will be strung together using commas. You can think&#xa;of commas as logical ORs, while spaces within keywords are equivalent&#xa;to logical ANDs (e.g. &#x2018;the twitter&#x2019; is the AND twitter, and &#x2018;the,twitter&#x2019; is the OR twitter).&#xa;"/>
                 <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
                   <Border info="null"/>
                 </Property>
@@ -656,6 +668,16 @@
           </Properties>
           <Events>
             <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="startStopButton2ActionPerformed"/>
+          </Events>
+        </Component>
+        <Component class="javax.swing.JButton" name="displayMapButton">
+          <Properties>
+            <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
+              <Image iconType="3" name="/res/map_24.png"/>
+            </Property>
+          </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="displayMapButtonActionPerformed"/>
           </Events>
         </Component>
       </SubComponents>

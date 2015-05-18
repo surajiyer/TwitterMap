@@ -174,6 +174,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         clearButton2 = new javax.swing.JButton();
         timeSpinner = new javax.swing.JSpinner();
         startStopButton2 = new javax.swing.JButton();
+        displayMapButton = new javax.swing.JButton();
         jSeparator6 = new javax.swing.JSeparator();
         mapPanel = new javax.swing.JPanel();
         menuBar = new javax.swing.JMenuBar();
@@ -358,7 +359,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         keywordPanel.setBorder(javax.swing.BorderFactory.createEtchedBorder(new java.awt.Color(102, 102, 102), null));
         keywordPanel.setPreferredSize(new java.awt.Dimension(205, 30));
 
-        enterKeywordTextField.setToolTipText("Input the keywords to search for in tweets here and hit ENTER. Each keyword entered will be strung together using commas. You can think of commas as logical ORs, while spaces within keywords are equivalent to logical ANDs (e.g. ‘the twitter’ is the AND twitter, and ‘the,twitter’ is the OR twitter).\n");
+        enterKeywordTextField.setToolTipText("Input the keywords to search for in tweets here and hit ENTER. Each\nkeyword entered will be strung together using commas. You can think\nof commas as logical ORs, while spaces within keywords are equivalent\nto logical ANDs (e.g. ‘the twitter’ is the AND twitter, and ‘the,twitter’ is the OR twitter).\n");
         enterKeywordTextField.setBorder(null);
         enterKeywordTextField.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -455,6 +456,13 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
             }
         });
 
+        displayMapButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/res/map_24.png"))); // NOI18N
+        displayMapButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                displayMapButtonActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout controlPanelLayout = new javax.swing.GroupLayout(controlPanel);
         controlPanel.setLayout(controlPanelLayout);
         controlPanelLayout.setHorizontalGroup(
@@ -462,7 +470,9 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
             .addGroup(controlPanelLayout.createSequentialGroup()
                 .addGap(4, 4, 4)
                 .addComponent(keywordPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 1006, Short.MAX_VALUE)
+                .addGap(257, 257, 257)
+                .addComponent(displayMapButton, javax.swing.GroupLayout.PREFERRED_SIZE, 34, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 715, Short.MAX_VALUE)
                 .addComponent(startStopButton2)
                 .addGap(4, 4, 4))
             .addGroup(controlPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -473,12 +483,17 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         );
         controlPanelLayout.setVerticalGroup(
             controlPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(startStopButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
-            .addComponent(keywordPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addGroup(controlPanelLayout.createSequentialGroup()
+                .addGroup(controlPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(startStopButton2, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, controlPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                        .addComponent(displayMapButton, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+                        .addComponent(keywordPanel, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
             .addGroup(controlPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(controlPanelLayout.createSequentialGroup()
                     .addComponent(runtimePanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGap(0, 0, Short.MAX_VALUE)))
+                    .addGap(0, 13, Short.MAX_VALUE)))
         );
 
         mapPanel.setLayout(new java.awt.BorderLayout());
@@ -603,11 +618,12 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addGap(5, 5, 5)
-                .addComponent(controlPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(controlPanel, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jSeparator6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(0, 0, 0)
-                .addComponent(mapPanel, javax.swing.GroupLayout.DEFAULT_SIZE, 650, Short.MAX_VALUE))
+                .addComponent(mapPanel, javax.swing.GroupLayout.PREFERRED_SIZE, 653, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(0, 0, 0))
         );
 
         pack();
@@ -783,11 +799,16 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         browser.loadURL(map);
     }//GEN-LAST:event_tryAgainButtonActionPerformed
 
+    private void displayMapButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_displayMapButtonActionPerformed
+        
+    }//GEN-LAST:event_displayMapButtonActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton clearAllKeywordsButton;
     private javax.swing.JButton clearButton1;
     private javax.swing.JButton clearButton2;
     private javax.swing.JPanel controlPanel;
+    private javax.swing.JButton displayMapButton;
     private javax.swing.JTextField enterKeywordTextField;
     private javax.swing.JLabel enterLatitudeLabel;
     private javax.swing.JLabel enterLongitudeLabel;
