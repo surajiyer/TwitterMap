@@ -1,6 +1,6 @@
 package Main;
 
-import twitterstream.TwitterSearch;
+import twitterstream.TwitterFilterStream;
 
 /**
  *
@@ -9,13 +9,13 @@ import twitterstream.TwitterSearch;
 public class TwitterMap implements BrowserListener {
     
     private final GUI gui;
-    private final TwitterSearch tStream;
+    private final TwitterFilterStream tStream;
     
     public TwitterMap() {
         // initialize the GUI frame
         gui = new GUI(this);
         // initialize the twitter stream.
-        tStream = new TwitterSearch();
+        tStream = new TwitterFilterStream();
     }
     
     public void run() {

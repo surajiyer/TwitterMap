@@ -29,9 +29,14 @@
                   <Group type="103" groupAlignment="0" attributes="0">
                       <Component id="loadedKeywordsPanel" max="32767" attributes="0"/>
                       <Group type="102" attributes="0">
-                          <Component id="removeKeywordsButton" min="-2" max="-2" attributes="0"/>
-                          <EmptySpace max="-2" attributes="0"/>
-                          <Component id="clearAllKeywordsButton" min="-2" max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="0" attributes="0">
+                              <Component id="translateKeywordsCheckBox" min="-2" max="-2" attributes="0"/>
+                              <Group type="102" attributes="0">
+                                  <Component id="removeKeywordsButton" min="-2" max="-2" attributes="0"/>
+                                  <EmptySpace max="-2" attributes="0"/>
+                                  <Component id="clearAllKeywordsButton" min="-2" max="-2" attributes="0"/>
+                              </Group>
+                          </Group>
                           <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
                       </Group>
                   </Group>
@@ -49,6 +54,8 @@
                       <Component id="removeKeywordsButton" alignment="3" min="-2" pref="34" max="-2" attributes="0"/>
                       <Component id="clearAllKeywordsButton" alignment="3" min="-2" pref="34" max="-2" attributes="0"/>
                   </Group>
+                  <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                  <Component id="translateKeywordsCheckBox" min="-2" max="-2" attributes="0"/>
                   <EmptySpace max="-2" attributes="0"/>
               </Group>
           </Group>
@@ -88,7 +95,7 @@
             </DimensionLayout>
             <DimensionLayout dim="1">
               <Group type="103" groupAlignment="0" attributes="0">
-                  <Component id="loadedKeywordsScrollPane" alignment="0" pref="121" max="32767" attributes="0"/>
+                  <Component id="loadedKeywordsScrollPane" alignment="0" pref="148" max="32767" attributes="0"/>
               </Group>
             </DimensionLayout>
           </Layout>
@@ -114,6 +121,13 @@
             </Container>
           </SubComponents>
         </Container>
+        <Component class="javax.swing.JCheckBox" name="translateKeywordsCheckBox">
+          <Properties>
+            <Property name="selected" type="boolean" value="true"/>
+            <Property name="text" type="java.lang.String" value="Enable Keyword Translation"/>
+            <Property name="toolTipText" type="java.lang.String" value="&lt;html&gt;&#xa;Enable/Disable translations of keywords to the following languages:&lt;br&gt;&#xa;Dutch, French, Chinese, Spanish, Hindi, Italian, Tamil, Russian, Arabic, &lt;br&gt;&#xa;German, Japanese, Korean, Lithuanian, Vietnamese"/>
+          </Properties>
+        </Component>
       </SubComponents>
     </Container>
     <Container class="javax.swing.JDialog" name="setMarkerDialog">
@@ -227,11 +241,11 @@
         <DimensionLayout dim="1">
           <Group type="103" groupAlignment="0" attributes="0">
               <Group type="102" alignment="1" attributes="0">
-                  <EmptySpace pref="59" max="32767" attributes="0"/>
+                  <EmptySpace pref="66" max="32767" attributes="0"/>
                   <Component id="no_internet_icon_label" min="-2" max="-2" attributes="0"/>
-                  <EmptySpace max="-2" attributes="0"/>
+                  <EmptySpace min="-2" pref="42" max="-2" attributes="0"/>
                   <Component id="tryAgainButton" min="-2" pref="40" max="-2" attributes="0"/>
-                  <EmptySpace min="-2" pref="183" max="-2" attributes="0"/>
+                  <EmptySpace min="-2" pref="95" max="-2" attributes="0"/>
               </Group>
           </Group>
         </DimensionLayout>
@@ -277,12 +291,10 @@
             </MenuItem>
             <MenuItem class="javax.swing.JCheckBoxMenuItem" name="systrayCheckBox">
               <Properties>
+                <Property name="selected" type="boolean" value="true"/>
                 <Property name="text" type="java.lang.String" value="Minimize to system tray"/>
                 <Property name="toolTipText" type="java.lang.String" value="Enable/Disable minimizing to system tray."/>
               </Properties>
-              <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="systrayCheckBoxActionPerformed"/>
-              </Events>
             </MenuItem>
             <MenuItem class="javax.swing.JPopupMenu$Separator" name="jSeparator1">
             </MenuItem>
@@ -294,7 +306,7 @@
                 <Property name="text" type="java.lang.String" value="Exit"/>
               </Properties>
               <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="exitPerformed"/>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="exitMenuItemActionPerformed"/>
               </Events>
             </MenuItem>
           </SubComponents>
@@ -437,7 +449,7 @@
   <Layout>
     <DimensionLayout dim="0">
       <Group type="103" groupAlignment="0" attributes="0">
-          <Component id="controlPanel" alignment="0" max="-2" attributes="0"/>
+          <Component id="controlPanel" alignment="0" max="32767" attributes="0"/>
           <Component id="jSeparator6" alignment="0" max="32767" attributes="0"/>
           <Component id="mapPanel" alignment="0" max="32767" attributes="0"/>
       </Group>
@@ -446,8 +458,8 @@
       <Group type="103" groupAlignment="0" attributes="0">
           <Group type="102" alignment="0" attributes="0">
               <EmptySpace min="-2" pref="5" max="-2" attributes="0"/>
-              <Component id="controlPanel" min="-2" max="-2" attributes="0"/>
-              <EmptySpace min="-2" pref="5" max="-2" attributes="0"/>
+              <Component id="controlPanel" min="-2" pref="32" max="-2" attributes="0"/>
+              <EmptySpace max="-2" attributes="0"/>
               <Component id="jSeparator6" min="-2" max="-2" attributes="0"/>
               <EmptySpace min="0" pref="0" max="-2" attributes="0"/>
               <Component id="mapPanel" min="-2" pref="653" max="-2" attributes="0"/>
@@ -458,6 +470,11 @@
   </Layout>
   <SubComponents>
     <Container class="javax.swing.JPanel" name="controlPanel">
+      <Properties>
+        <Property name="minimumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+          <Dimension value="[490, 43]"/>
+        </Property>
+      </Properties>
 
       <Layout>
         <DimensionLayout dim="0">

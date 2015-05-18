@@ -1,270 +1,273 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
 package twitterstream;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Writer;
+import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JDialog;
 import javax.swing.JOptionPane;
-import org.json.*;
-import org.scribe.builder.*;
-import org.scribe.builder.api.*;
-import org.scribe.exceptions.OAuthConnectionException;
-import org.scribe.model.*;
-import org.scribe.oauth.*;
+import org.apache.commons.lang3.ArrayUtils;
+import twitter4j.FilterQuery;
+import twitter4j.GeoLocation;
+import twitter4j.StallWarning;
+import twitter4j.Status;
+import twitter4j.StatusDeletionNotice;
+import twitter4j.StatusListener;
+import twitter4j.TwitterStream;
+import twitter4j.TwitterStreamFactory;
+import twitter4j.conf.Configuration;
+import twitter4j.conf.ConfigurationBuilder;
 import static utils.translate.translate_all;
 
 /**
- * 
+ *
  * @author s139662
  */
-public class TwitterFilterStream implements Runnable {
+public class TwitterFilterStream implements StatusListener {
 
-    /** Twitter Stream URI link */
-    private static final String STREAM_URI   = "https://stream.twitter.com/1.1/statuses/filter.json";
-    /** Twitter API key */
-    private static final String API_KEY      = "0ofktWKMWWZwv3lb2BGxeSsxz";
-    /** Twitter API Secret */
-    private static final String API_SECRET   = "VuyOjrVy9aPdiQoFXOw7HCS0ZHeUShfl7Bs5UktqEGDpIDUnMj";
-    /** Twitter Token key */
-    private static final String TOKEN_KEY    = "3063962920-rxltQ88TXf5BrvCiC2BBhm5A9ZiHgsMJOpmFTrl";
-    /** Twitter Token Secret */
-    private static final String TOKEN_SECRET = "Y4WALWynF1hZyW9NDV21E7qtRVhGt1cvumj7jVpPpAe3I";
-    
-    /** Output file name date format. */
-    private final SimpleDateFormat sdf;
-    
+    // Generate a twitter stream object to connect to the streaming API.
+    TwitterStream twitterStream;
+
+    /** Date formats for file naming and console output. */
+    private final SimpleDateFormat console_format, file_name_format;
+
     /** List of keywords to search for. */
-    private final ArrayList<String> keywords;
-    
-    /** Running time of twitter stream in milliseconds. */
-    private double runtime;
-    
-    /** To check if the twitter stream is/should be stopped. */
-    private boolean STOPPED = true;
-    
-    /** To check if twitter stream should log the input to file. */
-    private boolean logging;
-    
-    /** A tweet arrival event listener */
+    private final Map<String, List<String>> keywords;
+
+    private final String DATA_SEPERATOR = ";&;";
+
+    /** A tweet arrival event sListener */
     private TweetListener listener;
 
+    /** Start time and running time of twitter stream in milliseconds. */
+    private long startTime, runTime;
+
+    /** To check if the twitter stream is/should be stopped. */
+    private boolean ENABLED;
+
+    /** Writer objects to write the twitter stream data to file. */
+    File tweets_file, users_file;
+    PrintWriter tweets_writer, users_writer;
+
     public TwitterFilterStream() {
-        this.logging = true;
-        this.keywords = new ArrayList<>();
-        this.sdf = new SimpleDateFormat("hh:mm:ss");
-        this.runtime = 0d;
+        twitterStream = new TwitterStreamFactory(getAuth()).getInstance();
+        twitterStream.addListener(this);
+        keywords = new HashMap<>();
+        console_format = new SimpleDateFormat("hh:mm:ss");
+        file_name_format = new SimpleDateFormat("dd-MM-yy_HH-mm");
+        ENABLED = false;
+    }
+
+    /** Gets configuration builder for authentication */
+    private Configuration getAuth() {
+        final ConfigurationBuilder cb = new ConfigurationBuilder();
+        cb.setOAuthConsumerKey("0ofktWKMWWZwv3lb2BGxeSsxz");
+        cb.setOAuthConsumerSecret("VuyOjrVy9aPdiQoFXOw7HCS0ZHeUShfl7Bs5UktqEGDpIDUnMj");
+        cb.setOAuthAccessToken("3063962920-rxltQ88TXf5BrvCiC2BBhm5A9ZiHgsMJOpmFTrl");
+        cb.setOAuthAccessTokenSecret("Y4WALWynF1hZyW9NDV21E7qtRVhGt1cvumj7jVpPpAe3I");
+
+        return cb.build();
     }
 
     /**
      * Add keyword to search for in twitter stream.
      * @param keyword the keyword to search for.
+     * @param translate translate keywords to {Dutch, French, Chinese, Spanish, 
+     * Hindi, Italian, Tamil, Russian, Arabic, German, Japanese, Korean, 
+     * Lithuanian, Vietnamese} if true to expand search.
      */
-    public void addKeyword(String keyword) {
-        keywords.add(keyword);
-        try {
-            for(String s : translate_all(keyword)) {
-                keywords.add(s);
+    public void addKeyword(String keyword, boolean translate) {
+        if(translate)
+            try {
+                keywords.put(keyword, Arrays.asList(translate_all(keyword)));
+            } catch (Exception ex) {
+                keywords.put(keyword, null);
+                JDialog.setDefaultLookAndFeelDecorated(true);
+                JOptionPane.showMessageDialog(null, "Could not translate the keyword.", "Warning", JOptionPane.WARNING_MESSAGE);
             }
-        } catch (Exception ex) {
-            JDialog.setDefaultLookAndFeelDecorated(true);
-            JOptionPane.showMessageDialog(null, "Could not translate the keyword.", "Warning", JOptionPane.WARNING_MESSAGE);
+        else {
+            keywords.put(keyword, null);
         }
     }
-    
+
     /**
-     * Remove existing keyword.
+     * Remove individual keywords from set of keywords.
+     * @param keyword the keyword to remove.
+     */
+    public void removeKeyword(String keyword) {
+        keywords.remove(keyword);
+    }
+
+    /**
+     * Remove all existing keywords.
      */
     public void removeAllKeywords() {
         keywords.clear();
     }
 
-    public void setRuntime(double ms) {
-        runtime = ms;
-    }
-
     /**
-     * Set file logging on/off.
-     * 
-     * @param logging if true, it will sink the coordinates to a text file.
+     * Set the running time of the twitter streaming API (in milliseconds)
+     * @param ms the time in milliseconds
      */
-    public void logTweets(boolean logging) {
-        this.logging = logging;
+    public void setRuntime(long ms) {
+        runTime = ms;
     }
     
     /**
-     * Set the tweet listener for each generated tweets.
+     * If the Twitter streaming API is running, it returns true otherwise false.
+     * @return true if twitter stream is enabled.
+     */
+    public boolean isRunning() {
+        return ENABLED;
+    }
+
+    /**
+     * Start reading the twitter stream.
+     */
+    public void enable() {
+        
+        if(!ENABLED) {
+            // Check if at least 1 keyword exists.
+            if(keywords.isEmpty()) {
+                JDialog.setDefaultLookAndFeelDecorated(true);
+                JOptionPane.showMessageDialog(null, "Oops! You forgot to specify "
+                        + "minimum 1 keyword to search for.", "Warning", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            // Create new files to write the data to.
+            startTime = System.currentTimeMillis();
+            tweets_file = new File(System.getenv("TMP")+"\\Tweets_"+
+                                   file_name_format.format(new Date(startTime)) + ".csv");
+            users_file = new File(System.getenv("TMP")+"\\Users_"+
+                                  file_name_format.format(new Date(startTime)) + ".csv");
+
+            try {
+                tweets_writer = new PrintWriter(tweets_file);
+                tweets_writer.write(TweetEntity.CSV_FILE_HEADER);
+                tweets_writer.println();
+                users_writer = new PrintWriter(users_file);
+                users_writer.write(UserEntity.CSV_FILE_HEADER);
+                users_writer.println();
+            } catch (IOException e) {
+                System.out.println(console_format.format(new Date( System.currentTimeMillis())) +
+                                   " ERROR: Failed to create files to write data to.");
+                tweets_writer.close();
+                users_writer.close();
+                return;
+            }
+
+            // Create a new streaming filter query (i.e. keywords to track, locations etc.)
+            FilterQuery fq = new FilterQuery();
+            String[] keys = keywords.keySet().toArray(new String[0]);
+            for(String key : keys) {
+                try {
+                    keys = ArrayUtils.addAll(keys, translate_all(key));
+                } catch (Exception ex) {
+                    Logger.getLogger(TwitterFilterStream.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+            for(List<String> keyList : keywords.values()) {
+                if(keyList == null) continue;
+                keys = ArrayUtils.addAll(keys, keyList.toArray(new String[0]));
+            }
+            fq.track(keys);
+
+            // Start the twitter stream.
+            twitterStream.filter(fq);
+
+            // Set twitter stream running status.
+            listener.setRunningStatus(ENABLED = true);
+            System.out.println(console_format.format(new Date(startTime))
+                    + " INFO: Twitter Stream Started."); 
+        }
+    }
+
+    /**
+     * Stop reading the twitter stream.
+     */
+    public void disable() {
+        
+        if(ENABLED) {
+            // Stop the twitter stream.
+            twitterStream.shutdown();
+            
+            // close the file output streams.
+            tweets_writer.close();
+            users_writer.close();
+            listener.loggingCompleted(tweets_file, users_file);
+            
+            // Set twitter stream running status.
+            listener.setRunningStatus(ENABLED = false);
+            System.out.println(console_format.format(new Date( System.currentTimeMillis()))
+                    + " INFO: Twitter Stream Stopped.");
+        }
+    }
+
+    /**
+     * Set the tweet sListener for each generated tweets.
      * @param t object of a class that implements the TweetListener class.
      */
     public void setListener(TweetListener t) {
         this.listener = t;
     }
-    
-    /**
-     * Start reading the twitter stream.
-     */
-    public void enable() {
-        STOPPED = false;
-        listener.setRunningStatus(STOPPED);
-    }
-    
-    /**
-     * Stop reading the twitter stream.
-     */
-    public void disable() {
-        STOPPED = true;
-        listener.setRunningStatus(STOPPED);
-        System.out.println(sdf.format(new Date( System.currentTimeMillis())) + 
-                    " INFO: Twitter Stream Stopped.");
+
+    @Override
+    public void onStatus(Status status) {
+        if (runTime != 0 && System.currentTimeMillis() >= startTime + runTime) {
+            disable();
+            return;
+        }
+
+        // Notify listeners of new coordinates
+        if(status.getGeoLocation() != null) {
+            GeoLocation geo = status.getGeoLocation();
+            listener.newTweet(Double.toString(geo.getLatitude()),
+                    Double.toString(geo.getLongitude()), status.getText());
+        }
+
+        tweets_writer.write(new TweetEntity(DATA_SEPERATOR, status, null).toString());
+        tweets_writer.println();
+        users_writer.write(new UserEntity(DATA_SEPERATOR, status.getUser()).toString());
+        users_writer.println();
+        
+        // Stop the twitter stream if any error(s) while writing to file.
+        if(tweets_writer.checkError() || users_writer.checkError()) {
+            System.out.println(console_format.format(new Date(System.currentTimeMillis())) +
+                    " ERROR: Failed to write stream data to file.");
+            disable();
+        }
     }
 
     @Override
-    public void run() {
+    public void onDeletionNotice(StatusDeletionNotice sdn) {}
+
+    @Override
+    public void onTrackLimitationNotice(int i) {}
+
+    @Override
+    public void onScrubGeo(long l, long l1) {}
+
+    @Override
+    public void onStallWarning(StallWarning sw) {}
+
+    @Override
+    public void onException(Exception excptn) {
+        System.out.println(console_format.format(new Date( System.currentTimeMillis())) +
+                           " ERROR: Connection to Twitter public stream failed.");
         
-        if(keywords.isEmpty()) {
-            disable();
-            JDialog.setDefaultLookAndFeelDecorated(true);
-            JOptionPane.showMessageDialog(null, "Oops! You forgot to specify "
-                    + "minimum 1 keyword to search for.", "Warning", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-        
-        if(STOPPED) return;
-        
-        // Enter your consumer key and secret below
-        OAuthService service = new ServiceBuilder()
-                .provider(TwitterApi.class)
-                .apiKey(API_KEY)
-                .apiSecret(API_SECRET)
-                .build();
-
-            // Set your access token
-        Token accessToken = new Token(TOKEN_KEY, TOKEN_SECRET);
-
-        // Generate a request
-        System.out.println(sdf.format(new Date( System.currentTimeMillis())) + 
-                " INFO: Connecting to Twitter public stream");
-        OAuthRequest request = new OAuthRequest(Verb.POST, STREAM_URI);
-        request.addHeader("version", "HTTP/1.1");
-        request.addHeader("host", "stream.twitter.com");
-        request.setConnectionKeepAlive(true);
-        request.addHeader("user-agent", "Twitter Stream Reader");
-        String keys = keywords.get(0);
-        for(int i = 1; i < keywords.size(); i++) {
-            keys += ","+keywords.get(i);
-        }
-        request.addBodyParameter("track", keys);
-        service.signRequest(accessToken, request);
-        Response response;
-        try {
-            response = request.send();
-        } catch (OAuthConnectionException e) {
-            System.out.println(sdf.format(new Date( System.currentTimeMillis())) + 
-                    " ERROR: Connection to Twitter public stream failed.");
-            disable();
-            return;
-        }
-            
-        System.out.println(sdf.format(new Date( System.currentTimeMillis())) +
-                " INFO: Twitter Stream Started.");
-        
-        // Create a reader and a filewriterto read Twitter's stream
-        BufferedReader reader = new BufferedReader(new InputStreamReader(response.getStream()));
-        File output = null;
-        Writer writer = null;
-        
-        try {
-
-            // Used as offset for runtime, and unique file naming.
-            long startTime = System.currentTimeMillis();
-
-            // Create output file
-            if (logging) {
-                SimpleDateFormat f = new SimpleDateFormat("dd-MM-yy_HH-mm");
-                output = new File(System.getenv("TMP")+"\\Tweets_Coordinates_"+f.format(new Date(startTime)) + ".txt");
-                writer = new FileWriter(output);
-            }
-
-            String line;
-            JSONObject obj;
-            JSONArray coord;
-            int maxNrFailures = 2;
-            int readFailCount = 0;
-
-            // While people are tweeting
-            while ((line = reader.readLine()) != null) {
-                
-                /* Close writer and return after runtime ms or if stream is 
-                   manually stopped. */
-                if (STOPPED || (runtime != 0 && System.currentTimeMillis() >= startTime + runtime)) {
-                    System.out.println(sdf.format(new Date( System.currentTimeMillis())) + 
-                    " INFO: Twitter Stream Stopped.");
-                    break;
-                }
-                                
-                try {
-                    // Convert the tweet-string to JSON
-                    obj = new JSONObject(line);
-                
-                    if (!obj.isNull("geo")) {
-
-                        // Create the array with the coordinates, used for the event and output
-                        coord = obj.getJSONObject("geo").getJSONArray("coordinates");
-
-                        // Notify listeners of new coordinates
-                        //listener.newTweet(coord.toString(), obj.getString("text"));
-
-                        // Print the coordinates to an output file
-                        if (logging) {
-                            writer.write(coord.get(0).toString() + "," + coord.get(1).toString() + "\r\n");
-                            writer.flush();
-                        }
-                    }
-                } catch (JSONException e) {
-                    System.out.println(sdf.format(new Date( System.currentTimeMillis())) + 
-                            " ERROR: Failed to read stream.");
-                    if(++readFailCount >= maxNrFailures) {
-                        JDialog.setDefaultLookAndFeelDecorated(true);
-                        int choice = JOptionPane.showConfirmDialog(null, "Reading twitter "
-                                + "stream has failed "+maxNrFailures+" time(s). "
-                                + "Do you want to continue?", "Confirm",
-                            JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-                        if (choice == JOptionPane.NO_OPTION) {
-                            break;
-                        } else if (choice == JOptionPane.YES_OPTION || choice == JOptionPane.CLOSED_OPTION) {
-                            readFailCount = 0;
-                            choice = Integer.parseInt(JOptionPane.showInputDialog(null, 
-                                    "Do you want increase the number of tries? (0 = infinite)", 
-                                    "Question", JOptionPane.QUESTION_MESSAGE));
-                            if(choice == 0) {
-                                maxNrFailures = Integer.MAX_VALUE;
-                            } else {
-                               maxNrFailures = choice;
-                            }
-                        }
-                        
-                    }
-                }
-                
-            }
-        } catch (IOException e) {
-            System.out.println(sdf.format(new Date( System.currentTimeMillis())) + 
-                    " ERROR: Failed to create file or write stream to file.");
-        } finally {
-            if (logging) {
-                try {
-                    writer.close();
-                    //listener.loggingCompleted(output);
-                } catch (IOException ignore) {}
-            }
-            disable();
-        }
-        
+        disable();
     }
 }

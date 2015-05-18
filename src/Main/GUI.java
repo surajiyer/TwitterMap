@@ -22,7 +22,6 @@ import java.awt.PopupMenu;
 import java.awt.SystemTray;
 import java.awt.TrayIcon;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -150,7 +149,6 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         
         // Open all hidden dialogs at start
         keywordsDialog.setVisible(true);
-        setMarkerDialog.setVisible(true);
         
         // Adding support for minimizing window to system tray if supported.
         if (SystemTray.isSupported()) {
@@ -159,7 +157,9 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
             
             // Context menu items to system tray icon.
             final MenuItem exitItem = new MenuItem("Exit");
-            exitItem.addActionListener((evt1) -> this.exitPerformed(evt1));
+            exitItem.addActionListener((ActionEvent e) -> {
+                GUI.this.exitMenuItemActionPerformed(e);
+            });
             popup.add(exitItem);
             trayIcon.setPopupMenu(popup);
             trayIcon.addActionListener((ActionEvent e) -> {
@@ -189,6 +189,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         loadedKeywordsPanel = new javax.swing.JPanel();
         loadedKeywordsScrollPane = new javax.swing.JScrollPane();
         loadedKeywordsList = new javax.swing.JList();
+        translateKeywordsCheckBox = new javax.swing.JCheckBox();
         setMarkerDialog = new javax.swing.JDialog();
         enterLatitudeLabel = new javax.swing.JLabel();
         enterLongitudeLabel = new javax.swing.JLabel();
@@ -261,8 +262,12 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         );
         loadedKeywordsPanelLayout.setVerticalGroup(
             loadedKeywordsPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(loadedKeywordsScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 121, Short.MAX_VALUE)
+            .addComponent(loadedKeywordsScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 148, Short.MAX_VALUE)
         );
+
+        translateKeywordsCheckBox.setSelected(true);
+        translateKeywordsCheckBox.setText("Enable Keyword Translation");
+        translateKeywordsCheckBox.setToolTipText("<html>\nEnable/Disable translations of keywords to the following languages:<br>\nDutch, French, Chinese, Spanish, Hindi, Italian, Tamil, Russian, Arabic, <br>\nGerman, Japanese, Korean, Lithuanian, Vietnamese");
 
         javax.swing.GroupLayout keywordsDialogLayout = new javax.swing.GroupLayout(keywordsDialog.getContentPane());
         keywordsDialog.getContentPane().setLayout(keywordsDialogLayout);
@@ -273,9 +278,12 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
                 .addGroup(keywordsDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(loadedKeywordsPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(keywordsDialogLayout.createSequentialGroup()
-                        .addComponent(removeKeywordsButton)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(clearAllKeywordsButton)
+                        .addGroup(keywordsDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(translateKeywordsCheckBox)
+                            .addGroup(keywordsDialogLayout.createSequentialGroup()
+                                .addComponent(removeKeywordsButton)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(clearAllKeywordsButton)))
                         .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
@@ -288,6 +296,8 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
                 .addGroup(keywordsDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(removeKeywordsButton, javax.swing.GroupLayout.PREFERRED_SIZE, 34, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(clearAllKeywordsButton, javax.swing.GroupLayout.PREFERRED_SIZE, 34, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(translateKeywordsCheckBox)
                 .addContainerGap())
         );
 
@@ -374,11 +384,11 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         loadingErrorPanelLayout.setVerticalGroup(
             loadingErrorPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, loadingErrorPanelLayout.createSequentialGroup()
-                .addContainerGap(59, Short.MAX_VALUE)
+                .addContainerGap(66, Short.MAX_VALUE)
                 .addComponent(no_internet_icon_label)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGap(42, 42, 42)
                 .addComponent(tryAgainButton, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(183, 183, 183))
+                .addGap(95, 95, 95))
         );
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -393,6 +403,8 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
                 formWindowIconified(evt);
             }
         });
+
+        controlPanel.setMinimumSize(new java.awt.Dimension(490, 43));
 
         keywordPanel.setBackground(enterKeywordTextField.getBackground());
         keywordPanel.setBorder(javax.swing.BorderFactory.createEtchedBorder(new java.awt.Color(102, 102, 102), null));
@@ -547,13 +559,9 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         });
         fileMenu.add(keywordsMenuItem);
 
+        systrayCheckBox.setSelected(true);
         systrayCheckBox.setText("Minimize to system tray");
         systrayCheckBox.setToolTipText("Enable/Disable minimizing to system tray.");
-        systrayCheckBox.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                systrayCheckBoxActionPerformed(evt);
-            }
-        });
         fileMenu.add(systrayCheckBox);
         fileMenu.add(jSeparator1);
 
@@ -561,7 +569,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         exitMenuItem.setText("Exit");
         exitMenuItem.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                exitPerformed(evt);
+                exitMenuItemActionPerformed(evt);
             }
         });
         fileMenu.add(exitMenuItem);
@@ -647,7 +655,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(controlPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+            .addComponent(controlPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addComponent(jSeparator6)
             .addComponent(mapPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
@@ -655,8 +663,8 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addGap(5, 5, 5)
-                .addComponent(controlPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(5, 5, 5)
+                .addComponent(controlPanel, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jSeparator6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(0, 0, 0)
                 .addComponent(mapPanel, javax.swing.GroupLayout.PREFERRED_SIZE, 653, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -761,7 +769,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
 
     private void enterKeywordTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_enterKeywordTextFieldActionPerformed
         String keyword = enterKeywordTextField.getText();
-        bListener.addKeyword(keyword, true);
+        bListener.addKeyword(keyword, translateKeywordsCheckBox.isSelected());
         keywordsListModel.addElement(keyword);
         enterKeywordTextField.setText("");
     }//GEN-LAST:event_enterKeywordTextFieldActionPerformed
@@ -787,10 +795,6 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         }
     }//GEN-LAST:event_removeKeywordsButtonActionPerformed
 
-    private void systrayCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_systrayCheckBoxActionPerformed
-
-    }//GEN-LAST:event_systrayCheckBoxActionPerformed
-
     private void tryAgainButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tryAgainButtonActionPerformed
         browser.loadURL(map);
     }//GEN-LAST:event_tryAgainButtonActionPerformed
@@ -814,26 +818,27 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         } 
     }//GEN-LAST:event_startStopButtonPerformed
 
-    private void exitPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_exitPerformed
+    private void exitMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_exitMenuItemActionPerformed
         // Shut down the connection to twitter.
         bListener.stopTwitterStream();
-        
+
         // Exit the program.
         System.exit(0);
-    }//GEN-LAST:event_exitPerformed
+    }//GEN-LAST:event_exitMenuItemActionPerformed
 
     private void formWindowIconified(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowIconified
         if(systrayCheckBox.isSelected()) {
             // minimize the window
             this.setVisible(false);
             
+            // add tray icon
             try {
                 SystemTray.getSystemTray().add(trayIcon);
-            } catch (AWTException e) {
-                systrayCheckBox.setSelected(false);
+            } catch (AWTException ex) {
                 JDialog.setDefaultLookAndFeelDecorated(true);
                 JOptionPane.showMessageDialog(null, "Oops! Something went wrong. "
-                        + "The tray icon could not be added.", "Error", JOptionPane.ERROR_MESSAGE);
+                        + "Could not minimize to system tray.",
+                        "Error", JOptionPane.WARNING_MESSAGE);
             }
         }
     }//GEN-LAST:event_formWindowIconified
@@ -884,6 +889,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
     private javax.swing.JButton startStopButton2;
     private javax.swing.JCheckBoxMenuItem systrayCheckBox;
     private javax.swing.JSpinner timeSpinner;
+    private javax.swing.JCheckBox translateKeywordsCheckBox;
     private javax.swing.JButton tryAgainButton;
     // End of variables declaration//GEN-END:variables
 
