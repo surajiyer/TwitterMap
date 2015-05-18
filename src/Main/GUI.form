@@ -219,7 +219,7 @@
               </Group>
               <Group type="102" alignment="1" attributes="0">
                   <EmptySpace pref="395" max="32767" attributes="0"/>
-                  <Component id="jLabel1" min="-2" max="-2" attributes="0"/>
+                  <Component id="no_internet_icon_label" min="-2" max="-2" attributes="0"/>
                   <EmptySpace min="-2" pref="373" max="-2" attributes="0"/>
               </Group>
           </Group>
@@ -228,7 +228,7 @@
           <Group type="103" groupAlignment="0" attributes="0">
               <Group type="102" alignment="1" attributes="0">
                   <EmptySpace pref="59" max="32767" attributes="0"/>
-                  <Component id="jLabel1" min="-2" max="-2" attributes="0"/>
+                  <Component id="no_internet_icon_label" min="-2" max="-2" attributes="0"/>
                   <EmptySpace max="-2" attributes="0"/>
                   <Component id="tryAgainButton" min="-2" pref="40" max="-2" attributes="0"/>
                   <EmptySpace min="-2" pref="183" max="-2" attributes="0"/>
@@ -248,7 +248,7 @@
             <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="tryAgainButtonActionPerformed"/>
           </Events>
         </Component>
-        <Component class="javax.swing.JLabel" name="jLabel1">
+        <Component class="javax.swing.JLabel" name="no_internet_icon_label">
           <Properties>
             <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
               <Image iconType="3" name="/res/no_internet.png"/>
@@ -277,7 +277,6 @@
             </MenuItem>
             <MenuItem class="javax.swing.JCheckBoxMenuItem" name="systrayCheckBox">
               <Properties>
-                <Property name="selected" type="boolean" value="true"/>
                 <Property name="text" type="java.lang.String" value="Minimize to system tray"/>
                 <Property name="toolTipText" type="java.lang.String" value="Enable/Disable minimizing to system tray."/>
               </Properties>
@@ -295,7 +294,7 @@
                 <Property name="text" type="java.lang.String" value="Exit"/>
               </Properties>
               <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="exitMenuItemActionPerformed"/>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="exitPerformed"/>
               </Events>
             </MenuItem>
           </SubComponents>
@@ -390,7 +389,7 @@
                 <Property name="text" type="java.lang.String" value="Start"/>
               </Properties>
               <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="startStopButton1ActionPerformed"/>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="startStopButtonPerformed"/>
               </Events>
             </MenuItem>
           </SubComponents>
@@ -407,9 +406,10 @@
     <Property name="iconImage" type="java.awt.Image" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
       <Connection code="new ImageIcon(getClass().getResource(&quot;/res/twitter_icon.png&quot;)).getImage()" type="code"/>
     </Property>
-    <Property name="minimumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
-      <Dimension value="[400, 300]"/>
+    <Property name="minimumSize" type="java.awt.Dimension" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+      <Connection component="controlPanel" name="minimumSize" type="property"/>
     </Property>
+    <Property name="name" type="java.lang.String" value="TwitterMap" noResource="true"/>
     <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
       <Dimension value="[1280, 720]"/>
     </Property>
@@ -419,6 +419,9 @@
     <SyntheticProperty name="formSizePolicy" type="int" value="1"/>
     <SyntheticProperty name="generateCenter" type="boolean" value="false"/>
   </SyntheticProperties>
+  <Events>
+    <EventHandler event="windowIconified" listener="java.awt.event.WindowListener" parameters="java.awt.event.WindowEvent" handler="formWindowIconified"/>
+  </Events>
   <AuxValues>
     <AuxValue name="FormSettings_autoResourcing" type="java.lang.Integer" value="0"/>
     <AuxValue name="FormSettings_autoSetComponentName" type="java.lang.Boolean" value="false"/>
@@ -429,13 +432,12 @@
     <AuxValue name="FormSettings_listenerGenerationStyle" type="java.lang.Integer" value="0"/>
     <AuxValue name="FormSettings_variablesLocal" type="java.lang.Boolean" value="false"/>
     <AuxValue name="FormSettings_variablesModifier" type="java.lang.Integer" value="2"/>
-    <AuxValue name="designerSize" type="java.awt.Dimension" value="-84,-19,0,5,115,114,0,18,106,97,118,97,46,97,119,116,46,68,105,109,101,110,115,105,111,110,65,-114,-39,-41,-84,95,68,20,2,0,2,73,0,6,104,101,105,103,104,116,73,0,5,119,105,100,116,104,120,112,0,0,2,-43,0,0,5,0"/>
   </AuxValues>
 
   <Layout>
     <DimensionLayout dim="0">
       <Group type="103" groupAlignment="0" attributes="0">
-          <Component id="controlPanel" alignment="0" max="32767" attributes="0"/>
+          <Component id="controlPanel" alignment="0" max="-2" attributes="0"/>
           <Component id="jSeparator6" alignment="0" max="32767" attributes="0"/>
           <Component id="mapPanel" alignment="0" max="32767" attributes="0"/>
       </Group>
@@ -444,8 +446,8 @@
       <Group type="103" groupAlignment="0" attributes="0">
           <Group type="102" alignment="0" attributes="0">
               <EmptySpace min="-2" pref="5" max="-2" attributes="0"/>
-              <Component id="controlPanel" min="-2" pref="32" max="-2" attributes="0"/>
-              <EmptySpace max="-2" attributes="0"/>
+              <Component id="controlPanel" min="-2" max="-2" attributes="0"/>
+              <EmptySpace min="-2" pref="5" max="-2" attributes="0"/>
               <Component id="jSeparator6" min="-2" max="-2" attributes="0"/>
               <EmptySpace min="0" pref="0" max="-2" attributes="0"/>
               <Component id="mapPanel" min="-2" pref="653" max="-2" attributes="0"/>
@@ -473,7 +475,7 @@
                   <Group type="102" alignment="0" attributes="0">
                       <EmptySpace min="-2" pref="212" max="-2" attributes="0"/>
                       <Component id="runtimePanel" min="-2" pref="250" max="-2" attributes="0"/>
-                      <EmptySpace pref="754" max="32767" attributes="0"/>
+                      <EmptySpace pref="818" max="32767" attributes="0"/>
                   </Group>
               </Group>
           </Group>
@@ -481,19 +483,17 @@
         <DimensionLayout dim="1">
           <Group type="103" groupAlignment="0" attributes="0">
               <Group type="102" alignment="0" attributes="0">
-                  <Group type="103" groupAlignment="1" attributes="0">
-                      <Component id="startStopButton2" alignment="0" min="-2" pref="33" max="-2" attributes="0"/>
-                      <Group type="103" alignment="0" groupAlignment="1" max="-2" attributes="0">
-                          <Component id="displayMapButton" alignment="0" pref="0" max="32767" attributes="0"/>
-                          <Component id="keywordPanel" alignment="0" max="32767" attributes="0"/>
-                      </Group>
+                  <Group type="103" groupAlignment="1" max="-2" attributes="0">
+                      <Component id="displayMapButton" alignment="0" pref="0" max="32767" attributes="0"/>
+                      <Component id="keywordPanel" alignment="0" max="32767" attributes="0"/>
+                      <Component id="startStopButton2" max="32767" attributes="0"/>
                   </Group>
-                  <EmptySpace max="32767" attributes="0"/>
+                  <EmptySpace min="0" pref="0" max="-2" attributes="0"/>
               </Group>
               <Group type="103" rootIndex="1" groupAlignment="0" attributes="0">
                   <Group type="102" alignment="0" attributes="0">
                       <Component id="runtimePanel" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace min="0" pref="13" max="32767" attributes="0"/>
+                      <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
                   </Group>
               </Group>
           </Group>
@@ -538,7 +538,7 @@
           <SubComponents>
             <Component class="javax.swing.JTextField" name="enterKeywordTextField">
               <Properties>
-                <Property name="toolTipText" type="java.lang.String" value="Input the keywords to search for in tweets here and hit ENTER. Each&#xa;keyword entered will be strung together using commas. You can think&#xa;of commas as logical ORs, while spaces within keywords are equivalent&#xa;to logical ANDs (e.g. &#x2018;the twitter&#x2019; is the AND twitter, and &#x2018;the,twitter&#x2019; is the OR twitter).&#xa;"/>
+                <Property name="toolTipText" type="java.lang.String" value="&lt;html&gt;&#xa;Input the keywords to search for in tweets here and hit ENTER. Each keyword &lt;br&gt;&#xa;entered will be strung together using commas. You can think of commas as &lt;br&gt;&#xa;logical ORs, while spaces within keywords are equivalent to logical ANDs (e.g.&lt;br&gt;&#xa; &#x2018;the twitter&#x2019; is the AND twitter, and &#x2018;the,twitter&#x2019; is the OR twitter). &lt;br&gt;"/>
                 <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
                   <Border info="null"/>
                 </Property>
@@ -667,7 +667,7 @@
             <Property name="text" type="java.lang.String" value="Start"/>
           </Properties>
           <Events>
-            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="startStopButton2ActionPerformed"/>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="startStopButtonPerformed"/>
           </Events>
         </Component>
         <Component class="javax.swing.JButton" name="displayMapButton">

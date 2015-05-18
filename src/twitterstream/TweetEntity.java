@@ -21,6 +21,7 @@ public class TweetEntity {
     private String language;
     private long userID;
     private String keywords;
+    public static String CSV_FILE_HEADER;
     
     public TweetEntity(String dataSeperator, Status status, String keywords) {
         this(dataSeperator, status, status.getPlace(), 
@@ -52,6 +53,9 @@ public class TweetEntity {
         this.language = lang;
         this.userID = status.getUser().getId();
         this.keywords = keywords;
+        CSV_FILE_HEADER = "ID"+dataSeperator+"Retweet Count"+dataSeperator+"Favorite Count"
+                +"Text"+dataSeperator+"Creation time"+dataSeperator+"Country Code"+dataSeperator
+                +"Language Code"+dataSeperator+"User ID"+dataSeperator+"Keywords";
     }
     
     public TweetEntity(String dataSeperator, long id, long retweetid, int retweets, 
@@ -68,6 +72,9 @@ public class TweetEntity {
         this.language = language;
         this.userID = userId;
         this.keywords = keywords;
+        CSV_FILE_HEADER = "ID"+dataSeperator+"Retweet Count"+dataSeperator+"Favorite Count"
+                +"Text"+dataSeperator+"Creation time"+dataSeperator+"Country Code"+dataSeperator
+                +"Language Code"+dataSeperator+"User ID"+dataSeperator+"Keywords";
     }
     
     private String formatText(String text) {
@@ -120,8 +127,8 @@ public class TweetEntity {
     @Override
     public String toString() {
         final String s = dataSeperator;
-        return id + s + retweets + s + favourites + s + text + s + creationTime + s + 
-                countryCode + s + userID + s + keywords;
+        return id + s + retweets + s + favourites + s + text + s + creationTime + s
+                + language + s + countryCode + s + userID + s + keywords;
     }
     
     @Override

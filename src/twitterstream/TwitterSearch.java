@@ -137,66 +137,74 @@ public class TwitterSearch implements StatusListener {
      * Start reading the twitter stream.
      */
     public void enable() {
+        
+        if(!ENABLED) {
+            // Check if at least 1 keyword exists.
+            if(keywords.isEmpty()) {
+                JDialog.setDefaultLookAndFeelDecorated(true);
+                JOptionPane.showMessageDialog(null, "Oops! You forgot to specify "
+                                              + "minimum 1 keyword to search for.", "Warning", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
 
-        // Check if at least 1 keyword exists.
-        if(keywords.isEmpty()) {
-            JDialog.setDefaultLookAndFeelDecorated(true);
-            JOptionPane.showMessageDialog(null, "Oops! You forgot to specify "
-                                          + "minimum 1 keyword to search for.", "Warning", JOptionPane.WARNING_MESSAGE);
-            return;
+            // Create new files to write the data to.
+            startTime = System.currentTimeMillis();
+            tweets_file = new File(System.getenv("TMP")+"\\Tweets_"+
+                                   file_name_format.format(new Date(startTime)) + ".csv");
+            users_file = new File(System.getenv("TMP")+"\\Users_"+
+                                  file_name_format.format(new Date(startTime)) + ".csv");
+
+            try {
+                tweets_writer = new PrintWriter(tweets_file);
+                tweets_writer.write(TweetEntity.CSV_FILE_HEADER);
+                tweets_writer.println();
+                users_writer = new PrintWriter(users_file);
+                users_writer.write(UserEntity.CSV_FILE_HEADER);
+                users_writer.println();
+            } catch (IOException e) {
+                System.out.println(console_format.format(new Date( System.currentTimeMillis())) +
+                                   " ERROR: Failed to create files to write data to.");
+                tweets_writer.close();
+                users_writer.close();
+                return;
+            }
+
+            // Create a new streaming filter query (i.e. keywords to track, locations etc.)
+            FilterQuery fq = new FilterQuery();
+            String[] keys = keywords.keySet().toArray(new String[0]);
+            for(List<String> keyList : keywords.values()) {
+                if(keyList == null) continue;
+                keys = ArrayUtils.addAll(keys, keyList.toArray(new String[0]));
+            }
+            fq.track(keys);
+
+            // Start the twitter stream.
+            twitterStream.filter(fq);
+
+            // Set twitter stream running status.
+            listener.setRunningStatus(ENABLED = true);
+            System.out.println(console_format.format(new Date(startTime)) + " INFO: Twitter Stream Started."); 
         }
-
-        // Create new files to write the data to.
-        startTime = System.currentTimeMillis();
-        tweets_file = new File(System.getenv("TMP")+"\\Tweets_"+
-                               file_name_format.format(new Date(startTime)) + ".csv");
-        users_file = new File(System.getenv("TMP")+"\\Users_"+
-                              file_name_format.format(new Date(startTime)) + ".csv");
-
-        try {
-            tweets_writer = new PrintWriter(tweets_file);
-            users_writer = new PrintWriter(users_file);
-        } catch (IOException e) {
-            System.out.println(console_format.format(new Date( System.currentTimeMillis())) +
-                               " ERROR: Failed to create files to write data to.");
-            tweets_writer.close();
-            users_writer.close();
-            return;
-        }
-
-        // Create a new streaming filter query (i.e. keywords to track, locations etc.)
-        FilterQuery fq = new FilterQuery();
-        String[] keys = keywords.keySet().toArray(new String[0]);
-        for(List<String> keyList : keywords.values()) {
-            if(keyList == null) continue;
-            keys = ArrayUtils.addAll(keys, keyList.toArray(new String[0]));
-        }
-        fq.track(keys);
-
-        // Start the twitter stream.
-        twitterStream.filter(fq);
-
-        // Set twitter stream running status.
-        listener.setRunningStatus(ENABLED = true);
-        System.out.println(console_format.format(new Date(startTime)) + " INFO: Twitter Stream Started.");
     }
 
     /**
      * Stop reading the twitter stream.
      */
     public void disable() {
-
-        // Stop the twitter stream.
-        twitterStream.shutdown();
-
-        // close the file output streams.
-        tweets_writer.close();
-        users_writer.close();
-        listener.loggingCompleted(tweets_file, users_file);
-
-        // Set twitter stream running status.
-        listener.setRunningStatus(ENABLED = false);
-        System.out.println(console_format.format(new Date( System.currentTimeMillis())) + " INFO: Twitter Stream Stopped.");
+        
+        if(ENABLED) {
+            // Stop the twitter stream.
+            twitterStream.shutdown();
+            
+            // close the file output streams.
+            tweets_writer.close();
+            users_writer.close();
+            listener.loggingCompleted(tweets_file, users_file);
+            
+            // Set twitter stream running status.
+            listener.setRunningStatus(ENABLED = false);
+            System.out.println(console_format.format(new Date( System.currentTimeMillis())) + " INFO: Twitter Stream Stopped.");
+        }
     }
 
     /**
@@ -250,6 +258,7 @@ public class TwitterSearch implements StatusListener {
     public void onException(Exception excptn) {
         System.out.println(console_format.format(new Date( System.currentTimeMillis())) +
                            " ERROR: Connection to Twitter public stream failed.");
+        
         disable();
     }
 }

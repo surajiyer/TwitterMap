@@ -15,6 +15,7 @@ public class UserEntity {
     private final int followers;
     private final int favourites;
     private final int friends;
+    public static String CSV_FILE_HEADER;
     
     public UserEntity(String dataSeperator, User user) {
         this(dataSeperator, user.getId(), user.getName(), 
@@ -30,6 +31,8 @@ public class UserEntity {
         this.followers = followers;
         this.favourites = favourites;
         this.friends = friends;
+        CSV_FILE_HEADER = "ID"+dataSeperator+"Username"+dataSeperator+"Number of followers"
+                +dataSeperator+"Favourite Count"+dataSeperator+"Number of friends";
     }
     
     private String formatText(String text) {
