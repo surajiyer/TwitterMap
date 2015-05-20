@@ -8,7 +8,9 @@ package twitterstream;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.sql.SQLException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -29,6 +31,7 @@ import twitter4j.TwitterStream;
 import twitter4j.TwitterStreamFactory;
 import twitter4j.conf.Configuration;
 import twitter4j.conf.ConfigurationBuilder;
+import utils.MySQL4j;
 import static utils.translate.translate_all;
 
 /**
@@ -37,16 +40,17 @@ import static utils.translate.translate_all;
  */
 public class TwitterFilterStream implements StatusListener {
 
-    // Generate a twitter stream object to connect to the streaming API.
+    /** Generate a twitter stream object to connect to the streaming API. */
     TwitterStream twitterStream;
 
     /** Date formats for file naming and console output. */
     private final SimpleDateFormat console_format, file_name_format;
 
     /** List of keywords to search for. */
-    private final Map<String, List<String>> keywords;
+    private final ArrayList<String> keywords;
 
-    private final String DATA_SEPERATOR = ";&;";
+    /** File output column data delimeter. */
+    private final String DATA_SEPERATOR = ";";
 
     /** A tweet arrival event sListener */
     private TweetListener listener;
@@ -60,14 +64,22 @@ public class TwitterFilterStream implements StatusListener {
     /** Writer objects to write the twitter stream data to file. */
     File tweets_file, users_file;
     PrintWriter tweets_writer, users_writer;
+    
+    /** MySQL object that can connect to a MySQL database and execute SQL queries. */
+    private MySQL4j twitterDatabase;
+    
+    /**  */
+    private boolean translate;
 
     public TwitterFilterStream() {
         twitterStream = new TwitterStreamFactory(getAuth()).getInstance();
         twitterStream.addListener(this);
-        keywords = new HashMap<>();
+        keywords = new ArrayList<>();
         console_format = new SimpleDateFormat("hh:mm:ss");
         file_name_format = new SimpleDateFormat("dd-MM-yy_HH-mm");
         ENABLED = false;
+        twitterDatabase = null;
+        translate = false;
     }
 
     /** Gets configuration builder for authentication */
@@ -84,22 +96,9 @@ public class TwitterFilterStream implements StatusListener {
     /**
      * Add keyword to search for in twitter stream.
      * @param keyword the keyword to search for.
-     * @param translate translate keywords to {Dutch, French, Chinese, Spanish, 
-     * Hindi, Italian, Tamil, Russian, Arabic, German, Japanese, Korean, 
-     * Lithuanian, Vietnamese} if true to expand search.
      */
-    public void addKeyword(String keyword, boolean translate) {
-        if(translate)
-            try {
-                keywords.put(keyword, Arrays.asList(translate_all(keyword)));
-            } catch (Exception ex) {
-                keywords.put(keyword, null);
-                JDialog.setDefaultLookAndFeelDecorated(true);
-                JOptionPane.showMessageDialog(null, "Could not translate the keyword.", "Warning", JOptionPane.WARNING_MESSAGE);
-            }
-        else {
-            keywords.put(keyword, null);
-        }
+    public void addKeyword(String keyword) {
+        keywords.add(keyword);
     }
 
     /**
@@ -123,6 +122,24 @@ public class TwitterFilterStream implements StatusListener {
      */
     public void setRuntime(long ms) {
         runTime = ms;
+    }
+    
+    /**
+     * Enable/Disable keyword translation to expand search.
+     * @param translate translate keywords to {Dutch, French, Chinese, Spanish, 
+     * Hindi, Italian, Tamil, Russian, Arabic, German, Japanese, Korean, 
+     * Lithuanian, Vietnamese} if true to expand search.
+     */
+    public void enableTranslate(boolean translate) {
+        this.translate = translate;
+    }
+    
+    /**
+     * Set whether you want to write the output to a MySQL database or not.
+     */
+    public void useDatabase() {
+        twitterDatabase = new MySQL4j("s139662", "rvH6X6a7rN9bJtUD",//32ZfbSTRaFDqsrWw 
+                "jdbc:mysql://surajiyer96.synology.me:3306/twitter_filter_stream");
     }
     
     /**
@@ -156,10 +173,10 @@ public class TwitterFilterStream implements StatusListener {
 
             try {
                 tweets_writer = new PrintWriter(tweets_file);
-                tweets_writer.write(TweetEntity.CSV_FILE_HEADER);
+                tweets_writer.write(TweetEntity.getCSVHeader(DATA_SEPERATOR));
                 tweets_writer.println();
                 users_writer = new PrintWriter(users_file);
-                users_writer.write(UserEntity.CSV_FILE_HEADER);
+                users_writer.write(UserEntity.getCSVHeader(DATA_SEPERATOR));
                 users_writer.println();
             } catch (IOException e) {
                 System.out.println(console_format.format(new Date( System.currentTimeMillis())) +
@@ -168,20 +185,30 @@ public class TwitterFilterStream implements StatusListener {
                 users_writer.close();
                 return;
             }
+            
+            if(twitterDatabase != null) {
+                try {
+                    twitterDatabase.connect();
+                } catch (Exception ex) {
+                    System.out.println(console_format.format(new Date( System.currentTimeMillis())) +
+                                   " ERROR: Failed to connect to the MySQL database.");
+                    return;
+                }
+            }
 
             // Create a new streaming filter query (i.e. keywords to track, locations etc.)
             FilterQuery fq = new FilterQuery();
-            String[] keys = keywords.keySet().toArray(new String[0]);
-            for(String key : keys) {
-                try {
-                    keys = ArrayUtils.addAll(keys, translate_all(key));
-                } catch (Exception ex) {
-                    Logger.getLogger(TwitterFilterStream.class.getName()).log(Level.SEVERE, null, ex);
+            String[] keys = keywords.toArray(new String[0]);
+            if(translate) {
+                for(String key : keys) {
+                    try {
+                        keys = ArrayUtils.addAll(keys, translate_all(key));
+                    } catch (Exception ex) {
+                        JDialog.setDefaultLookAndFeelDecorated(true);
+                        JOptionPane.showMessageDialog(null, "Could not translate keyword '"+key+"'.", 
+                                "Warning", JOptionPane.WARNING_MESSAGE);
+                    }
                 }
-            }
-            for(List<String> keyList : keywords.values()) {
-                if(keyList == null) continue;
-                keys = ArrayUtils.addAll(keys, keyList.toArray(new String[0]));
             }
             fq.track(keys);
 
@@ -209,9 +236,18 @@ public class TwitterFilterStream implements StatusListener {
             users_writer.close();
             listener.loggingCompleted(tweets_file, users_file);
             
+            if(twitterDatabase != null) {
+                try {
+                    twitterDatabase.close();
+                } catch (SQLException ex) {
+                    System.out.println(console_format.format(new Date( System.currentTimeMillis())) 
+                            + " ERROR: Failed to terminate the connection to the MySQL database properly.");
+                }
+            }
+            
             // Set twitter stream running status.
             listener.setRunningStatus(ENABLED = false);
-            System.out.println(console_format.format(new Date( System.currentTimeMillis()))
+            System.out.println(console_format.format(new Date( System.currentTimeMillis())) 
                     + " INFO: Twitter Stream Stopped.");
         }
     }
@@ -237,8 +273,26 @@ public class TwitterFilterStream implements StatusListener {
             listener.newTweet(Double.toString(geo.getLatitude()),
                     Double.toString(geo.getLongitude()), status.getText());
         }
+        
+        TweetEntity te = new TweetEntity(DATA_SEPERATOR, status, null);
+        
+        if(twitterDatabase != null) {
+            try {
+                twitterDatabase.executeSQLQuery("INSERT tweets VALUES(" + te.getID() 
+                        + "," + te.getRetweetID() + "," + te.getRetweetCount() + "," + te.getFavCount()
+                        + ",'" + te.getText() + "'," + te.getTime() + ",'" + te.getCountry() + "','"
+                        + te.getLanguage() + "'," + te.getUserID() + "," + (te.getKeywords() == null
+                        ? "NULL" : "'"+te.getKeywords()+"'") + ")");
+            } catch (SQLException ex) {
+                System.out.println(console_format.format(new Date( System.currentTimeMillis())) 
+                            + " ERROR: Failed to write the twitter data to the MySQL"
+                            + " database properly.");
+                disable();
+                return;
+            }
+        }
 
-        tweets_writer.write(new TweetEntity(DATA_SEPERATOR, status, null).toString());
+        tweets_writer.write(te.toString());
         tweets_writer.println();
         users_writer.write(new UserEntity(DATA_SEPERATOR, status.getUser()).toString());
         users_writer.println();

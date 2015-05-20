@@ -53,7 +53,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
     /** Browser object from JxBrowser library */
     private final Browser browser;
     private final BrowserView browserView;
-    private final BrowserListener bListener;
+    private final GUIListener guiListener;
     
     /** Image icons for the start/stop button. */
     private ImageIcon start, stop;
@@ -69,7 +69,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
      * Creates new form Map
      * @param bl browser listener object
      */
-    public GUI(BrowserListener bl) {
+    public GUI(GUIListener bl) {
         // Load certain necessary resources.
         map = getClass().getResource("/res/map.html").toString();
         start = createImageIcon("play_16.png");
@@ -80,7 +80,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         // Create a browser, its associated UI view object and the browser listener.
         browser = new Browser();
         browserView = new BrowserView(browser);
-        bListener = bl;
+        guiListener = bl;
         browser.addLoadListener(new LoadListener() {
 
             @Override
@@ -100,7 +100,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
             @Override
             public void onFailLoadingFrame(FailLoadingEvent fle) {
                 //if (fle.isMainFrame()) {
-                    bListener.onBrowserLoadFailed();
+                    guiListener.onBrowserLoadFailed();
                     mapPanel.remove(browserView);
                     mapPanel.add(loadingErrorPanel, BorderLayout.CENTER);
                     revalidate();
@@ -265,9 +265,13 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
             .addComponent(loadedKeywordsScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 148, Short.MAX_VALUE)
         );
 
-        translateKeywordsCheckBox.setSelected(true);
         translateKeywordsCheckBox.setText("Enable Keyword Translation");
         translateKeywordsCheckBox.setToolTipText("<html>\nEnable/Disable translations of keywords to the following languages:<br>\nDutch, French, Chinese, Spanish, Hindi, Italian, Tamil, Russian, Arabic, <br>\nGerman, Japanese, Korean, Lithuanian, Vietnamese");
+        translateKeywordsCheckBox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                translateKeywordsCheckBoxActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout keywordsDialogLayout = new javax.swing.GroupLayout(keywordsDialog.getContentPane());
         keywordsDialog.getContentPane().setLayout(keywordsDialogLayout);
@@ -728,7 +732,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
                     "Warning", JOptionPane.WARNING_MESSAGE);
             return;
         }
-        bListener.setRunningTime((long)l*timeScale);
+        guiListener.setRunningTime((long)l*timeScale);
         enterRunTextField.setText("");
         String s = enterRunTextField.getToolTipText();
         s = s.substring(0, s.lastIndexOf(":")+2);
@@ -746,7 +750,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
 
     private void clearAllKeywordsButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_clearAllKeywordsButtonActionPerformed
         for(int i = keywordsListModel.getSize()-1; i >=0; i--) {
-            bListener.removeKeyword(keywordsListModel.remove(i));
+            guiListener.removeKeyword(keywordsListModel.remove(i));
         }
     }//GEN-LAST:event_clearAllKeywordsButtonActionPerformed
 
@@ -769,7 +773,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
 
     private void enterKeywordTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_enterKeywordTextFieldActionPerformed
         String keyword = enterKeywordTextField.getText();
-        bListener.addKeyword(keyword, translateKeywordsCheckBox.isSelected());
+        guiListener.addKeyword(keyword);
         keywordsListModel.addElement(keyword);
         enterKeywordTextField.setText("");
     }//GEN-LAST:event_enterKeywordTextFieldActionPerformed
@@ -791,7 +795,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
     private void removeKeywordsButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_removeKeywordsButtonActionPerformed
         int[] selectedIndices = loadedKeywordsList.getSelectedIndices();
         for(int i = selectedIndices.length-1; i >= 0; i--) {
-            bListener.removeKeyword(keywordsListModel.remove(selectedIndices[i]));
+            guiListener.removeKeyword(keywordsListModel.remove(selectedIndices[i]));
         }
     }//GEN-LAST:event_removeKeywordsButtonActionPerformed
 
@@ -809,18 +813,18 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         // Start/Stop the twitter stream.
         switch (startStopButton1.getText()) {
             case "Stop":
-                bListener.stopTwitterStream();
+                guiListener.stopTwitterStream();
                 break;
             case "Start":
-                if(isConnected())
-                    bListener.startTwitterStream();
+                //if(isConnected())
+                    guiListener.startTwitterStream();
                 break;
         } 
     }//GEN-LAST:event_startStopButtonPerformed
 
     private void exitMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_exitMenuItemActionPerformed
         // Shut down the connection to twitter.
-        bListener.stopTwitterStream();
+        guiListener.stopTwitterStream();
 
         // Exit the program.
         System.exit(0);
@@ -842,6 +846,10 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
             }
         }
     }//GEN-LAST:event_formWindowIconified
+
+    private void translateKeywordsCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_translateKeywordsCheckBoxActionPerformed
+        guiListener.translate(translateKeywordsCheckBox.isSelected());
+    }//GEN-LAST:event_translateKeywordsCheckBoxActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton clearAllKeywordsButton;

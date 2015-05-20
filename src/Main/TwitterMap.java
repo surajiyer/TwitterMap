@@ -6,7 +6,7 @@ import twitterstream.TwitterFilterStream;
  *
  * @author s121735
  */
-public class TwitterMap implements BrowserListener {
+public class TwitterMap implements GUIListener {
     
     private final GUI gui;
     private final TwitterFilterStream tStream;
@@ -21,6 +21,7 @@ public class TwitterMap implements BrowserListener {
     public void run() {
         // Set the twitter stream parameters
         tStream.setRuntime(0); // Runtime in ms; 0 = unlimited.
+        tStream.useDatabase();
         tStream.setListener(gui);
         
         // Show the GUI
@@ -47,8 +48,8 @@ public class TwitterMap implements BrowserListener {
     }
 
     @Override
-    public void addKeyword(String s, boolean translate) {
-        tStream.addKeyword(s, translate);
+    public void addKeyword(String s) {
+        tStream.addKeyword(s);
     }
 
     @Override
@@ -64,6 +65,11 @@ public class TwitterMap implements BrowserListener {
     @Override
     public void removeKeyword(String s) {
         tStream.removeKeyword(s);
+    }
+
+    @Override
+    public void translate(boolean translate) {
+        tStream.enableTranslate(translate);
     }
     
 }

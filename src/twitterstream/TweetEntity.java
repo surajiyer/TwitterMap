@@ -10,76 +10,41 @@ import twitter4j.Status;
  */
 public class TweetEntity {
     
-    private String dataSeperator = ";&;";
+    private String dataSeperator = ";";
     private long id;
-    private long retweetid;
-    private int retweets;
-    private int favourites;
+    private long retweet_id;
+    private int retweet_count;
+    private int fav_count;
     private String text;
-    private long creationTime;
-    private String countryCode;
-    private String language;
-    private long userID;
+    private long creation_time;
+    private String country_code;
+    private String language_code;
+    private long user_id;
     private String keywords;
-    public static String CSV_FILE_HEADER;
     
     public TweetEntity(String dataSeperator, Status status, String keywords) {
-        this(dataSeperator, status, status.getPlace(), 
-                status.getRetweetedStatus(), keywords);
+        this(dataSeperator, status, status.getPlace(), status.getRetweetedStatus(), keywords);
     }
     
     private TweetEntity(String dataSeperator, Status status, Place place, 
             Status retweet, String keywords) {
-        String countrycode = "";
-        if (place != null) {
-            countrycode = place.getCountryCode();
-        }
-        long retweetStatusID = -1;
-        if (retweet != null) {
-            retweetStatusID = retweet.getId();
-        }
-        String lang = "";
-        if (status.getLang() != null) {
-            lang = status.getLang();
-        }
         this.dataSeperator = dataSeperator;
         this.id = status.getId();
-        this.retweetid = retweetStatusID;
-        this.retweets = status.getRetweetCount();
-        this.favourites = status.getFavoriteCount();
+        this.retweet_id = retweet == null ? -1 : retweet.getId();
+        this.retweet_count = status.getRetweetCount();
+        this.fav_count = status.getFavoriteCount();
         this.text = formatText(status.getText());
-        this.creationTime = status.getCreatedAt().getTime();
-        this.countryCode = countrycode;
-        this.language = lang;
-        this.userID = status.getUser().getId();
-        this.keywords = keywords;
-        CSV_FILE_HEADER = "ID"+dataSeperator+"Retweet Count"+dataSeperator+"Favorite Count"
-                +"Text"+dataSeperator+"Creation time"+dataSeperator+"Country Code"+dataSeperator
-                +"Language Code"+dataSeperator+"User ID"+dataSeperator+"Keywords";
-    }
-    
-    public TweetEntity(String dataSeperator, long id, long retweetid, int retweets, 
-            int favourites, String text, long time, String country, 
-            String language, long userId, String keywords) {
-        this.dataSeperator = dataSeperator;
-        this.id = id;
-        this.retweetid = retweetid;
-        this.retweets = retweets;
-        this.favourites = favourites;
-        this.text = formatText(text);
-        this.creationTime = time;
-        this.countryCode = country;
-        this.language = language;
-        this.userID = userId;
-        this.keywords = keywords;
-        CSV_FILE_HEADER = "ID"+dataSeperator+"Retweet Count"+dataSeperator+"Favorite Count"
-                +"Text"+dataSeperator+"Creation time"+dataSeperator+"Country Code"+dataSeperator
-                +"Language Code"+dataSeperator+"User ID"+dataSeperator+"Keywords";
+        this.creation_time = status.getCreatedAt().getTime();
+        this.country_code = place == null ? "und" : place.getCountryCode();
+        this.language_code = status.getLang() == null ? "und" : status.getLang();
+        this.user_id = status.getUser().getId();
+        this.keywords = keywords == null ? "NULL" : keywords;
     }
     
     private String formatText(String text) {
         text = text.replace("\n", " ");
         text = text.replace("  ", " ");
+        text = text.replace("'", "\'");
         
         return text;
     }
@@ -89,15 +54,15 @@ public class TweetEntity {
     }
     
     public final long getRetweetID() {
-        return retweetid;
+        return retweet_id;
     }
     
-    public final int getRetweets() {
-        return retweets;
+    public final int getRetweetCount() {
+        return retweet_count;
     }
     
-    public final int getFavourites() {
-        return favourites;
+    public final int getFavCount() {
+        return fav_count;
     }
     
     public final String getText() {
@@ -105,30 +70,38 @@ public class TweetEntity {
     }
     
     public final long getTime() {
-        return creationTime;
+        return creation_time;
     }
     
     public final String getCountry() {
-        return countryCode;
+        return country_code;
     }
     
     public final String getLanguage() {
-        return language;
+        return language_code;
     }
     
     public final long getUserID() {
-        return userID;
+        return user_id;
     }
     
     public final String getKeywords() {
         return keywords;
     }
     
+    public static final String getCSVHeader(String dataSeperator) {
+        final String s = dataSeperator;
+        return "ID"+s+"Retweet ID"+s+"Retweet Count"+s+"Favorite Count"+s+"Text"
+                +s+"Creation time"+s+"Country Code"+s+"Language Code"+s+"User ID"
+                +s+"Keywords";
+    }
+    
     @Override
     public String toString() {
         final String s = dataSeperator;
-        return id + s + retweets + s + favourites + s + text + s + creationTime + s
-                + language + s + countryCode + s + userID + s + keywords;
+        return id + s + retweet_id + s + retweet_count + s + fav_count + s + text + s
+                + creation_time + s + language_code + s + country_code + s + user_id + s 
+                + keywords;
     }
     
     @Override
@@ -145,12 +118,12 @@ public class TweetEntity {
     public int hashCode() {
         int hash = 7;
         hash = 37 * hash + (int) (this.id ^ (this.id >>> 32));
-        hash = 37 * hash + this.retweets;
-        hash = 37 * hash + this.favourites;
+        hash = 37 * hash + this.retweet_count;
+        hash = 37 * hash + this.fav_count;
         hash = 37 * hash + Objects.hashCode(this.text);
-        hash = 37 * hash + (int) (this.creationTime ^ (this.creationTime >>> 32));
-        hash = 37 * hash + Objects.hashCode(this.countryCode);
-        hash = 37 * hash + (int) (this.userID ^ (this.userID >>> 32));
+        hash = 37 * hash + (int) (this.creation_time ^ (this.creation_time >>> 32));
+        hash = 37 * hash + Objects.hashCode(this.country_code);
+        hash = 37 * hash + (int) (this.user_id ^ (this.user_id >>> 32));
         hash = 37 * hash + Objects.hashCode(this.keywords);
         return hash;
     }

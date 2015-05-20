@@ -123,10 +123,12 @@
         </Container>
         <Component class="javax.swing.JCheckBox" name="translateKeywordsCheckBox">
           <Properties>
-            <Property name="selected" type="boolean" value="true"/>
             <Property name="text" type="java.lang.String" value="Enable Keyword Translation"/>
             <Property name="toolTipText" type="java.lang.String" value="&lt;html&gt;&#xa;Enable/Disable translations of keywords to the following languages:&lt;br&gt;&#xa;Dutch, French, Chinese, Spanish, Hindi, Italian, Tamil, Russian, Arabic, &lt;br&gt;&#xa;German, Japanese, Korean, Lithuanian, Vietnamese"/>
           </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="translateKeywordsCheckBoxActionPerformed"/>
+          </Events>
         </Component>
       </SubComponents>
     </Container>

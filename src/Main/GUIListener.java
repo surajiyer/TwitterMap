@@ -10,7 +10,7 @@ package Main;
  *
  * @author s139662
  */
-public interface BrowserListener {
+public interface GUIListener {
     
     /**
      * When browser fails to load Google maps correctly, it must shut down
@@ -29,11 +29,10 @@ public interface BrowserListener {
     public void stopTwitterStream();
     
     /**
-     * Add a new keyword to 
-     * @param s 
-     * @param translate 
+     * Add a new keyword to track from the twitter filter stream.
+     * @param s keyword to track
      */
-    public void addKeyword(String s, boolean translate);
+    public void addKeyword(String s);
     
     /**
      * Remove specific keyword.
@@ -51,4 +50,10 @@ public interface BrowserListener {
      * @param t the running time in milliseconds.
      */
     public void setRunningTime(long t);
+    
+    /**
+     * Enable/Disable translation of keywords.
+     * @param translate 
+     */
+    public void translate(boolean translate);
 }
