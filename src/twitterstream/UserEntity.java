@@ -11,30 +11,30 @@ public class UserEntity {
     
     private String dataSeperator = ";";
     private final long id;
-    private final String name;
-    private final int followers;
-    private final int favourites;
-    private final int friends;
+    private final String username;
+    private final int nr_of_followers;
+    private final int fav_count;
+    private final int nr_of_friends;
     
     public UserEntity(String dataSeperator, User user) {
-        this(dataSeperator, user.getId(), user.getName(), 
-                user.getFollowersCount(), user.getFavouritesCount(),
-                user.getFriendsCount());
+        this(dataSeperator, user.getId(), user.getName(), user.getFollowersCount(),
+                user.getFavouritesCount(), user.getFriendsCount());
     }
     
     public UserEntity(String dataSeperator, long id, String name, 
             int followers, int favourites, int friends) {
         this.dataSeperator = dataSeperator;
         this.id = id;
-        this.name = formatText(name);
-        this.followers = followers;
-        this.favourites = favourites;
-        this.friends = friends;
+        this.username = formatText(name);
+        this.nr_of_followers = followers;
+        this.fav_count = favourites;
+        this.nr_of_friends = friends;
     }
     
     private String formatText(String text) {
         text = text.replace("\n", " ");
         text = text.replace("  ", " ");
+        text = text.replace("'", "\'");
         
         return text;
     }
@@ -44,19 +44,19 @@ public class UserEntity {
     }
     
     public final String getName() {
-        return name;
+        return username;
     }
     
     public final int getFollowers() {
-        return followers;
+        return nr_of_followers;
     }
     
     public final int getFavourites() {
-        return favourites;
+        return fav_count;
     }
     
     public final int getFriends() {
-        return friends;
+        return nr_of_friends;
     }
     
     public static final String getCSVHeader(String dataSeperator) {
@@ -68,7 +68,7 @@ public class UserEntity {
     @Override
     public String toString() {
         final String s = dataSeperator;
-        return id + s + name + s + followers + s + favourites + s + friends;
+        return id + s + username + s + nr_of_followers + s + fav_count + s + nr_of_friends;
     }
     
     @Override
@@ -85,10 +85,10 @@ public class UserEntity {
     public int hashCode() {
         int hash = 7;
         hash = 59 * hash + (int) (this.id ^ (this.id >>> 32));
-        hash = 59 * hash + Objects.hashCode(this.name);
-        hash = 59 * hash + this.followers;
-        hash = 59 * hash + this.favourites;
-        hash = 59 * hash + this.friends;
+        hash = 59 * hash + Objects.hashCode(this.username);
+        hash = 59 * hash + this.nr_of_followers;
+        hash = 59 * hash + this.fav_count;
+        hash = 59 * hash + this.nr_of_friends;
         return hash;
     }
 

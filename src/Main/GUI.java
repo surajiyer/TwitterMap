@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.text.ParseException;
+import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.DefaultListModel;
@@ -37,6 +38,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
+import javax.swing.table.DefaultTableModel;
 import twitterstream.TweetListener;
 import utils.HintTextField;
 import static utils.UIutils.createImageIcon;
@@ -76,7 +78,23 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         stop = createImageIcon("stop_16.png");
         popup = new PopupMenu();
         trayIcon = new TrayIcon(createImageIcon("map_16.png").getImage());
-        
+        languageCodes.put("English", "en");
+        languageCodes.put("Dutch", "nl");
+        languageCodes.put("German", "de");
+        languageCodes.put("French", "fr");
+        languageCodes.put("Spanish", "es");
+        languageCodes.put("Italian", "it");
+        languageCodes.put("Russian", "ru");
+        languageCodes.put("Lithuanian", "lt");
+        languageCodes.put("Hindi", "hi");
+        languageCodes.put("Tamil", "ta");
+        languageCodes.put("Arabic", "ar");
+        languageCodes.put("Chinese", "zh");
+        languageCodes.put("Japanese", "ja");
+        languageCodes.put("Korean", "ko");
+        languageCodes.put("Vietnamese", "vi");
+
+
         // Create a browser, its associated UI view object and the browser listener.
         browser = new Browser();
         browserView = new BrowserView(browser);
@@ -189,7 +207,12 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         loadedKeywordsPanel = new javax.swing.JPanel();
         loadedKeywordsScrollPane = new javax.swing.JScrollPane();
         loadedKeywordsList = new javax.swing.JList();
-        translateKeywordsCheckBox = new javax.swing.JCheckBox();
+        langSelectionComboBox = new javax.swing.JComboBox();
+        addLangButton = new javax.swing.JButton();
+        selectLangPanel = new javax.swing.JPanel();
+        selectedLangScrollPane = new javax.swing.JScrollPane();
+        selectedLangTable = new javax.swing.JTable();
+        removeLangButton = new javax.swing.JButton();
         setMarkerDialog = new javax.swing.JDialog();
         enterLatitudeLabel = new javax.swing.JLabel();
         enterLongitudeLabel = new javax.swing.JLabel();
@@ -262,14 +285,75 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         );
         loadedKeywordsPanelLayout.setVerticalGroup(
             loadedKeywordsPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(loadedKeywordsScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 148, Short.MAX_VALUE)
+            .addComponent(loadedKeywordsScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 132, Short.MAX_VALUE)
         );
 
-        translateKeywordsCheckBox.setText("Enable Keyword Translation");
-        translateKeywordsCheckBox.setToolTipText("<html>\nEnable/Disable translations of keywords to the following languages:<br>\nDutch, French, Chinese, Spanish, Hindi, Italian, Tamil, Russian, Arabic, <br>\nGerman, Japanese, Korean, Lithuanian, Vietnamese");
-        translateKeywordsCheckBox.addActionListener(new java.awt.event.ActionListener() {
+        langSelectionComboBox.setModel(new javax.swing.DefaultComboBoxModel<String>(new String[] { "English", "Dutch", "German", "French", "Spanish", "Italian", "Lithuanian", "Russian", "Hindi", "Tamil", "Chinese", "Japanese", "Korean", "Vietnamese", "Arabic" }));
+
+        addLangButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                translateKeywordsCheckBoxActionPerformed(evt);
+                addLangButtonActionPerformed(evt);
+            }
+        });
+
+        selectLangPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Translation"));
+
+        selectedLangTable.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+
+            },
+            new String [] {
+                "Language", "Code"
+            }
+        ) {
+            Class[] types = new Class [] {
+                java.lang.String.class, java.lang.String.class
+            };
+            boolean[] canEdit = new boolean [] {
+                false, false
+            };
+
+            public Class getColumnClass(int columnIndex) {
+                return types [columnIndex];
+            }
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
+        selectedLangTable.setColumnSelectionAllowed(true);
+        selectedLangTable.getTableHeader().setReorderingAllowed(false);
+        selectedLangScrollPane.setViewportView(selectedLangTable);
+        selectedLangTable.getColumnModel().getSelectionModel().setSelectionMode(javax.swing.ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        if (selectedLangTable.getColumnModel().getColumnCount() > 0) {
+            selectedLangTable.getColumnModel().getColumn(0).setResizable(false);
+            selectedLangTable.getColumnModel().getColumn(1).setResizable(false);
+        }
+
+        javax.swing.GroupLayout selectLangPanelLayout = new javax.swing.GroupLayout(selectLangPanel);
+        selectLangPanel.setLayout(selectLangPanelLayout);
+        selectLangPanelLayout.setHorizontalGroup(
+            selectLangPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 0, Short.MAX_VALUE)
+            .addGroup(selectLangPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, selectLangPanelLayout.createSequentialGroup()
+                    .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(selectedLangScrollPane, javax.swing.GroupLayout.PREFERRED_SIZE, 256, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGap(184, 184, 184)))
+        );
+        selectLangPanelLayout.setVerticalGroup(
+            selectLangPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 159, Short.MAX_VALUE)
+            .addGroup(selectLangPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, selectLangPanelLayout.createSequentialGroup()
+                    .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(selectedLangScrollPane, javax.swing.GroupLayout.PREFERRED_SIZE, 133, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+        );
+
+        removeLangButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                removeLangButtonActionPerformed(evt);
             }
         });
 
@@ -282,8 +366,14 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
                 .addGroup(keywordsDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(loadedKeywordsPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(keywordsDialogLayout.createSequentialGroup()
-                        .addGroup(keywordsDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(translateKeywordsCheckBox)
+                        .addComponent(langSelectionComboBox, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(addLangButton)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(removeLangButton))
+                    .addGroup(keywordsDialogLayout.createSequentialGroup()
+                        .addGroup(keywordsDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                            .addComponent(selectLangPanel, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
                             .addGroup(keywordsDialogLayout.createSequentialGroup()
                                 .addComponent(removeKeywordsButton)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -301,7 +391,12 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
                     .addComponent(removeKeywordsButton, javax.swing.GroupLayout.PREFERRED_SIZE, 34, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(clearAllKeywordsButton, javax.swing.GroupLayout.PREFERRED_SIZE, 34, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(translateKeywordsCheckBox)
+                .addComponent(selectLangPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(keywordsDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(addLangButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(langSelectionComboBox)
+                    .addComponent(removeLangButton, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
 
@@ -401,7 +496,6 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         setIconImage(new ImageIcon(getClass().getResource("/res/twitter_icon.png")).getImage());
         setMinimumSize(controlPanel.getMinimumSize());
         setName("TwitterMap"); // NOI18N
-        setPreferredSize(new java.awt.Dimension(1280, 720));
         addWindowListener(new java.awt.event.WindowAdapter() {
             public void windowIconified(java.awt.event.WindowEvent evt) {
                 formWindowIconified(evt);
@@ -671,7 +765,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jSeparator6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(0, 0, 0)
-                .addComponent(mapPanel, javax.swing.GroupLayout.PREFERRED_SIZE, 653, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(mapPanel, javax.swing.GroupLayout.DEFAULT_SIZE, 653, Short.MAX_VALUE)
                 .addGap(0, 0, 0))
         );
 
@@ -817,6 +911,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
                 break;
             case "Start":
                 //if(isConnected())
+                    guiListener.translate(selectedLanguages.values().toArray(new String[0]));
                     guiListener.startTwitterStream();
                 break;
         } 
@@ -838,6 +933,8 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
             // add tray icon
             try {
                 SystemTray.getSystemTray().add(trayIcon);
+                trayIcon.displayMessage("Attention", "TwitterMap has been minimized to the system tray. ", 
+                        TrayIcon.MessageType.INFO);
             } catch (AWTException ex) {
                 JDialog.setDefaultLookAndFeelDecorated(true);
                 JOptionPane.showMessageDialog(null, "Oops! Something went wrong. "
@@ -847,11 +944,25 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         }
     }//GEN-LAST:event_formWindowIconified
 
-    private void translateKeywordsCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_translateKeywordsCheckBoxActionPerformed
-        guiListener.translate(translateKeywordsCheckBox.isSelected());
-    }//GEN-LAST:event_translateKeywordsCheckBoxActionPerformed
+    private void addLangButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addLangButtonActionPerformed
+        String selected = (String)langSelectionComboBox.getSelectedItem();
+        if(!selectedLanguages.containsKey(selected)) {
+            String[] sel = new String[] {selected, languageCodes.get(selected)};
+            selectedLanguages.put(sel[0], sel[1]);
+            ((DefaultTableModel)selectedLangTable.getModel()).addRow(sel);
+        }
+    }//GEN-LAST:event_addLangButtonActionPerformed
+
+    private void removeLangButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_removeLangButtonActionPerformed
+        int[] selectedIndices = selectedLangTable.getSelectedRows();
+        for(int i = selectedIndices.length-1; i >= 0; i--) {
+            selectedLanguages.remove(selectedLangTable.getValueAt(selectedIndices[i], 0));
+            ((DefaultTableModel)selectedLangTable.getModel()).removeRow(selectedIndices[i]);
+        }
+    }//GEN-LAST:event_removeLangButtonActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton addLangButton;
     private javax.swing.JButton clearAllKeywordsButton;
     private javax.swing.JButton clearButton1;
     private javax.swing.JButton clearButton2;
@@ -871,6 +982,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
     private javax.swing.JPanel keywordPanel;
     private javax.swing.JDialog keywordsDialog;
     private javax.swing.JMenuItem keywordsMenuItem;
+    private javax.swing.JComboBox langSelectionComboBox;
     private javax.swing.JFormattedTextField latTextField;
     private javax.swing.JMenuItem loadFileMarkersButton;
     private DefaultListModel<String> keywordsListModel = new DefaultListModel();
@@ -886,10 +998,16 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
     private javax.swing.JMenuItem removeAllMarkersButton;
     private javax.swing.JMenuItem removeFileMarkersButton;
     private javax.swing.JButton removeKeywordsButton;
+    private javax.swing.JButton removeLangButton;
     private javax.swing.JMenuItem removeTwitterMarkersButton;
     private javax.swing.JMenuItem removeUserMarkersButton;
     private javax.swing.JMenu runMenu;
     private javax.swing.JPanel runtimePanel;
+    private javax.swing.JPanel selectLangPanel;
+    private javax.swing.JScrollPane selectedLangScrollPane;
+    private HashMap<String, String> selectedLanguages = new HashMap<>();
+    private HashMap<String, String> languageCodes = new HashMap<>();
+    private javax.swing.JTable selectedLangTable;
     private javax.swing.JMenuItem setMarkerButton;
     private javax.swing.JDialog setMarkerDialog;
     private javax.swing.JButton setUserMarkerButton;
@@ -897,7 +1015,6 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
     private javax.swing.JButton startStopButton2;
     private javax.swing.JCheckBoxMenuItem systrayCheckBox;
     private javax.swing.JSpinner timeSpinner;
-    private javax.swing.JCheckBox translateKeywordsCheckBox;
     private javax.swing.JButton tryAgainButton;
     // End of variables declaration//GEN-END:variables
 

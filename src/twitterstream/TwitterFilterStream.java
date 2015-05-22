@@ -11,13 +11,7 @@ import java.io.PrintWriter;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.JDialog;
 import javax.swing.JOptionPane;
 import org.apache.commons.lang3.ArrayUtils;
@@ -31,8 +25,8 @@ import twitter4j.TwitterStream;
 import twitter4j.TwitterStreamFactory;
 import twitter4j.conf.Configuration;
 import twitter4j.conf.ConfigurationBuilder;
+import utils.GoogleTranslation;
 import utils.MySQL4j;
-import static utils.translate.translate_all;
 
 /**
  *
@@ -68,8 +62,8 @@ public class TwitterFilterStream implements StatusListener {
     /** MySQL object that can connect to a MySQL database and execute SQL queries. */
     private MySQL4j twitterDatabase;
     
-    /**  */
-    private boolean translate;
+    /** Language codes for keyword translation */
+    private String[] translate_codes;
 
     public TwitterFilterStream() {
         twitterStream = new TwitterStreamFactory(getAuth()).getInstance();
@@ -79,16 +73,25 @@ public class TwitterFilterStream implements StatusListener {
         file_name_format = new SimpleDateFormat("dd-MM-yy_HH-mm");
         ENABLED = false;
         twitterDatabase = null;
-        translate = false;
+        translate_codes = null;
     }
 
     /** Gets configuration builder for authentication */
     private Configuration getAuth() {
+        return getAuth("0ofktWKMWWZwv3lb2BGxeSsxz",
+                "VuyOjrVy9aPdiQoFXOw7HCS0ZHeUShfl7Bs5UktqEGDpIDUnMj",
+                "3063962920-rxltQ88TXf5BrvCiC2BBhm5A9ZiHgsMJOpmFTrl",
+                "Y4WALWynF1hZyW9NDV21E7qtRVhGt1cvumj7jVpPpAe3I");
+    }
+    
+    /** Gets configuration builder for authentication */
+    private Configuration getAuth(String CONSUMER_KEY, String CONSUMER_SECRET, 
+            String API_KEY, String API_SECRET) {
         final ConfigurationBuilder cb = new ConfigurationBuilder();
-        cb.setOAuthConsumerKey("0ofktWKMWWZwv3lb2BGxeSsxz");
-        cb.setOAuthConsumerSecret("VuyOjrVy9aPdiQoFXOw7HCS0ZHeUShfl7Bs5UktqEGDpIDUnMj");
-        cb.setOAuthAccessToken("3063962920-rxltQ88TXf5BrvCiC2BBhm5A9ZiHgsMJOpmFTrl");
-        cb.setOAuthAccessTokenSecret("Y4WALWynF1hZyW9NDV21E7qtRVhGt1cvumj7jVpPpAe3I");
+        cb.setOAuthConsumerKey(CONSUMER_KEY);
+        cb.setOAuthConsumerSecret(CONSUMER_SECRET);
+        cb.setOAuthAccessToken(API_KEY);
+        cb.setOAuthAccessTokenSecret(API_SECRET);
 
         return cb.build();
     }
@@ -126,20 +129,34 @@ public class TwitterFilterStream implements StatusListener {
     
     /**
      * Enable/Disable keyword translation to expand search.
-     * @param translate translate keywords to {Dutch, French, Chinese, Spanish, 
-     * Hindi, Italian, Tamil, Russian, Arabic, German, Japanese, Korean, 
-     * Lithuanian, Vietnamese} if true to expand search.
+     * @param languages language codes of languages to which the keyword must be
+     * translated to.
      */
-    public void enableTranslate(boolean translate) {
-        this.translate = translate;
+    public void translate(String... languages) {
+        this.translate_codes = languages;
     }
     
     /**
      * Set whether you want to write the output to a MySQL database or not.
+     * User: root, Pass: 32ZfbSTRaFDqsrWw
+     * User: s139662, Pass: rvH6X6a7rN9bJtUD
      */
     public void useDatabase() {
-        twitterDatabase = new MySQL4j("s139662", "rvH6X6a7rN9bJtUD",//32ZfbSTRaFDqsrWw 
+        useDatabase("s139662",  "rvH6X6a7rN9bJtUD", 
                 "jdbc:mysql://surajiyer96.synology.me:3306/twitter_filter_stream");
+    }
+    
+    /**
+     * Set whether you want to write the output to a MySQL database or not.
+     * User: root, Pass: 32ZfbSTRaFDqsrWw
+     * User: s139662, Pass: rvH6X6a7rN9bJtUD
+     * 
+     * @param username
+     * @param password
+     * @param url
+     */
+    public void useDatabase(String username, String password, String url) {
+        twitterDatabase = new MySQL4j(username, password, url);
     }
     
     /**
@@ -192,6 +209,8 @@ public class TwitterFilterStream implements StatusListener {
                 } catch (Exception ex) {
                     System.out.println(console_format.format(new Date( System.currentTimeMillis())) +
                                    " ERROR: Failed to connect to the MySQL database.");
+                    ENABLED = true;
+                    disable();
                     return;
                 }
             }
@@ -199,14 +218,17 @@ public class TwitterFilterStream implements StatusListener {
             // Create a new streaming filter query (i.e. keywords to track, locations etc.)
             FilterQuery fq = new FilterQuery();
             String[] keys = keywords.toArray(new String[0]);
-            if(translate) {
+            if(translate_codes != null && translate_codes.length > 0) {
                 for(String key : keys) {
                     try {
-                        keys = ArrayUtils.addAll(keys, translate_all(key));
+                        keys = ArrayUtils.addAll(keys, GoogleTranslation.translate(key, translate_codes));
                     } catch (Exception ex) {
                         JDialog.setDefaultLookAndFeelDecorated(true);
                         JOptionPane.showMessageDialog(null, "Could not translate keyword '"+key+"'.", 
                                 "Warning", JOptionPane.WARNING_MESSAGE);
+                        ENABLED = true;
+                        disable();
+                        return;
                     }
                 }
             }

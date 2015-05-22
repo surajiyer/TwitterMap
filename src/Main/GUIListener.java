@@ -53,7 +53,8 @@ public interface GUIListener {
     
     /**
      * Enable/Disable translation of keywords.
-     * @param translate 
+     * @param codes language coed for the languages in which the keywords must 
+     * be translated to.
      */
-    public void translate(boolean translate);
+    public void translate(String... codes);
 }

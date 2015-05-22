@@ -68,8 +68,8 @@ public class TwitterMap implements GUIListener {
     }
 
     @Override
-    public void translate(boolean translate) {
-        tStream.enableTranslate(translate);
+    public void translate(String... codes) {
+        tStream.translate(codes);
     }
     
 }
