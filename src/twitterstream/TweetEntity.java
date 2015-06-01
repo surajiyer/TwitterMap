@@ -18,6 +18,7 @@ public class TweetEntity {
     private String text;
     private long creation_time;
     private String country_code;
+    private String geoLocation;
     private String language_code;
     private long user_id;
     private String keywords;
@@ -33,19 +34,24 @@ public class TweetEntity {
         this.retweet_id = retweet == null ? -1 : retweet.getId();
         this.retweet_count = status.getRetweetCount();
         this.fav_count = status.getFavoriteCount();
-        this.text = formatText(status.getText());
+        this.text = cleanText(status.getText());
         this.creation_time = status.getCreatedAt().getTime();
         this.country_code = place == null ? "und" : place.getCountryCode();
         this.language_code = status.getLang() == null ? "und" : status.getLang();
         this.user_id = status.getUser().getId();
-        this.keywords = keywords == null ? "NULL" : keywords;
+        this.keywords = keywords;
     }
     
-    private String formatText(String text) {
+    private String cleanText(String text) {
+        text = text.replace("?", " ");
         text = text.replace("\n", " ");
-        text = text.replace("  ", " ");
-        text = text.replace("'", "\'");
-        
+        text = text.replace("\t", " ");
+        return text;
+    }
+    
+    public String escapeText(String text) {
+        text = text.replace("\'", "\\\'");
+        text = text.replace("\"", "\\\"");
         return text;
     }
     
@@ -65,7 +71,15 @@ public class TweetEntity {
         return fav_count;
     }
     
-    public final String getText() {
+    /**
+     * Returns the text (the actual message) of the tweet.
+     * @param escape true if all special characters must be escaped in the output
+     * for cleaner printing/writing.
+     * @return the tweet status text
+     */
+    public final String getText(boolean escape) {
+        if(escape)
+            return escapeText(text);
         return text;
     }
     
@@ -91,17 +105,17 @@ public class TweetEntity {
     
     public static final String getCSVHeader(String dataSeperator) {
         final String s = dataSeperator;
-        return "ID"+s+"Retweet ID"+s+"Retweet Count"+s+"Favorite Count"+s+"Text"
-                +s+"Creation time"+s+"Country Code"+s+"Language Code"+s+"User ID"
-                +s+"Keywords";
+        return "ID"+s+"Retweet ID"+s+"User ID"+s+"Text"+s+"Favorite Count"+s+
+                "Retweet Count"+s+"Creation time"+s+"Country Code"+s+"Geolocation"
+                +s+"Language Code"+s+"Keywords";
     }
     
     @Override
     public String toString() {
         final String s = dataSeperator;
-        return id + s + retweet_id + s + retweet_count + s + fav_count + s + text + s
-                + creation_time + s + language_code + s + country_code + s + user_id + s 
-                + keywords;
+        return id + s + retweet_id + s + user_id + s + text + s + fav_count + s 
+                + retweet_count + s + creation_time + s + country_code + s 
+                + geoLocation + s + language_code + s + keywords;
     }
     
     @Override

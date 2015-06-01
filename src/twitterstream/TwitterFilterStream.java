@@ -142,8 +142,22 @@ public class TwitterFilterStream implements StatusListener {
      * User: s139662, Pass: rvH6X6a7rN9bJtUD
      */
     public void useDatabase() {
-        useDatabase("s139662",  "rvH6X6a7rN9bJtUD", 
+        useDatabase("s139662", "rvH6X6a7rN9bJtUD", 
                 "jdbc:mysql://surajiyer96.synology.me:3306/twitter_filter_stream");
+    }
+    
+    /**
+     * Load new twitter credentials.
+     * 
+     * @param CONSUMER_KEY
+     * @param CONSUMER_SECRET
+     * @param API_KEY
+     * @param API_SECRET 
+     */
+    public void setTwitterCredentials(String CONSUMER_KEY, String CONSUMER_SECRET, 
+            String API_KEY, String API_SECRET) {
+        twitterStream = new TwitterStreamFactory(getAuth(CONSUMER_KEY, CONSUMER_SECRET, 
+            API_KEY, API_SECRET)).getInstance();
     }
     
     /**
@@ -156,7 +170,11 @@ public class TwitterFilterStream implements StatusListener {
      * @param url
      */
     public void useDatabase(String username, String password, String url) {
-        twitterDatabase = new MySQL4j(username, password, url);
+        useDatabase(new MySQL4j(username, password, url));
+    }
+    
+    public void useDatabase(MySQL4j db) {
+        twitterDatabase = db;
     }
     
     /**
@@ -208,7 +226,7 @@ public class TwitterFilterStream implements StatusListener {
                     twitterDatabase.connect();
                 } catch (Exception ex) {
                     System.out.println(console_format.format(new Date( System.currentTimeMillis())) +
-                                   " ERROR: Failed to connect to the MySQL database.");
+                                   " ERROR: No MySQL database specified.");
                     ENABLED = true;
                     disable();
                     return;
@@ -297,14 +315,26 @@ public class TwitterFilterStream implements StatusListener {
         }
         
         TweetEntity te = new TweetEntity(DATA_SEPERATOR, status, null);
+        UserEntity ue = new UserEntity(DATA_SEPERATOR, status.getUser());
         
         if(twitterDatabase != null) {
             try {
-                twitterDatabase.executeSQLQuery("INSERT tweets VALUES(" + te.getID() 
+                System.out.println("INSERT tweets VALUES(" + te.getID() 
                         + "," + te.getRetweetID() + "," + te.getRetweetCount() + "," + te.getFavCount()
-                        + ",'" + te.getText() + "'," + te.getTime() + ",'" + te.getCountry() + "','"
+                        + ",'" + te.getText(true) + "'," + te.getTime() + ",'" + te.getCountry() + "','"
                         + te.getLanguage() + "'," + te.getUserID() + "," + (te.getKeywords() == null
                         ? "NULL" : "'"+te.getKeywords()+"'") + ")");
+                System.out.println("INSERT users VALUES(" + ue.getID() 
+                        + ",'" + ue.getName(true) + "'," + ue.getNrOfFollowers() 
+                        + "," + ue.getFavCount()+ "," + ue.getNrOfFriends() + ")");
+                twitterDatabase.executeSQLQuery("INSERT tweets VALUES(" + te.getID() 
+                        + "," + te.getRetweetID() + "," + te.getRetweetCount() + "," + te.getFavCount()
+                        + ",'" + te.getText(true) + "'," + te.getTime() + ",'" + te.getCountry() + "','"
+                        + te.getLanguage() + "'," + te.getUserID() + "," + (te.getKeywords() == null
+                        ? "NULL" : "'"+te.getKeywords()+"'") + ")");
+                twitterDatabase.executeSQLQuery("INSERT users VALUES(" + ue.getID() 
+                        + ",'" + ue.getName(true) + "'," + ue.getNrOfFollowers() 
+                        + "," + ue.getFavCount()+ "," + ue.getNrOfFriends() + ")");
             } catch (SQLException ex) {
                 System.out.println(console_format.format(new Date( System.currentTimeMillis())) 
                             + " ERROR: Failed to write the twitter data to the MySQL"
@@ -316,7 +346,7 @@ public class TwitterFilterStream implements StatusListener {
 
         tweets_writer.write(te.toString());
         tweets_writer.println();
-        users_writer.write(new UserEntity(DATA_SEPERATOR, status.getUser()).toString());
+        users_writer.write(ue.toString());
         users_writer.println();
         
         // Stop the twitter stream if any error(s) while writing to file.

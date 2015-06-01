@@ -1,5 +1,7 @@
 package Main;
 
+import utils.MySQL4j;
+
 /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
@@ -57,4 +59,20 @@ public interface GUIListener {
      * be translated to.
      */
     public void translate(String... codes);
+    
+    /**
+     * Sets the MySQL database to use.
+     * @param db the MySQL database object
+     */
+    public void setMySQLDatabase(MySQL4j db);
+    
+    /**
+     * Load a new twitter stream instance with given twitter credentials.
+     * @param CONSUMER_KEY
+     * @param CONSUMER_SECRET
+     * @param API_KEY
+     * @param API_SECRET 
+     */
+    public void setTwitterCredentials(String CONSUMER_KEY, String CONSUMER_SECRET, 
+            String API_KEY, String API_SECRET);
 }

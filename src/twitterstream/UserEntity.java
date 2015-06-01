@@ -25,17 +25,22 @@ public class UserEntity {
             int followers, int favourites, int friends) {
         this.dataSeperator = dataSeperator;
         this.id = id;
-        this.username = formatText(name);
+        this.username = cleanText(name);
         this.nr_of_followers = followers;
         this.fav_count = favourites;
         this.nr_of_friends = friends;
     }
     
-    private String formatText(String text) {
+    private String cleanText(String text) {
+        text = text.replace("?", " ");
         text = text.replace("\n", " ");
-        text = text.replace("  ", " ");
-        text = text.replace("'", "\'");
-        
+        text = text.replace("\t", " ");
+        return text;
+    }
+    
+    public String escapeText(String text) {
+        text = text.replace("\'", "\\\'");
+        text = text.replace("\"", "\\\"");
         return text;
     }
     
@@ -43,19 +48,21 @@ public class UserEntity {
         return id;
     }
     
-    public final String getName() {
+    public final String getName(boolean escape) {
+        if(escape)
+            return escapeText(username);
         return username;
     }
     
-    public final int getFollowers() {
+    public final int getNrOfFollowers() {
         return nr_of_followers;
     }
     
-    public final int getFavourites() {
+    public final int getFavCount() {
         return fav_count;
     }
     
-    public final int getFriends() {
+    public final int getNrOfFriends() {
         return nr_of_friends;
     }
     

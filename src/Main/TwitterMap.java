@@ -1,6 +1,7 @@
 package Main;
 
 import twitterstream.TwitterFilterStream;
+import utils.MySQL4j;
 
 /**
  *
@@ -11,11 +12,11 @@ public class TwitterMap implements GUIListener {
     private final GUI gui;
     private final TwitterFilterStream tStream;
     
-    public TwitterMap() {
-        // initialize the GUI frame
-        gui = new GUI(this);
+    public TwitterMap() {        
         // initialize the twitter stream.
         tStream = new TwitterFilterStream();
+        // initialize the GUI frame
+        gui = new GUI(this);
     }
     
     public void run() {
@@ -70,6 +71,16 @@ public class TwitterMap implements GUIListener {
     @Override
     public void translate(String... codes) {
         tStream.translate(codes);
+    }
+
+    @Override
+    public void setMySQLDatabase(MySQL4j db) {
+        tStream.useDatabase(db);
+    }
+
+    @Override
+    public void setTwitterCredentials(String CONSUMER_KEY, String CONSUMER_SECRET, String API_KEY, String API_SECRET) {
+        tStream.setTwitterCredentials(CONSUMER_KEY, CONSUMER_SECRET, API_KEY, API_SECRET);
     }
     
 }

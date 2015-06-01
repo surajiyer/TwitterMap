@@ -63,6 +63,18 @@ public class MySQL4j {
         console_format = new SimpleDateFormat("hh:mm:ss");
     }
     
+    public String getUsername() {
+        return username;
+    }
+    
+    public String getPassword() {
+        return password;
+    }
+    
+    public String getURL() {
+        return url;
+    }
+    
     /**
      * Establishes a connection to provided database URL with the given username
      * and password.
@@ -101,5 +113,16 @@ public class MySQL4j {
         conn.close();
         System.out.println(console_format.format(new Date(System.currentTimeMillis())) 
                 + " INFO: Connection to database terminated successfully");
+    }
+    
+    public static void main(String[] args) throws Exception {
+        // test
+        MySQL4j sql = new MySQL4j("s139662", "rvH6X6a7rN9bJtUD", 
+                "jdbc:mysql://surajiyer96.synology.me:3306/twitter_filter_stream");
+        sql.connect();
+        sql.executeSQLQuery("INSERT tweets VALUES(602145169886969857,602036363181993986,"
+                + "0,0,'RT @DrKumarVishwas: अच्छे दिन for corrupt officers 😜 #ModiMurdersDemocracy  http://t.co/EGwbwmQ1WH',"
+                + "1432397570000,'und','hi',2371691228,NULL)");
+        sql.close();
     }
 }

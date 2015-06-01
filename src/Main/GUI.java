@@ -17,6 +17,7 @@ import com.teamdev.jxbrowser.chromium.swing.BrowserView;
 import java.awt.AWTException;
 import utils.GoogleMaps;
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.MenuItem;
 import java.awt.PopupMenu;
 import java.awt.SystemTray;
@@ -41,6 +42,7 @@ import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 import twitterstream.TweetListener;
 import utils.HintTextField;
+import utils.MySQL4j;
 import static utils.UIutils.createImageIcon;
 
 /**
@@ -56,6 +58,9 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
     private final Browser browser;
     private final BrowserView browserView;
     private final GUIListener guiListener;
+    
+    /** GUI frame width and height. */
+    private final int MIN_FRAME_WIDTH, MIN_FRAME_HEIGHT;
     
     /** Image icons for the start/stop button. */
     private ImageIcon start, stop;
@@ -76,6 +81,8 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         map = getClass().getResource("/res/map.html").toString();
         start = createImageIcon("play_16.png");
         stop = createImageIcon("stop_16.png");
+        MIN_FRAME_WIDTH = 960;
+        MIN_FRAME_HEIGHT = 540;
         popup = new PopupMenu();
         trayIcon = new TrayIcon(createImageIcon("map_16.png").getImage());
         languageCodes.put("English", "en");
@@ -165,9 +172,6 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         // Add the map view to the GUI frame and load the map URL.
         browser.loadURL(map);
         
-        // Open all hidden dialogs at start
-        keywordsDialog.setVisible(true);
-        
         // Adding support for minimizing window to system tray if supported.
         if (SystemTray.isSupported()) {
             systrayCheckBox.setEnabled(true);
@@ -189,6 +193,12 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
             systrayCheckBox.setEnabled(false);
             systrayCheckBox.setToolTipText("OS does not support this function.");
         }
+        
+        // Center the frame to the screen
+        setLocationRelativeTo(null);
+        
+        // Display the keywords dialog at start
+        keywordsDialog.setVisible(true);
     }
 
     /**
@@ -222,6 +232,30 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         loadingErrorPanel = new javax.swing.JPanel();
         tryAgainButton = new javax.swing.JButton();
         no_internet_icon_label = new javax.swing.JLabel();
+        twitterKeysInputDialog = new javax.swing.JDialog();
+        consumerKeyLabel = new javax.swing.JLabel();
+        consumerKeyTextField = new javax.swing.JTextField();
+        consumerSecretLabel = new javax.swing.JLabel();
+        consumerSecretTextField = new javax.swing.JTextField();
+        apiKeyTextField = new javax.swing.JTextField();
+        apiKeyLabel = new javax.swing.JLabel();
+        apiSecretLabel = new javax.swing.JLabel();
+        apiSecretTextField = new javax.swing.JTextField();
+        keysControlPanel = new javax.swing.JPanel();
+        applyKeysButton = new javax.swing.JButton();
+        clearAllKeysButton = new javax.swing.JButton();
+        OkKeysButton = new javax.swing.JButton();
+        databaseKeysInputDialog = new javax.swing.JDialog();
+        jLabel1 = new javax.swing.JLabel();
+        jLabel2 = new javax.swing.JLabel();
+        jLabel3 = new javax.swing.JLabel();
+        sqlUserTextField = new javax.swing.JTextField();
+        sqlLinkTextField = new javax.swing.JTextField();
+        sqlButtonsPanel = new javax.swing.JPanel();
+        sqlApplyButton = new javax.swing.JButton();
+        sqlCancelButton = new javax.swing.JButton();
+        connectingLabel = new javax.swing.JLabel();
+        sqlPasswordField = new javax.swing.JPasswordField();
         controlPanel = new javax.swing.JPanel();
         keywordPanel = new javax.swing.JPanel();
         enterKeywordTextField = new HintTextField("Enter Keyword here...");
@@ -230,13 +264,15 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         enterRunTextField = new HintTextField("Enter Running time here...");
         clearButton2 = new javax.swing.JButton();
         timeSpinner = new javax.swing.JSpinner();
-        startStopButton2 = new javax.swing.JButton();
         displayMapButton = new javax.swing.JButton();
+        startStopButton2 = new javax.swing.JButton();
         jSeparator6 = new javax.swing.JSeparator();
         mapPanel = new javax.swing.JPanel();
         menuBar = new javax.swing.JMenuBar();
         fileMenu = new javax.swing.JMenu();
         keywordsMenuItem = new javax.swing.JMenuItem();
+        twitterKeysMenuItem = new javax.swing.JMenuItem();
+        databaseKeysMenuItem = new javax.swing.JMenuItem();
         systrayCheckBox = new javax.swing.JCheckBoxMenuItem();
         jSeparator1 = new javax.swing.JPopupMenu.Separator();
         exitMenuItem = new javax.swing.JMenuItem();
@@ -285,11 +321,12 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         );
         loadedKeywordsPanelLayout.setVerticalGroup(
             loadedKeywordsPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(loadedKeywordsScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 132, Short.MAX_VALUE)
+            .addComponent(loadedKeywordsScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 129, Short.MAX_VALUE)
         );
 
         langSelectionComboBox.setModel(new javax.swing.DefaultComboBoxModel<String>(new String[] { "English", "Dutch", "German", "French", "Spanish", "Italian", "Lithuanian", "Russian", "Hindi", "Tamil", "Chinese", "Japanese", "Korean", "Vietnamese", "Arabic" }));
 
+        addLangButton.setText("Add");
         addLangButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 addLangButtonActionPerformed(evt);
@@ -351,6 +388,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
                     .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
         );
 
+        removeLangButton.setText("Clear");
         removeLangButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 removeLangButtonActionPerformed(evt);
@@ -363,44 +401,43 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
             keywordsDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(keywordsDialogLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(keywordsDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(loadedKeywordsPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addGroup(keywordsDialogLayout.createSequentialGroup()
-                        .addComponent(langSelectionComboBox, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(keywordsDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(selectLangPanel, javax.swing.GroupLayout.DEFAULT_SIZE, 0, Short.MAX_VALUE)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, keywordsDialogLayout.createSequentialGroup()
+                        .addComponent(removeKeywordsButton)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(addLangButton)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(removeLangButton))
+                        .addComponent(clearAllKeywordsButton))
                     .addGroup(keywordsDialogLayout.createSequentialGroup()
-                        .addGroup(keywordsDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                            .addComponent(selectLangPanel, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
-                            .addGroup(keywordsDialogLayout.createSequentialGroup()
-                                .addComponent(removeKeywordsButton)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(clearAllKeywordsButton)))
-                        .addGap(0, 0, Short.MAX_VALUE)))
-                .addContainerGap())
+                        .addComponent(langSelectionComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, 159, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(addLangButton, javax.swing.GroupLayout.PREFERRED_SIZE, 55, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(removeLangButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(loadedKeywordsPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         keywordsDialogLayout.setVerticalGroup(
             keywordsDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, keywordsDialogLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(loadedKeywordsPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(loadedKeywordsPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(keywordsDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(removeKeywordsButton, javax.swing.GroupLayout.PREFERRED_SIZE, 34, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(clearAllKeywordsButton, javax.swing.GroupLayout.PREFERRED_SIZE, 34, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(selectLangPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(keywordsDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(addLangButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(langSelectionComboBox)
-                    .addComponent(removeLangButton, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addGroup(keywordsDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(addLangButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(removeLangButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(langSelectionComboBox))
                 .addContainerGap())
         );
 
         keywordsDialog.pack();
+        keywordsDialog.setLocationRelativeTo(this);
 
         setMarkerDialog.setTitle("Set Marker");
         setMarkerDialog.setIconImage(new javax.swing.ImageIcon(getClass().getResource("/res/marker_24.png")).getImage());
@@ -454,6 +491,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         );
 
         setMarkerDialog.pack();
+        setMarkerDialog.setLocationRelativeTo(this);
 
         loadingErrorPanel.setPreferredSize(new java.awt.Dimension(1280, 650));
 
@@ -483,18 +521,186 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         loadingErrorPanelLayout.setVerticalGroup(
             loadingErrorPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, loadingErrorPanelLayout.createSequentialGroup()
-                .addContainerGap(66, Short.MAX_VALUE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(no_internet_icon_label)
                 .addGap(42, 42, 42)
                 .addComponent(tryAgainButton, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(95, 95, 95))
         );
 
+        twitterKeysInputDialog.setTitle("Enter twitter credentials");
+        twitterKeysInputDialog.setResizable(false);
+        twitterKeysInputDialog.setType(java.awt.Window.Type.POPUP);
+
+        consumerKeyLabel.setText("Enter your twitter Consumer key:");
+
+        consumerKeyTextField.setCursor(new java.awt.Cursor(java.awt.Cursor.TEXT_CURSOR));
+
+        consumerSecretLabel.setText("Enter your twitter Consumer secret:");
+
+        apiKeyLabel.setText("Enter your twitter API key:");
+
+        apiSecretLabel.setText("Enter your twitter API secret:");
+
+        applyKeysButton.setText("Apply");
+        applyKeysButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                applyKeysButtonActionPerformed(evt);
+            }
+        });
+        keysControlPanel.add(applyKeysButton);
+
+        clearAllKeysButton.setText("Clear All");
+        clearAllKeysButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                clearAllKeysButtonActionPerformed(evt);
+            }
+        });
+        keysControlPanel.add(clearAllKeysButton);
+
+        OkKeysButton.setText("Ok");
+        OkKeysButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                OkKeysButtonActionPerformed(evt);
+            }
+        });
+        keysControlPanel.add(OkKeysButton);
+
+        javax.swing.GroupLayout twitterKeysInputDialogLayout = new javax.swing.GroupLayout(twitterKeysInputDialog.getContentPane());
+        twitterKeysInputDialog.getContentPane().setLayout(twitterKeysInputDialogLayout);
+        twitterKeysInputDialogLayout.setHorizontalGroup(
+            twitterKeysInputDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(twitterKeysInputDialogLayout.createSequentialGroup()
+                .addGroup(twitterKeysInputDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(twitterKeysInputDialogLayout.createSequentialGroup()
+                        .addContainerGap()
+                        .addGroup(twitterKeysInputDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(twitterKeysInputDialogLayout.createSequentialGroup()
+                                .addGroup(twitterKeysInputDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                                    .addComponent(consumerSecretLabel)
+                                    .addComponent(consumerKeyLabel))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(twitterKeysInputDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(consumerKeyTextField)
+                                    .addComponent(consumerSecretTextField, javax.swing.GroupLayout.DEFAULT_SIZE, 165, Short.MAX_VALUE)))
+                            .addGroup(twitterKeysInputDialogLayout.createSequentialGroup()
+                                .addGap(56, 56, 56)
+                                .addComponent(apiKeyLabel)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(apiKeyTextField, javax.swing.GroupLayout.DEFAULT_SIZE, 164, Short.MAX_VALUE))))
+                    .addGroup(twitterKeysInputDialogLayout.createSequentialGroup()
+                        .addGap(52, 52, 52)
+                        .addComponent(apiSecretLabel)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(apiSecretTextField, javax.swing.GroupLayout.DEFAULT_SIZE, 164, Short.MAX_VALUE))
+                    .addGroup(twitterKeysInputDialogLayout.createSequentialGroup()
+                        .addContainerGap()
+                        .addComponent(keysControlPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                .addContainerGap())
+        );
+        twitterKeysInputDialogLayout.setVerticalGroup(
+            twitterKeysInputDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(twitterKeysInputDialogLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(twitterKeysInputDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(consumerKeyTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(consumerKeyLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGap(18, 18, 18)
+                .addGroup(twitterKeysInputDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(consumerSecretLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(consumerSecretTextField))
+                .addGap(18, 18, 18)
+                .addGroup(twitterKeysInputDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(apiKeyLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(apiKeyTextField))
+                .addGap(18, 18, 18)
+                .addGroup(twitterKeysInputDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(apiSecretLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(apiSecretTextField))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(keysControlPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(7, 7, 7))
+        );
+
+        twitterKeysInputDialog.pack();
+        twitterKeysInputDialog.setLocationRelativeTo(this);
+
+        jLabel1.setText("Username:");
+
+        jLabel2.setText("Password:");
+
+        jLabel3.setText("URL link:");
+
+        sqlApplyButton.setText("Apply");
+        sqlApplyButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                sqlApplyButtonActionPerformed(evt);
+            }
+        });
+        sqlButtonsPanel.add(sqlApplyButton);
+
+        sqlCancelButton.setText("OK/Cancel");
+        sqlCancelButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                sqlCancelButtonActionPerformed(evt);
+            }
+        });
+        sqlButtonsPanel.add(sqlCancelButton);
+
+        connectingLabel.setIcon(new javax.swing.ImageIcon(getClass().getResource("/res/loading_spinner_24.gif"))); // NOI18N
+        sqlButtonsPanel.add(connectingLabel);
+        connectingLabel.setVisible(false);
+
+        sqlPasswordField.setText("jPasswordField1");
+
+        javax.swing.GroupLayout databaseKeysInputDialogLayout = new javax.swing.GroupLayout(databaseKeysInputDialog.getContentPane());
+        databaseKeysInputDialog.getContentPane().setLayout(databaseKeysInputDialogLayout);
+        databaseKeysInputDialogLayout.setHorizontalGroup(
+            databaseKeysInputDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(databaseKeysInputDialogLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(databaseKeysInputDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(sqlButtonsPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(databaseKeysInputDialogLayout.createSequentialGroup()
+                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addGroup(databaseKeysInputDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel3, javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(jLabel2, javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(jLabel1, javax.swing.GroupLayout.Alignment.TRAILING))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addGroup(databaseKeysInputDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(sqlUserTextField, javax.swing.GroupLayout.DEFAULT_SIZE, 190, Short.MAX_VALUE)
+                            .addComponent(sqlLinkTextField)
+                            .addComponent(sqlPasswordField))))
+                .addContainerGap())
+        );
+        databaseKeysInputDialogLayout.setVerticalGroup(
+            databaseKeysInputDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(databaseKeysInputDialogLayout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(databaseKeysInputDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(sqlUserTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel1))
+                .addGap(18, 18, 18)
+                .addGroup(databaseKeysInputDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel2)
+                    .addComponent(sqlPasswordField, javax.swing.GroupLayout.PREFERRED_SIZE, 22, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(18, 18, 18)
+                .addGroup(databaseKeysInputDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(sqlLinkTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel3))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(sqlButtonsPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(7, 7, 7))
+        );
+
+        databaseKeysInputDialog.pack();
+
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Twitter Map");
         setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
         setIconImage(new ImageIcon(getClass().getResource("/res/twitter_icon.png")).getImage());
-        setMinimumSize(controlPanel.getMinimumSize());
+        setMinimumSize(new Dimension(MIN_FRAME_WIDTH, MIN_FRAME_HEIGHT));
         setName("TwitterMap"); // NOI18N
         addWindowListener(new java.awt.event.WindowAdapter() {
             public void windowIconified(java.awt.event.WindowEvent evt) {
@@ -502,7 +708,9 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
             }
         });
 
-        controlPanel.setMinimumSize(new java.awt.Dimension(490, 43));
+        controlPanel.setMaximumSize(new java.awt.Dimension(32767, 30));
+        controlPanel.setMinimumSize(new java.awt.Dimension(563, 30));
+        controlPanel.setPreferredSize(new java.awt.Dimension(563, 30));
 
         keywordPanel.setBackground(enterKeywordTextField.getBackground());
         keywordPanel.setBorder(javax.swing.BorderFactory.createEtchedBorder(new java.awt.Color(102, 102, 102), null));
@@ -534,8 +742,8 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
             keywordPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(keywordPanelLayout.createSequentialGroup()
                 .addGap(4, 4, 4)
-                .addComponent(enterKeywordTextField, javax.swing.GroupLayout.DEFAULT_SIZE, 154, Short.MAX_VALUE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(enterKeywordTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 154, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(4, 4, 4)
                 .addComponent(clearButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
         keywordPanelLayout.setVerticalGroup(
@@ -581,21 +789,26 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
             runtimePanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(runtimePanelLayout.createSequentialGroup()
                 .addGap(4, 4, 4)
-                .addComponent(enterRunTextField, javax.swing.GroupLayout.DEFAULT_SIZE, 168, Short.MAX_VALUE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(clearButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(enterRunTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 168, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(4, 4, 4)
+                .addComponent(timeSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(0, 0, 0)
-                .addComponent(timeSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addComponent(clearButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
         runtimePanelLayout.setVerticalGroup(
             runtimePanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(clearButton2, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)
-            .addGroup(runtimePanelLayout.createSequentialGroup()
-                .addGroup(runtimePanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(timeSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(enterRunTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(0, 0, Short.MAX_VALUE))
+            .addGroup(runtimePanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addComponent(enterRunTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(timeSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
+
+        displayMapButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/res/map_24.png"))); // NOI18N
+        displayMapButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                displayMapButtonActionPerformed(evt);
+            }
+        });
 
         startStopButton2.setIcon(start);
         startStopButton2.setText("Start");
@@ -605,46 +818,32 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
             }
         });
 
-        displayMapButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/res/map_24.png"))); // NOI18N
-        displayMapButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                displayMapButtonActionPerformed(evt);
-            }
-        });
-
         javax.swing.GroupLayout controlPanelLayout = new javax.swing.GroupLayout(controlPanel);
         controlPanel.setLayout(controlPanelLayout);
         controlPanelLayout.setHorizontalGroup(
             controlPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(controlPanelLayout.createSequentialGroup()
-                .addGap(4, 4, 4)
-                .addComponent(keywordPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(257, 257, 257)
-                .addComponent(displayMapButton, javax.swing.GroupLayout.PREFERRED_SIZE, 34, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 715, Short.MAX_VALUE)
+                .addGap(0, 0, 0)
+                .addComponent(keywordPanel, javax.swing.GroupLayout.PREFERRED_SIZE, 202, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(runtimePanel, javax.swing.GroupLayout.PREFERRED_SIZE, 247, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(displayMapButton, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 710, Short.MAX_VALUE)
                 .addComponent(startStopButton2)
-                .addGap(4, 4, 4))
-            .addGroup(controlPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(controlPanelLayout.createSequentialGroup()
-                    .addGap(212, 212, 212)
-                    .addComponent(runtimePanel, javax.swing.GroupLayout.PREFERRED_SIZE, 250, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addContainerGap(818, Short.MAX_VALUE)))
+                .addGap(0, 0, 0))
         );
         controlPanelLayout.setVerticalGroup(
             controlPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(controlPanelLayout.createSequentialGroup()
-                .addGroup(controlPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                    .addComponent(displayMapButton, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
-                    .addComponent(keywordPanel, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(startStopButton2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addGap(0, 0, 0))
-            .addGroup(controlPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(controlPanelLayout.createSequentialGroup()
-                    .addComponent(runtimePanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGap(0, 0, Short.MAX_VALUE)))
+            .addComponent(runtimePanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+            .addComponent(keywordPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(displayMapButton, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
+            .addComponent(startStopButton2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
 
         mapPanel.setLayout(new java.awt.BorderLayout());
+
+        menuBar.setMinimumSize(new java.awt.Dimension(0, 26));
 
         fileMenu.setText("File");
 
@@ -656,6 +855,22 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
             }
         });
         fileMenu.add(keywordsMenuItem);
+
+        twitterKeysMenuItem.setText("Edit twitter credentials");
+        twitterKeysMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                twitterKeysMenuItemActionPerformed(evt);
+            }
+        });
+        fileMenu.add(twitterKeysMenuItem);
+
+        databaseKeysMenuItem.setText("Edit MySQL database");
+        databaseKeysMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                databaseKeysMenuItemActionPerformed(evt);
+            }
+        });
+        fileMenu.add(databaseKeysMenuItem);
 
         systrayCheckBox.setSelected(true);
         systrayCheckBox.setText("Minimize to system tray");
@@ -753,19 +968,22 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(controlPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addComponent(jSeparator6)
             .addComponent(mapPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addGap(7, 7, 7)
+                .addComponent(controlPanel, javax.swing.GroupLayout.DEFAULT_SIZE, 1266, Short.MAX_VALUE)
+                .addGap(7, 7, 7))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addGap(5, 5, 5)
-                .addComponent(controlPanel, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(controlPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jSeparator6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(0, 0, 0)
-                .addComponent(mapPanel, javax.swing.GroupLayout.DEFAULT_SIZE, 653, Short.MAX_VALUE)
+                .addComponent(mapPanel, javax.swing.GroupLayout.DEFAULT_SIZE, 650, Short.MAX_VALUE)
                 .addGap(0, 0, 0))
         );
 
@@ -898,9 +1116,21 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
     }//GEN-LAST:event_tryAgainButtonActionPerformed
 
     private void displayMapButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_displayMapButtonActionPerformed
-        mapPanel.setVisible(false);
+        boolean isVisible = mapPanel.isVisible();
+        setSize(0, 0);
+        setMinimumSize(null);
+        mapPanel.setVisible(isVisible = !isVisible);
         revalidate();
         repaint();
+        pack();
+        if(isVisible) {
+            setMinimumSize(new Dimension(MIN_FRAME_WIDTH, MIN_FRAME_HEIGHT));
+        } else {
+            System.out.println(controlPanel.getMinimumSize().height + menuBar.getMinimumSize().height);
+            setMinimumSize(new Dimension(controlPanel.getMinimumSize().width, 
+                    controlPanel.getMinimumSize().height + menuBar.getMinimumSize().height));
+        }
+        setResizable(isVisible);
     }//GEN-LAST:event_displayMapButtonActionPerformed
 
     private void startStopButtonPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startStopButtonPerformed
@@ -911,8 +1141,8 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
                 break;
             case "Start":
                 //if(isConnected())
-                    guiListener.translate(selectedLanguages.values().toArray(new String[0]));
-                    guiListener.startTwitterStream();
+                guiListener.translate(selectedLanguages.values().toArray(new String[0]));
+                guiListener.startTwitterStream();
                 break;
         } 
     }//GEN-LAST:event_startStopButtonPerformed
@@ -961,12 +1191,112 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         }
     }//GEN-LAST:event_removeLangButtonActionPerformed
 
+    private void applyKeysButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_applyKeysButtonActionPerformed
+        String cKey = consumerKeyTextField.getText();
+        String cSecret = consumerSecretTextField.getText();
+        String apiKey = apiKeyTextField.getText();
+        String apiSecret = apiSecretTextField.getText();
+        
+        if(cKey.equals("")||cKey.equals("\t")
+                || cSecret.equals("")||cSecret.equals("\t")
+                || apiKey.equals("")||apiKey.equals("\t")
+                || apiSecret.equals("")||apiSecret.equals("\t")) {
+            JDialog.setDefaultLookAndFeelDecorated(true);
+            JOptionPane.showMessageDialog(null, "Please fill in all the fields.", 
+                    "Empty Fields", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
+        if(cKey.matches("^[a-zA-Z0-9]+$")
+                && cSecret.matches("^[a-zA-Z0-9]+$")
+                && apiKey.matches("^[a-zA-Z0-9]+\\-[a-zA-Z0-9]+$")
+                && apiSecret.matches("^[a-zA-Z0-9]+$")) {
+            guiListener.setTwitterCredentials(cKey, cSecret, apiKey, apiSecret);
+        } else {
+            JDialog.setDefaultLookAndFeelDecorated(true);
+            JOptionPane.showMessageDialog(null, "1 or more keys/secrets uses invalid characters.", 
+                    "Invalid input", JOptionPane.WARNING_MESSAGE);
+        }
+    }//GEN-LAST:event_applyKeysButtonActionPerformed
+
+    private void twitterKeysMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_twitterKeysMenuItemActionPerformed
+        twitterKeysInputDialog.setVisible(true);
+    }//GEN-LAST:event_twitterKeysMenuItemActionPerformed
+
+    private void databaseKeysMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_databaseKeysMenuItemActionPerformed
+        sqlApplyButton.setEnabled(true);
+        sqlCancelButton.setEnabled(true);
+        databaseKeysInputDialog.setVisible(true);
+    }//GEN-LAST:event_databaseKeysMenuItemActionPerformed
+
+    private void sqlApplyButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_sqlApplyButtonActionPerformed
+        String user = sqlUserTextField.getText();
+        String pass = sqlPasswordField.getPassword().toString();
+        String link = sqlLinkTextField.getText();
+        if(user.equals("")||user.equals("\t")
+                ||pass.equals("")||pass.equals("\t")
+                ||link.equals("")||link.equals("\t")) {
+            JDialog.setDefaultLookAndFeelDecorated(true);
+            JOptionPane.showMessageDialog(null, "Please fill in all the fields.", 
+                    "Empty Fields", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
+        MySQL4j test = new MySQL4j(user, pass, link);
+        try {
+            connectingLabel.setVisible(true);
+            test.connect();
+            sqlApplyButton.setEnabled(false);
+            sqlCancelButton.setEnabled(false);
+            connectingLabel.setVisible(false);
+            test.close();
+            
+            // Pass the new database link to the twitter stream.
+            guiListener.setMySQLDatabase(test);
+        } catch (Exception ex) {
+            connectingLabel.setVisible(false);
+            JDialog.setDefaultLookAndFeelDecorated(true);
+            JOptionPane.showMessageDialog(null, "Oops! Unable to connect to database. Make sure the "
+                    + "username/password/url provided are correct and that the link is reachable.", 
+                    "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }//GEN-LAST:event_sqlApplyButtonActionPerformed
+
+    private void sqlCancelButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_sqlCancelButtonActionPerformed
+        databaseKeysInputDialog.setVisible(false);
+    }//GEN-LAST:event_sqlCancelButtonActionPerformed
+
+    private void clearAllKeysButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_clearAllKeysButtonActionPerformed
+        consumerKeyTextField.setText("");
+        consumerSecretTextField.setText("");
+        apiKeyTextField.setText("");
+        apiSecretTextField.setText("");
+    }//GEN-LAST:event_clearAllKeysButtonActionPerformed
+
+    private void OkKeysButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_OkKeysButtonActionPerformed
+        twitterKeysInputDialog.setVisible(false);
+    }//GEN-LAST:event_OkKeysButtonActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton OkKeysButton;
     private javax.swing.JButton addLangButton;
+    private javax.swing.JLabel apiKeyLabel;
+    private javax.swing.JTextField apiKeyTextField;
+    private javax.swing.JLabel apiSecretLabel;
+    private javax.swing.JTextField apiSecretTextField;
+    private javax.swing.JButton applyKeysButton;
+    private javax.swing.JButton clearAllKeysButton;
     private javax.swing.JButton clearAllKeywordsButton;
     private javax.swing.JButton clearButton1;
     private javax.swing.JButton clearButton2;
+    private javax.swing.JLabel connectingLabel;
+    private javax.swing.JLabel consumerKeyLabel;
+    private javax.swing.JTextField consumerKeyTextField;
+    private javax.swing.JLabel consumerSecretLabel;
+    private javax.swing.JTextField consumerSecretTextField;
     private javax.swing.JPanel controlPanel;
+    private javax.swing.JDialog databaseKeysInputDialog;
+    private javax.swing.JMenuItem databaseKeysMenuItem;
     private javax.swing.JButton displayMapButton;
     private javax.swing.JTextField enterKeywordTextField;
     private javax.swing.JLabel enterLatitudeLabel;
@@ -975,10 +1305,14 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
     private javax.swing.JMenuItem exitMenuItem;
     private javax.swing.JFileChooser fileChooser;
     private javax.swing.JMenu fileMenu;
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
     private javax.swing.JPopupMenu.Separator jSeparator1;
     private javax.swing.JPopupMenu.Separator jSeparator2;
     private javax.swing.JPopupMenu.Separator jSeparator3;
     private javax.swing.JSeparator jSeparator6;
+    private javax.swing.JPanel keysControlPanel;
     private javax.swing.JPanel keywordPanel;
     private javax.swing.JDialog keywordsDialog;
     private javax.swing.JMenuItem keywordsMenuItem;
@@ -1011,11 +1345,19 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
     private javax.swing.JMenuItem setMarkerButton;
     private javax.swing.JDialog setMarkerDialog;
     private javax.swing.JButton setUserMarkerButton;
+    private javax.swing.JButton sqlApplyButton;
+    private javax.swing.JPanel sqlButtonsPanel;
+    private javax.swing.JButton sqlCancelButton;
+    private javax.swing.JTextField sqlLinkTextField;
+    private javax.swing.JPasswordField sqlPasswordField;
+    private javax.swing.JTextField sqlUserTextField;
     private javax.swing.JMenuItem startStopButton1;
     private javax.swing.JButton startStopButton2;
     private javax.swing.JCheckBoxMenuItem systrayCheckBox;
     private javax.swing.JSpinner timeSpinner;
     private javax.swing.JButton tryAgainButton;
+    private javax.swing.JDialog twitterKeysInputDialog;
+    private javax.swing.JMenuItem twitterKeysMenuItem;
     // End of variables declaration//GEN-END:variables
 
     /**
@@ -1046,6 +1388,8 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
             clearAllKeywordsButton.setEnabled(false);
             removeAllMarkersButton.setEnabled(false);
             removeTwitterMarkersButton.setEnabled(false);
+            twitterKeysMenuItem.setEnabled(false);
+            databaseKeysMenuItem.setEnabled(false);
         }
         else {
             startStopButton1.setIcon(start);
@@ -1058,6 +1402,8 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
             clearAllKeywordsButton.setEnabled(true);
             removeAllMarkersButton.setEnabled(true);
             removeTwitterMarkersButton.setEnabled(true);
+            twitterKeysMenuItem.setEnabled(true);
+            databaseKeysMenuItem.setEnabled(true);
         }
     }
 
