@@ -60,7 +60,8 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
     private final GUIListener guiListener;
     
     /** GUI frame width and height. */
-    private final int MIN_FRAME_WIDTH, MIN_FRAME_HEIGHT;
+    private final Dimension MIN_FRAME_DIM;
+    private Dimension CUR_FRAME_DIM;
     
     /** Image icons for the start/stop button. */
     private ImageIcon start, stop;
@@ -81,8 +82,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         map = getClass().getResource("/res/map.html").toString();
         start = createImageIcon("play_16.png");
         stop = createImageIcon("stop_16.png");
-        MIN_FRAME_WIDTH = 960;
-        MIN_FRAME_HEIGHT = 540;
+        MIN_FRAME_DIM = new Dimension(960, 540);
         popup = new PopupMenu();
         trayIcon = new TrayIcon(createImageIcon("map_16.png").getImage());
         languageCodes.put("English", "en");
@@ -700,7 +700,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         setTitle("Twitter Map");
         setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
         setIconImage(new ImageIcon(getClass().getResource("/res/twitter_icon.png")).getImage());
-        setMinimumSize(new Dimension(MIN_FRAME_WIDTH, MIN_FRAME_HEIGHT));
+        setMinimumSize(MIN_FRAME_DIM);
         setName("TwitterMap"); // NOI18N
         addWindowListener(new java.awt.event.WindowAdapter() {
             public void windowIconified(java.awt.event.WindowEvent evt) {
@@ -978,12 +978,12 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGap(5, 5, 5)
+                .addGap(7, 7, 7)
                 .addComponent(controlPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jSeparator6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(0, 0, 0)
-                .addComponent(mapPanel, javax.swing.GroupLayout.DEFAULT_SIZE, 650, Short.MAX_VALUE)
+                .addComponent(mapPanel, javax.swing.GroupLayout.DEFAULT_SIZE, 648, Short.MAX_VALUE)
                 .addGap(0, 0, 0))
         );
 
@@ -1117,18 +1117,18 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
 
     private void displayMapButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_displayMapButtonActionPerformed
         boolean isVisible = mapPanel.isVisible();
-        setSize(0, 0);
-        setMinimumSize(null);
+        if(isVisible)
+            CUR_FRAME_DIM = getSize();
         mapPanel.setVisible(isVisible = !isVisible);
         revalidate();
         repaint();
-        pack();
         if(isVisible) {
-            setMinimumSize(new Dimension(MIN_FRAME_WIDTH, MIN_FRAME_HEIGHT));
+            setMinimumSize(MIN_FRAME_DIM);
+            setSize(CUR_FRAME_DIM);
         } else {
-            System.out.println(controlPanel.getMinimumSize().height + menuBar.getMinimumSize().height);
-            setMinimumSize(new Dimension(controlPanel.getMinimumSize().width, 
-                    controlPanel.getMinimumSize().height + menuBar.getMinimumSize().height));
+            setMinimumSize(new Dimension(controlPanel.getMinimumSize().width+46, 
+                    controlPanel.getMinimumSize().height + menuBar.getMinimumSize().height+46));
+            setSize(getMinimumSize());
         }
         setResizable(isVisible);
     }//GEN-LAST:event_displayMapButtonActionPerformed

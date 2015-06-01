@@ -12,6 +12,7 @@ import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
 import javax.swing.JDialog;
 import javax.swing.JOptionPane;
 import org.apache.commons.lang3.ArrayUtils;
@@ -299,6 +300,22 @@ public class TwitterFilterStream implements StatusListener {
     public void setListener(TweetListener t) {
         this.listener = t;
     }
+    
+    /**
+     * Given a tweet, get the first keyword it is related to.
+     * @param tweet the status text
+     * @return related keyword or null if no related keyword found
+     */
+    public String getRelatedKeyword(String tweet) {
+        String related = "";
+        for (String keyword : keywords) {
+            if(tweet.contains(keyword))
+                related += DATA_SEPERATOR + keyword;
+        }
+        if(related.equals(""))
+            return null;
+        return related.substring(1);
+    }
 
     @Override
     public void onStatus(Status status) {
@@ -314,7 +331,7 @@ public class TwitterFilterStream implements StatusListener {
                     Double.toString(geo.getLongitude()), status.getText());
         }
         
-        TweetEntity te = new TweetEntity(DATA_SEPERATOR, status, null);
+        TweetEntity te = new TweetEntity(DATA_SEPERATOR, status, getRelatedKeyword(status.getText()));
         UserEntity ue = new UserEntity(DATA_SEPERATOR, status.getUser());
         
         if(twitterDatabase != null) {
