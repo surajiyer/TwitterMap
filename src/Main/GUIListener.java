@@ -75,4 +75,23 @@ public interface GUIListener {
      */
     public void setTwitterCredentials(String CONSUMER_KEY, String CONSUMER_SECRET, 
             String API_KEY, String API_SECRET);
+    
+    public MySQL4j getMySQLDatabase();
+    
+    /**
+     * Set whether to use a MySQL database.
+     * @param use true if to be used, otherwise false.
+     */
+    public void useDatabase(boolean use);
+    
+    /**
+     * Returns whether the twitter stream object has been specified or not.
+     * @return true if it exists, otherwise false.
+     */
+    public boolean existsStream();
+    
+    /**
+     * Load the main GUI.
+     */
+    public void loadMainFrame();
 }

@@ -32,11 +32,4 @@ public interface TweetListener {
      * @param isRunning 
      */
     public void setRunningStatus(boolean isRunning);
-    
-    /**
-     * When logging has completed, save the file to user-defined location.
-     * @param tweets_file the file that stores the tweets.
-     * @param users_file the file that stores the users who tweeted.
-     */
-    public void loggingCompleted(File tweets_file, File users_file);
 }

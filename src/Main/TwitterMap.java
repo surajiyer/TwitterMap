@@ -1,36 +1,52 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
 package Main;
 
 import twitterstream.TwitterFilterStream;
 import utils.MySQL4j;
 
 /**
- *
- * @author s121735
+ * Main class
+ * 
+ * @author S.S.Iyer
  */
 public class TwitterMap implements GUIListener {
     
-    private final GUI gui;
     private final TwitterFilterStream tStream;
     
-    public TwitterMap() {        
+    public TwitterMap() {
+        
         // initialize the twitter stream.
         tStream = new TwitterFilterStream();
-        // initialize the GUI frame
-        gui = new GUI(this);
+        
+        // create a login frame to input the twitter credentials.
+        twitterLoginFrame tlf = new twitterLoginFrame(this);
+        tlf.setVisible(true);
     }
     
     public void run() {
+        
+        // Initialize the main frame.
+        final GUI gui = new GUI(this);
+        
         // Set the twitter stream parameters
         tStream.setRuntime(0); // Runtime in ms; 0 = unlimited.
-        tStream.useDatabase();
         tStream.setListener(gui);
         
-        // Show the GUI
+        // Display the Main Frame GUI.
         gui.setVisible(true);
+        
+        // Add shut down hook to turn of the filter stream before exit.
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            TwitterMap.this.tStream.disable();
+        }));
     }
 
     public static void main(String[] args) {
-        new TwitterMap().run();
+        TwitterMap twitterMap = new TwitterMap();
     }
 
     @Override
@@ -75,12 +91,32 @@ public class TwitterMap implements GUIListener {
 
     @Override
     public void setMySQLDatabase(MySQL4j db) {
-        tStream.useDatabase(db);
+        tStream.setDatabase(db);
     }
 
     @Override
     public void setTwitterCredentials(String CONSUMER_KEY, String CONSUMER_SECRET, String API_KEY, String API_SECRET) {
         tStream.setTwitterCredentials(CONSUMER_KEY, CONSUMER_SECRET, API_KEY, API_SECRET);
+    }
+
+    @Override
+    public MySQL4j getMySQLDatabase() {
+        return tStream.getMySQLDatabase();
+    }
+
+    @Override
+    public void useDatabase(boolean use) {
+        tStream.useDatabase(use);
+    }
+
+    @Override
+    public boolean existsStream() {
+        return tStream.existsStream();
+    }
+
+    @Override
+    public void loadMainFrame() {
+        run();
     }
     
 }

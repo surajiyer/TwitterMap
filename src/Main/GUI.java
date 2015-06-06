@@ -28,8 +28,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.text.ParseException;
 import java.util.HashMap;
 import java.util.logging.Level;
@@ -46,8 +44,9 @@ import utils.MySQL4j;
 import static utils.UIutils.createImageIcon;
 
 /**
- *
- * @author s139662
+ * Main frame of the app.
+ * 
+ * @author S.S.Iyer
  */
 public class GUI extends javax.swing.JFrame implements TweetListener {
 
@@ -75,9 +74,9 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
     
     /**
      * Creates new form Map
-     * @param bl browser listener object
+     * @param gl GUI listener object
      */
-    public GUI(GUIListener bl) {
+    public GUI(GUIListener gl) {
         // Load certain necessary resources.
         map = getClass().getResource("/res/map.html").toString();
         start = createImageIcon("play_16.png");
@@ -105,7 +104,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         // Create a browser, its associated UI view object and the browser listener.
         browser = new Browser();
         browserView = new BrowserView(browser);
-        guiListener = bl;
+        guiListener = gl;
         browser.addLoadListener(new LoadListener() {
 
             @Override
@@ -116,22 +115,13 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
 
             @Override
             public void onFinishLoadingFrame(FinishLoadingEvent fle) {
-                mapPanel.remove(loadingErrorPanel);
                 mapPanel.add(browserView, BorderLayout.CENTER);
                 revalidate();
                 repaint();
             }
 
             @Override
-            public void onFailLoadingFrame(FailLoadingEvent fle) {
-                //if (fle.isMainFrame()) {
-                    guiListener.onBrowserLoadFailed();
-                    mapPanel.remove(browserView);
-                    mapPanel.add(loadingErrorPanel, BorderLayout.CENTER);
-                    revalidate();
-                    repaint();
-                //}
-            }
+            public void onFailLoadingFrame(FailLoadingEvent fle) {}
 
             @Override
             public void onDocumentLoadedInFrame(FrameLoadEvent fle) {}
@@ -194,9 +184,6 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
             systrayCheckBox.setToolTipText("OS does not support this function.");
         }
         
-        // Center the frame to the screen
-        setLocationRelativeTo(null);
-        
         // Display the keywords dialog at start
         keywordsDialog.setVisible(true);
     }
@@ -229,9 +216,6 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         latTextField = new javax.swing.JFormattedTextField();
         longTextField = new javax.swing.JFormattedTextField();
         setUserMarkerButton = new javax.swing.JButton();
-        loadingErrorPanel = new javax.swing.JPanel();
-        tryAgainButton = new javax.swing.JButton();
-        no_internet_icon_label = new javax.swing.JLabel();
         twitterKeysInputDialog = new javax.swing.JDialog();
         consumerKeyLabel = new javax.swing.JLabel();
         consumerKeyTextField = new javax.swing.JTextField();
@@ -246,16 +230,17 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         clearAllKeysButton = new javax.swing.JButton();
         OkKeysButton = new javax.swing.JButton();
         databaseKeysInputDialog = new javax.swing.JDialog();
-        jLabel1 = new javax.swing.JLabel();
-        jLabel2 = new javax.swing.JLabel();
-        jLabel3 = new javax.swing.JLabel();
+        sqlUsernameLabel = new javax.swing.JLabel();
+        sqlPassLabel = new javax.swing.JLabel();
+        sqlLinkLabel = new javax.swing.JLabel();
         sqlUserTextField = new javax.swing.JTextField();
         sqlLinkTextField = new javax.swing.JTextField();
         sqlButtonsPanel = new javax.swing.JPanel();
         sqlApplyButton = new javax.swing.JButton();
-        sqlCancelButton = new javax.swing.JButton();
+        sqlOkButton = new javax.swing.JButton();
         connectingLabel = new javax.swing.JLabel();
         sqlPasswordField = new javax.swing.JPasswordField();
+        useDBCheckBox = new javax.swing.JCheckBox();
         controlPanel = new javax.swing.JPanel();
         keywordPanel = new javax.swing.JPanel();
         enterKeywordTextField = new HintTextField("Enter Keyword here...");
@@ -266,7 +251,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         timeSpinner = new javax.swing.JSpinner();
         displayMapButton = new javax.swing.JButton();
         startStopButton2 = new javax.swing.JButton();
-        jSeparator6 = new javax.swing.JSeparator();
+        panelSeparator = new javax.swing.JSeparator();
         mapPanel = new javax.swing.JPanel();
         menuBar = new javax.swing.JMenuBar();
         fileMenu = new javax.swing.JMenu();
@@ -493,41 +478,6 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         setMarkerDialog.pack();
         setMarkerDialog.setLocationRelativeTo(this);
 
-        loadingErrorPanel.setPreferredSize(new java.awt.Dimension(1280, 650));
-
-        tryAgainButton.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
-        tryAgainButton.setText("Try Again");
-        tryAgainButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                tryAgainButtonActionPerformed(evt);
-            }
-        });
-
-        no_internet_icon_label.setIcon(new javax.swing.ImageIcon(getClass().getResource("/res/no_internet.png"))); // NOI18N
-
-        javax.swing.GroupLayout loadingErrorPanelLayout = new javax.swing.GroupLayout(loadingErrorPanel);
-        loadingErrorPanel.setLayout(loadingErrorPanelLayout);
-        loadingErrorPanelLayout.setHorizontalGroup(
-            loadingErrorPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(loadingErrorPanelLayout.createSequentialGroup()
-                .addGap(570, 570, 570)
-                .addComponent(tryAgainButton, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, loadingErrorPanelLayout.createSequentialGroup()
-                .addContainerGap(395, Short.MAX_VALUE)
-                .addComponent(no_internet_icon_label)
-                .addGap(373, 373, 373))
-        );
-        loadingErrorPanelLayout.setVerticalGroup(
-            loadingErrorPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, loadingErrorPanelLayout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(no_internet_icon_label)
-                .addGap(42, 42, 42)
-                .addComponent(tryAgainButton, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(95, 95, 95))
-        );
-
         twitterKeysInputDialog.setTitle("Enter twitter credentials");
         twitterKeysInputDialog.setResizable(false);
         twitterKeysInputDialog.setType(java.awt.Window.Type.POPUP);
@@ -625,13 +575,26 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         twitterKeysInputDialog.pack();
         twitterKeysInputDialog.setLocationRelativeTo(this);
 
-        jLabel1.setText("Username:");
+        databaseKeysInputDialog.setTitle("MySQL Database");
+        databaseKeysInputDialog.setResizable(false);
+        databaseKeysInputDialog.addComponentListener(new java.awt.event.ComponentAdapter() {
+            public void componentShown(java.awt.event.ComponentEvent evt) {
+                dbInputDialogShown(evt);
+            }
+        });
 
-        jLabel2.setText("Password:");
+        sqlUsernameLabel.setText("Username:");
 
-        jLabel3.setText("URL link:");
+        sqlPassLabel.setText("Password:");
+
+        sqlLinkLabel.setText("URL link:");
+
+        sqlUserTextField.setToolTipText("Type the username of the MySQL database here.");
+
+        sqlLinkTextField.setToolTipText("Add the URL link to the MySQL database here.");
 
         sqlApplyButton.setText("Apply");
+        sqlApplyButton.setToolTipText("Click to effect changes.");
         sqlApplyButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 sqlApplyButtonActionPerformed(evt);
@@ -639,19 +602,29 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         });
         sqlButtonsPanel.add(sqlApplyButton);
 
-        sqlCancelButton.setText("OK/Cancel");
-        sqlCancelButton.addActionListener(new java.awt.event.ActionListener() {
+        sqlOkButton.setText("OK");
+        sqlOkButton.setToolTipText("Close the window.");
+        sqlOkButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                sqlCancelButtonActionPerformed(evt);
+                sqlOkButtonActionPerformed(evt);
             }
         });
-        sqlButtonsPanel.add(sqlCancelButton);
+        sqlButtonsPanel.add(sqlOkButton);
 
         connectingLabel.setIcon(new javax.swing.ImageIcon(getClass().getResource("/res/loading_spinner_24.gif"))); // NOI18N
+        connectingLabel.setToolTipText("Loading...");
         sqlButtonsPanel.add(connectingLabel);
         connectingLabel.setVisible(false);
 
         sqlPasswordField.setText("jPasswordField1");
+        sqlPasswordField.setToolTipText("Type the password of the MySQL database here.");
+
+        useDBCheckBox.setText("Use a MySQL Database");
+        useDBCheckBox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                useDBCheckBoxActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout databaseKeysInputDialogLayout = new javax.swing.GroupLayout(databaseKeysInputDialog.getContentPane());
         databaseKeysInputDialog.getContentPane().setLayout(databaseKeysInputDialogLayout);
@@ -660,36 +633,45 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
             .addGroup(databaseKeysInputDialogLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(databaseKeysInputDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(databaseKeysInputDialogLayout.createSequentialGroup()
+                        .addComponent(useDBCheckBox)
+                        .addGap(0, 0, Short.MAX_VALUE))
                     .addComponent(sqlButtonsPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(databaseKeysInputDialogLayout.createSequentialGroup()
+                        .addComponent(sqlUsernameLabel)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(sqlUserTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 190, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, databaseKeysInputDialogLayout.createSequentialGroup()
                         .addGap(0, 0, Short.MAX_VALUE)
                         .addGroup(databaseKeysInputDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel3, javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(jLabel2, javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(jLabel1, javax.swing.GroupLayout.Alignment.TRAILING))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addGroup(databaseKeysInputDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(sqlUserTextField, javax.swing.GroupLayout.DEFAULT_SIZE, 190, Short.MAX_VALUE)
-                            .addComponent(sqlLinkTextField)
-                            .addComponent(sqlPasswordField))))
+                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, databaseKeysInputDialogLayout.createSequentialGroup()
+                                .addComponent(sqlPassLabel)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(sqlPasswordField, javax.swing.GroupLayout.PREFERRED_SIZE, 190, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, databaseKeysInputDialogLayout.createSequentialGroup()
+                                .addComponent(sqlLinkLabel)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(sqlLinkTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 190, javax.swing.GroupLayout.PREFERRED_SIZE)))))
                 .addContainerGap())
         );
         databaseKeysInputDialogLayout.setVerticalGroup(
             databaseKeysInputDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(databaseKeysInputDialogLayout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addContainerGap()
+                .addComponent(useDBCheckBox)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(databaseKeysInputDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(sqlUserTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel1))
-                .addGap(18, 18, 18)
-                .addGroup(databaseKeysInputDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel2)
-                    .addComponent(sqlPasswordField, javax.swing.GroupLayout.PREFERRED_SIZE, 22, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(18, 18, 18)
+                    .addComponent(sqlUsernameLabel)
+                    .addComponent(sqlUserTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(databaseKeysInputDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(sqlPasswordField, javax.swing.GroupLayout.PREFERRED_SIZE, 22, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(sqlPassLabel))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(databaseKeysInputDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(sqlLinkTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel3))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                    .addComponent(sqlLinkLabel))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(sqlButtonsPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(7, 7, 7))
         );
@@ -716,7 +698,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         keywordPanel.setBorder(javax.swing.BorderFactory.createEtchedBorder(new java.awt.Color(102, 102, 102), null));
         keywordPanel.setPreferredSize(new java.awt.Dimension(205, 30));
 
-        enterKeywordTextField.setToolTipText("<html>\nInput the keywords to search for in tweets here and hit ENTER. Each keyword <br>\nentered will be strung together using commas. You can think of commas as <br>\nlogical ORs, while spaces within keywords are equivalent to logical ANDs (e.g.<br>\n ‘the twitter’ is the AND twitter, and ‘the,twitter’ is the OR twitter). <br>");
+        enterKeywordTextField.setToolTipText("<html>\nInput the keywords to search for in tweets here and hit ENTER. To search for <br>\nHastags, add a # before the keyword. Each keyword entered will be strung together <br>\nusing commas. You can think of commas as logical ORs, while spaces within <br>\nkeywords are equivalent to logical ANDs (e.g. ‘the twitter’ is the AND twitter, <br>\nand ‘the,twitter’ is the OR twitter). <br>");
         enterKeywordTextField.setBorder(null);
         enterKeywordTextField.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -968,7 +950,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jSeparator6)
+            .addComponent(panelSeparator)
             .addComponent(mapPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addGap(7, 7, 7)
@@ -981,13 +963,14 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
                 .addGap(7, 7, 7)
                 .addComponent(controlPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jSeparator6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(panelSeparator, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(0, 0, 0)
                 .addComponent(mapPanel, javax.swing.GroupLayout.DEFAULT_SIZE, 648, Short.MAX_VALUE)
                 .addGap(0, 0, 0))
         );
 
         pack();
+        setLocationRelativeTo(null);
     }// </editor-fold>//GEN-END:initComponents
 
     private void keywordsMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_keywordsMenuItemActionPerformed
@@ -1111,10 +1094,6 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         }
     }//GEN-LAST:event_removeKeywordsButtonActionPerformed
 
-    private void tryAgainButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tryAgainButtonActionPerformed
-        browser.loadURL(map);
-    }//GEN-LAST:event_tryAgainButtonActionPerformed
-
     private void displayMapButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_displayMapButtonActionPerformed
         boolean isVisible = mapPanel.isVisible();
         if(isVisible)
@@ -1140,17 +1119,15 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
                 guiListener.stopTwitterStream();
                 break;
             case "Start":
-                //if(isConnected())
-                guiListener.translate(selectedLanguages.values().toArray(new String[0]));
-                guiListener.startTwitterStream();
+                if(isConnected()) {
+                    guiListener.translate(selectedLanguages.values().toArray(new String[0]));
+                    guiListener.startTwitterStream();
+                }
                 break;
         } 
     }//GEN-LAST:event_startStopButtonPerformed
 
     private void exitMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_exitMenuItemActionPerformed
-        // Shut down the connection to twitter.
-        guiListener.stopTwitterStream();
-
         // Exit the program.
         System.exit(0);
     }//GEN-LAST:event_exitMenuItemActionPerformed
@@ -1225,7 +1202,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
 
     private void databaseKeysMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_databaseKeysMenuItemActionPerformed
         sqlApplyButton.setEnabled(true);
-        sqlCancelButton.setEnabled(true);
+        sqlOkButton.setEnabled(true);
         databaseKeysInputDialog.setVisible(true);
     }//GEN-LAST:event_databaseKeysMenuItemActionPerformed
 
@@ -1246,8 +1223,39 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         try {
             connectingLabel.setVisible(true);
             test.connect();
+            System.out.println("Hi");
+            // create the twitter filter stream database
+            test.executeSQLQuery("CREATE DATABASE IF NOT EXISTS `twitter_filter_stream` "
+                    + "DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci");
+            // set to use the twitter filter database
+            test.executeSQLQuery("USE `twitter_filter_stream`");
+            // create the tweets table
+            test.executeSQLQuery("CREATE TABLE IF NOT EXISTS `tweets` (" +
+                "  `id` bigint(20) NOT NULL COMMENT 'tweet id'," +
+                "  `retweet_id` bigint(20) NOT NULL COMMENT 'retweet id of the tweet if it is a retweet of another tweet'," +
+                "  `user_id` bigint(20) NOT NULL COMMENT 'user id of the user who tweeted the status'," +
+                "  `text` text NOT NULL COMMENT 'tweet status'," +
+                "  `fav_count` int(10) NOT NULL COMMENT 'favorite count'," +
+                "  `nr_retweets` int(10) NOT NULL COMMENT 'retweet count'," +
+                "  `creation_time` bigint(20) NOT NULL COMMENT 'creation time in (ms) since Jan 1st 1970 GMT'," +
+                "  `country_code` varchar(3) NOT NULL COMMENT 'two-letter country code about the place from where the tweet originated'," +
+                "  `geolocation` varchar(40) DEFAULT NULL COMMENT 'coordinates of tweet origin'," +
+                "  `lang_code` varchar(3) NOT NULL COMMENT 'two-letter code that represents the language detected in the status. ''und'' if not know.'," +
+                "  `keywords` varchar(200) DEFAULT NULL COMMENT 'keywords used in the status'" +
+                "  `sentiment` int(11) DEFAULT NULL COMMENT 'The sentiment of tweet text based on associated keyword'" +    
+                ") ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Stores tweets from the twitter filter stream API'");
+            // create the tweet users table
+            test.executeSQLQuery("CREATE TABLE IF NOT EXISTS `users` (" +
+                "  `id` bigint(20) NOT NULL COMMENT 'user id'," +
+                "  `username` varchar(30) NOT NULL COMMENT 'username'," +
+                "  `nr_of_followers` int(10) NOT NULL COMMENT 'number of followers fo the user'," +
+                "  `fav_count` int(10) NOT NULL COMMENT 'number of favorites'," +
+                "  `nr_of_friends` int(10) NOT NULL COMMENT 'number of friends'" +
+                ") ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='users'");
+            // alter tweets table to set primary key
+            test.executeSQLQuery("ALTER TABLE `tweets` ADD PRIMARY KEY (`id`) COMMENT 'tweet id'");
             sqlApplyButton.setEnabled(false);
-            sqlCancelButton.setEnabled(false);
+            sqlOkButton.setEnabled(false);
             connectingLabel.setVisible(false);
             test.close();
             
@@ -1262,9 +1270,9 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         }
     }//GEN-LAST:event_sqlApplyButtonActionPerformed
 
-    private void sqlCancelButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_sqlCancelButtonActionPerformed
+    private void sqlOkButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_sqlOkButtonActionPerformed
         databaseKeysInputDialog.setVisible(false);
-    }//GEN-LAST:event_sqlCancelButtonActionPerformed
+    }//GEN-LAST:event_sqlOkButtonActionPerformed
 
     private void clearAllKeysButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_clearAllKeysButtonActionPerformed
         consumerKeyTextField.setText("");
@@ -1274,8 +1282,37 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
     }//GEN-LAST:event_clearAllKeysButtonActionPerformed
 
     private void OkKeysButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_OkKeysButtonActionPerformed
-        twitterKeysInputDialog.setVisible(false);
+        if(guiListener.existsStream())
+            twitterKeysInputDialog.setVisible(false);
+        else {
+            JDialog.setDefaultLookAndFeelDecorated(true);
+            JOptionPane.showMessageDialog(null, "You to specify valid twitter credentials.", 
+                    "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }//GEN-LAST:event_OkKeysButtonActionPerformed
+
+    private void dbInputDialogShown(java.awt.event.ComponentEvent evt) {//GEN-FIRST:event_dbInputDialogShown
+        MySQL4j db = guiListener.getMySQLDatabase();
+        String user = "", pass = "", url = "";
+        if(db != null) {
+            user = db.getUsername();
+            pass = db.getPassword();
+            url = db.getURL();
+        }
+        sqlUserTextField.setText(user);
+        sqlPasswordField.setText(pass);
+        sqlLinkTextField.setText(url);
+        useDBCheckBoxActionPerformed(null);
+    }//GEN-LAST:event_dbInputDialogShown
+
+    private void useDBCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_useDBCheckBoxActionPerformed
+        boolean selected = useDBCheckBox.isSelected();
+        sqlUserTextField.setEnabled(selected);
+        sqlPasswordField.setEnabled(selected);
+        sqlLinkTextField.setEnabled(selected);
+        sqlApplyButton.setEnabled(selected);
+        guiListener.useDatabase(selected);
+    }//GEN-LAST:event_useDBCheckBoxActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton OkKeysButton;
@@ -1305,13 +1342,9 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
     private javax.swing.JMenuItem exitMenuItem;
     private javax.swing.JFileChooser fileChooser;
     private javax.swing.JMenu fileMenu;
-    private javax.swing.JLabel jLabel1;
-    private javax.swing.JLabel jLabel2;
-    private javax.swing.JLabel jLabel3;
     private javax.swing.JPopupMenu.Separator jSeparator1;
     private javax.swing.JPopupMenu.Separator jSeparator2;
     private javax.swing.JPopupMenu.Separator jSeparator3;
-    private javax.swing.JSeparator jSeparator6;
     private javax.swing.JPanel keysControlPanel;
     private javax.swing.JPanel keywordPanel;
     private javax.swing.JDialog keywordsDialog;
@@ -1323,12 +1356,11 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
     private javax.swing.JList loadedKeywordsList;
     private javax.swing.JPanel loadedKeywordsPanel;
     private javax.swing.JScrollPane loadedKeywordsScrollPane;
-    private javax.swing.JPanel loadingErrorPanel;
     private javax.swing.JFormattedTextField longTextField;
     private javax.swing.JPanel mapPanel;
     private javax.swing.JMenu markersMenu;
     private javax.swing.JMenuBar menuBar;
-    private javax.swing.JLabel no_internet_icon_label;
+    private javax.swing.JSeparator panelSeparator;
     private javax.swing.JMenuItem removeAllMarkersButton;
     private javax.swing.JMenuItem removeFileMarkersButton;
     private javax.swing.JButton removeKeywordsButton;
@@ -1347,17 +1379,20 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
     private javax.swing.JButton setUserMarkerButton;
     private javax.swing.JButton sqlApplyButton;
     private javax.swing.JPanel sqlButtonsPanel;
-    private javax.swing.JButton sqlCancelButton;
+    private javax.swing.JLabel sqlLinkLabel;
     private javax.swing.JTextField sqlLinkTextField;
+    private javax.swing.JButton sqlOkButton;
+    private javax.swing.JLabel sqlPassLabel;
     private javax.swing.JPasswordField sqlPasswordField;
     private javax.swing.JTextField sqlUserTextField;
+    private javax.swing.JLabel sqlUsernameLabel;
     private javax.swing.JMenuItem startStopButton1;
     private javax.swing.JButton startStopButton2;
     private javax.swing.JCheckBoxMenuItem systrayCheckBox;
     private javax.swing.JSpinner timeSpinner;
-    private javax.swing.JButton tryAgainButton;
     private javax.swing.JDialog twitterKeysInputDialog;
     private javax.swing.JMenuItem twitterKeysMenuItem;
+    private javax.swing.JCheckBox useDBCheckBox;
     // End of variables declaration//GEN-END:variables
 
     /**
@@ -1365,9 +1400,6 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
      */
     @Override
     public void newTweet(String lat, String lon, String title) {
-        //int commaIndex = coordinates.indexOf(",");
-        //String lat = coordinates.substring(1, commaIndex);
-        //String lon = coordinates.substring(commaIndex+1, coordinates.length()-1);
         GoogleMaps.setMarker(browser, lat, lon, title, "tweet");
     }
 
@@ -1390,6 +1422,8 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
             removeTwitterMarkersButton.setEnabled(false);
             twitterKeysMenuItem.setEnabled(false);
             databaseKeysMenuItem.setEnabled(false);
+            databaseKeysInputDialog.setVisible(false);
+            twitterKeysInputDialog.setVisible(false);
         }
         else {
             startStopButton1.setIcon(start);
@@ -1405,39 +1439,6 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
             twitterKeysMenuItem.setEnabled(true);
             databaseKeysMenuItem.setEnabled(true);
         }
-    }
-
-    /**
-     * Once logging is completed, we ask the user to select a location to save 
-     * the file in. Once user clicks save, it will automatically save the file
-     * to the user selected directory. If the user cancels the save operation,
-     * the program, will ask him to confirm his choice. If the user confirms,
-     * it will delete the temporary file otherwise it will again ask him to 
-     * select a save directory.
-     */
-    @Override
-    public void loggingCompleted(File tweets_file, File users_file) {
-        boolean confirmed;
-        do{
-            fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-            int retValue = fileChooser.showSaveDialog(null);
-            if(retValue == JFileChooser.APPROVE_OPTION) {
-                tweets_file.renameTo(new File(fileChooser.getSelectedFile()+"\\"+tweets_file.getName()));
-                users_file.renameTo(new File(fileChooser.getSelectedFile()+"\\"+users_file.getName()));
-                confirmed = true;
-            } else {
-                JDialog.setDefaultLookAndFeelDecorated(true);
-                int choice = JOptionPane.showConfirmDialog(null, "Are you sure you"
-                        + " don't want to save the file?", "Confirm", 
-                        JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
-                confirmed = choice == JOptionPane.YES_OPTION;
-                if(confirmed) {
-                    tweets_file.delete();
-                    users_file.delete();
-                }
-            }
-        }while(!confirmed);
-        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
     }
     
     /**
@@ -1495,14 +1496,16 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
     public boolean isConnected() {
         boolean reachable = false;
         try {
-            reachable = InetAddress.getByName("www.google.com").isReachable(500);
-        } catch (UnknownHostException ex) {
-            Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+            Process p1 = java.lang.Runtime.getRuntime().exec("ping www.google.com");
+            // return code for p1 will be 0 if internet is connected, else it will be 1
+            reachable = p1.waitFor() == 0;
         } catch (IOException ex) {
+            Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (InterruptedException ex) {
             Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
         }
         if(!reachable) {
-            JOptionPane.showMessageDialog(null, "No Internet Conenction.",
+            JOptionPane.showMessageDialog(null, "No Internet Connection.",
                     "Error", JOptionPane.ERROR_MESSAGE);
         }
         return reachable;

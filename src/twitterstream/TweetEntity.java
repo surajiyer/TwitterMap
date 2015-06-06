@@ -22,6 +22,7 @@ public class TweetEntity {
     private String language_code;
     private long user_id;
     private String keywords;
+    private int sentiment;
     
     public TweetEntity(String dataSeperator, Status status, String keywords) {
         this(dataSeperator, status, status.getPlace(), status.getRetweetedStatus(), keywords);
@@ -40,8 +41,16 @@ public class TweetEntity {
         this.language_code = status.getLang() == null ? "und" : status.getLang();
         this.user_id = status.getUser().getId();
         this.keywords = keywords;
+        this.sentiment = analyseSentiment(text, keywords);
     }
     
+    /**
+     * Cleans the text. Replaces all new lines, gaps and question marks with
+     * a space to make the text more cleaner for text mining.
+     * 
+     * @param text the tweet text
+     * @return the cleaned text
+     */
     private String cleanText(String text) {
         text = text.replace("?", " ");
         text = text.replace("\n", " ");
@@ -49,6 +58,13 @@ public class TweetEntity {
         return text;
     }
     
+    /**
+     * Used to escape single and double quotes to add them properly to the 
+     * MySQL database.
+     * 
+     * @param text the tweet text
+     * @return the escaped text
+     */
     public String escapeText(String text) {
         text = text.replace("\'", "\\\'");
         text = text.replace("\"", "\\\"");
@@ -103,11 +119,15 @@ public class TweetEntity {
         return keywords;
     }
     
+    public final int getSentiment() {
+        return sentiment;
+    }
+    
     public static final String getCSVHeader(String dataSeperator) {
         final String s = dataSeperator;
         return "ID"+s+"Retweet ID"+s+"User ID"+s+"Text"+s+"Favorite Count"+s+
                 "Retweet Count"+s+"Creation time"+s+"Country Code"+s+"Geolocation"
-                +s+"Language Code"+s+"Keywords";
+                +s+"Language Code"+s+"Keywords"+s+"Sentiment";
     }
     
     @Override
@@ -115,7 +135,7 @@ public class TweetEntity {
         final String s = dataSeperator;
         return id + s + retweet_id + s + user_id + s + text + s + fav_count + s 
                 + retweet_count + s + creation_time + s + country_code + s 
-                + geoLocation + s + language_code + s + keywords;
+                + geoLocation + s + language_code + s + keywords + s + sentiment;
     }
     
     @Override
@@ -140,5 +160,18 @@ public class TweetEntity {
         hash = 37 * hash + (int) (this.user_id ^ (this.user_id >>> 32));
         hash = 37 * hash + Objects.hashCode(this.keywords);
         return hash;
+    }
+
+    /**
+     * Analyse the sentiment of tweet text based on given keyword.
+     * @param text the tweet text
+     * @return a score ranging from 0 (Very bad) to 4 (Very good).
+     */
+    private int analyseSentiment(String text, String keyword) {
+        if(text == null)
+            throw new IllegalArgumentException("Tweet text cannot be null.");
+        if(keyword == null)
+            throw new IllegalArgumentException("Keyword cannot be null.");
+        return 0;
     }
 }
