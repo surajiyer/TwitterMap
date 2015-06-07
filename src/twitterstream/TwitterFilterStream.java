@@ -12,7 +12,6 @@ import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.logging.FileHandler;
@@ -351,13 +350,32 @@ public class TwitterFilterStream implements StatusListener {
      * @param error if an error occurred or not.
      */
     public void disable(boolean error) {
-                
-        if(status == StreamStatus.PROCESSING) {
+        
+        if(status == StreamStatus.ENABLED || error) {
+            // Stop the twitter stream.
+            twitterStream.shutdown();
+            
+            // write the number of retrieved tweets to log file.
+            logger.log(Level.INFO, "Retrieved {0} tweet(s)", tweets_count);
+            
+            // Set twitter stream running status.
+            logger.info("Twitter Stream Stopped.");
+            
+            // Set the twitter status to processing.
+            if(!error) {
+                listener.setRunningStatus(status = StreamStatus.PROCESSING);
+                System.out.println("Processing now");
+                return;
+            }
+        }
+        
+        if(status == StreamStatus.PROCESSING || error) {
             // close the file output streams.
             tweets_writer.close();
             users_writer.close();
             fh.close();
             
+            // close the MySQL database connection.
             if(twitterDatabase != null && useDatabase) {
                 try {
                     twitterDatabase.close();
@@ -369,6 +387,8 @@ public class TwitterFilterStream implements StatusListener {
             // Set twitter stream running status.
             listener.setRunningStatus(status = StreamStatus.DISABLED);
             
+            System.out.println("Disabling now");
+                    
             // When logging has completed, save the file to user-defined location.
             JFileChooser fc = new JFileChooser();
             boolean confirmed;
@@ -393,20 +413,6 @@ public class TwitterFilterStream implements StatusListener {
                     }
                 }
             }while(!confirmed);
-        }
-        
-        if(status == StreamStatus.ENABLED) {
-            // Stop the twitter stream.
-            twitterStream.shutdown();
-            
-            // write the number of retrieved tweets to log file.
-            logger.log(Level.INFO, "Retrieved {0} tweet(s)", tweets_count);
-            
-            // Set twitter stream running status.
-            logger.info("Twitter Stream Stopped.");
-            
-            // Set the twitter status to processing.
-            listener.setRunningStatus(status = StreamStatus.PROCESSING);
         }
     }
 
@@ -484,7 +490,6 @@ public class TwitterFilterStream implements StatusListener {
                 } catch (InterruptedException ex) {
                     logger.severe("Concurrent taking of tweet interrupted.");
                 }
-                System.out.println("Hi");
                 
                 // Notify listeners of new coordinates
                 if(!(coordinates = te.getGeoLocation()).equals("und")) {
@@ -533,6 +538,7 @@ public class TwitterFilterStream implements StatusListener {
                 }
             }
             
+            System.out.println("NULLZ");
             disable(false);
         }
     };

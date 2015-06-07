@@ -1394,6 +1394,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
             twitterKeysMenuItem.setEnabled(false);
             databaseKeysMenuItem.setEnabled(false);
             addLangButton.setEnabled(false);
+            removeLangButton.setEnabled(false);
             databaseKeysInputDialog.setVisible(false);
             twitterKeysInputDialog.setVisible(false);
         } else if (s == TwitterFilterStream.StreamStatus.DISABLED) {
@@ -1412,6 +1413,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
             twitterKeysMenuItem.setEnabled(true);
             databaseKeysMenuItem.setEnabled(true);
             addLangButton.setEnabled(true);
+            removeLangButton.setEnabled(true);
         } else {
             startStopButton1.setIcon(stop);
             startStopButton1.setText("Processing");
