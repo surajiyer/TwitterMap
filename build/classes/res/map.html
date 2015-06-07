@@ -27,7 +27,6 @@
         // Set of markers loaded on the map.
         var twitterMarkers = [];
         var userMarkers = [];
-        var fileMarkers = [];
         
         // Load the map and its initial configurations.
         function initialize() {
@@ -52,7 +51,7 @@
         
         // Function to add a merker to the map.
         function addMarker(lat,long,msg,icon,tag) {
-            if(!(tag === 'tweet' || tag === 'file' || tag === 'user')) {
+            if(!(tag === 'tweet' || tag === 'user')) {
                 return;
             }
             var marker = new google.maps.Marker({
@@ -64,8 +63,6 @@
             mc.addMarker(marker, false);
             if(tag === 'tweet') {
                 twitterMarkers.push(marker);
-            } else if (tag === 'file') {
-                fileMarkers.push(marker);
             } else if (tag === 'user'){
                 userMarkers.push(marker);
             }
@@ -102,20 +99,10 @@
             userMarkers = [];
         }
         
-        // Remove all the markers loaded from a file.
-        function clearFileMarkers() {
-            mc.removeMarkers(fileMarkers);
-            /*for (var i = 0; i < fileMarkers.length; i++) {
-                fileMarkers[i].setMap(null);
-            }*/
-            fileMarkers = [];
-        }
-        
         // Remove all markers from the map.
         function clearAllMarkers() {
             clearTwitterMarkers();
             clearUserMarkers();
-            clearFileMarkers();
         }
         
         // If the map position is out of range, move it back

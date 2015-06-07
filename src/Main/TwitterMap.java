@@ -47,7 +47,7 @@ public class TwitterMap implements GUIListener {
         
         // Add shut down hook to turn of the filter stream before exit.
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            TwitterMap.this.tStream.disable();
+            TwitterMap.this.tStream.disable(false);
         }));
     }
 
@@ -57,7 +57,7 @@ public class TwitterMap implements GUIListener {
 
     @Override
     public void onBrowserLoadFailed() {
-        tStream.disable();
+        tStream.disable(true);
     }
 
     @Override
@@ -67,7 +67,7 @@ public class TwitterMap implements GUIListener {
 
     @Override
     public void stopTwitterStream() {
-        tStream.disable();
+        tStream.disable(false);
     }
 
     @Override

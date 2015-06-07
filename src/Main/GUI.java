@@ -42,6 +42,7 @@ import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
 import twitterstream.TweetEntity;
 import twitterstream.TweetListener;
+import twitterstream.TwitterFilterStream;
 import utils.HintTextField;
 import utils.MySQL4j;
 import utils.UIutils;
@@ -338,7 +339,6 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         removeAllMarkersButton = new javax.swing.JMenuItem();
         removeTwitterMarkersButton = new javax.swing.JMenuItem();
         removeUserMarkersButton = new javax.swing.JMenuItem();
-        removeFileMarkersButton = new javax.swing.JMenuItem();
         runMenu = new javax.swing.JMenu();
         startStopButton1 = new javax.swing.JMenuItem();
 
@@ -989,15 +989,6 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         });
         markersMenu.add(removeUserMarkersButton);
 
-        removeFileMarkersButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/res/cross_16.png"))); // NOI18N
-        removeFileMarkersButton.setText("Remove File markers");
-        removeFileMarkersButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                removeFileMarkersButtonActionPerformed(evt);
-            }
-        });
-        markersMenu.add(removeFileMarkersButton);
-
         menuBar.add(markersMenu);
 
         runMenu.setText("Run");
@@ -1049,8 +1040,6 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
     private void loadFileMarkersButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loadFileMarkersButtonActionPerformed
         int retValue = fileChooser.showOpenDialog(null);
         if (retValue == JFileChooser.APPROVE_OPTION) {
-            // Clear markers already loaded from a previous file.
-            GoogleMaps.clearFileMarkers(browser);
             // Load the coordinates from the selected file.
             loadCoordinatesFromFile(fileChooser.getSelectedFile());
         }
@@ -1065,11 +1054,6 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         // clear all markers from the map.
         GoogleMaps.clearAllMarkers(browser);
     }//GEN-LAST:event_removeAllMarkersButtonActionPerformed
-
-    private void removeFileMarkersButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_removeFileMarkersButtonActionPerformed
-        // clear all markers loaded from a file from the map.
-        GoogleMaps.clearFileMarkers(browser);
-    }//GEN-LAST:event_removeFileMarkersButtonActionPerformed
 
     private void removeUserMarkersButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_removeUserMarkersButtonActionPerformed
         // clear all user defined markers from the map.
@@ -1395,8 +1379,8 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
      * status of the twitter stream.
      */
     @Override
-    public void setRunningStatus(boolean isRunning) {
-        if (isRunning) {
+    public void setRunningStatus(TwitterFilterStream.StreamStatus s) {
+        if (s == TwitterFilterStream.StreamStatus.ENABLED) {
             startStopButton1.setIcon(stop);
             startStopButton1.setText("Stop");
             startStopButton2.setIcon(stop);
@@ -1412,11 +1396,13 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
             addLangButton.setEnabled(false);
             databaseKeysInputDialog.setVisible(false);
             twitterKeysInputDialog.setVisible(false);
-        } else {
+        } else if (s == TwitterFilterStream.StreamStatus.DISABLED) {
             startStopButton1.setIcon(start);
             startStopButton1.setText("Start");
+            startStopButton1.setEnabled(true);
             startStopButton2.setIcon(start);
             startStopButton2.setText("Start");
+            startStopButton2.setEnabled(true);
             enterKeywordTextField.setEnabled(true);
             enterRunTextField.setEnabled(true);
             removeKeywordsButton.setEnabled(true);
@@ -1426,6 +1412,13 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
             twitterKeysMenuItem.setEnabled(true);
             databaseKeysMenuItem.setEnabled(true);
             addLangButton.setEnabled(true);
+        } else {
+            startStopButton1.setIcon(stop);
+            startStopButton1.setText("Processing");
+            startStopButton1.setEnabled(false);
+            startStopButton2.setIcon(stop);
+            startStopButton2.setText("Processing");
+            startStopButton2.setEnabled(false);
         }
     }
 
@@ -1455,11 +1448,15 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
                     if(!TweetEntity.getCSVHeader(";").equals(in.readLine()))
                             throw new Exception("Incorrect file.");
                     while (((tweet = in.readLine()) != null)) {
-                        String coordinates = tweet.substring(tweet.indexOf(";[")+1, tweet.indexOf("];"));
+                        String coordinates = tweet.substring(UIutils.nthOccurrence(tweet, ";", 8)+1, 
+                                UIutils.nthOccurrence(tweet, ";", 9));
+                        if(coordinates.equals("und"))
+                            continue;
                         int commaIndex = coordinates.indexOf(",");
                         String lat = coordinates.substring(1, commaIndex);
                         String lon = coordinates.substring(commaIndex + 1, coordinates.length()-1);
-                        String text = tweet.substring(UIutils.nthOccurrence(tweet, ";", 3)+1, UIutils.nthOccurrence(tweet, ";", 4));
+                        String text = tweet.substring(UIutils.nthOccurrence(tweet, ";", 3)+1, 
+                                UIutils.nthOccurrence(tweet, ";", 4));
                         newTweet(lat, lon, text);
                     }
                 } catch (IOException ex) {
@@ -1528,7 +1525,6 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
     private javax.swing.JMenuBar menuBar;
     private javax.swing.JSeparator panelSeparator;
     private javax.swing.JMenuItem removeAllMarkersButton;
-    private javax.swing.JMenuItem removeFileMarkersButton;
     private javax.swing.JButton removeKeywordsButton;
     private javax.swing.JButton removeLangButton;
     private javax.swing.JMenuItem removeTwitterMarkersButton;

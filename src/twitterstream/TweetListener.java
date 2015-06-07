@@ -5,6 +5,8 @@
  */
 package twitterstream;
 
+import twitterstream.TwitterFilterStream.StreamStatus;
+
 /**
  *
  * @author S.S.Iyer
@@ -22,7 +24,7 @@ public interface TweetListener {
     
     /**
      * Set whether the filter stream is running or not.
-     * @param isRunning 
+     * @param s
      */
-    public void setRunningStatus(boolean isRunning);
+    public void setRunningStatus(StreamStatus s);
 }

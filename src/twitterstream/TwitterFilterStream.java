@@ -12,6 +12,7 @@ import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.logging.FileHandler;
@@ -24,7 +25,6 @@ import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import org.apache.commons.lang3.ArrayUtils;
 import twitter4j.FilterQuery;
-import twitter4j.GeoLocation;
 import twitter4j.StallWarning;
 import twitter4j.Status;
 import twitter4j.StatusDeletionNotice;
@@ -43,6 +43,13 @@ import utils.MySQL4j;
  */
 public class TwitterFilterStream implements StatusListener {
 
+    /**
+     * Status of the filter stream.
+     */
+    public enum StreamStatus {
+        ENABLED, DISABLED, PROCESSING;
+    }
+    
     /** Generate a twitter stream object to connect to the streaming API. */
     TwitterStream twitterStream;
 
@@ -62,7 +69,7 @@ public class TwitterFilterStream implements StatusListener {
     private long startTime, runTime;
 
     /** To check if the twitter stream is/should be stopped. */
-    private boolean ENABLED;
+    private StreamStatus status;
 
     /** Writer objects to write the twitter stream data to file. */
     private File tweets_file, users_file;
@@ -84,21 +91,20 @@ public class TwitterFilterStream implements StatusListener {
     private long tweets_count;
     
     /** FIFO tweets buffer for processing tweets on concurrent thread. */
-    BlockingQueue tweetsQ, usersQ;
+    BlockingQueue q;
 
     public TwitterFilterStream() {
         twitterStream = null;
         keywords = new ArrayList<>();
         file_name_format = new SimpleDateFormat("dd-MM-yy_HH-mm");
-        ENABLED = false;
+        status = StreamStatus.DISABLED;
         twitterDatabase = null;
         translate_codes = null;
         logfile = null;
         logger = Logger.getLogger("TwitterStreamLog");
         fh = null;
         useDatabase = false;
-        tweetsQ = new ArrayBlockingQueue(100);
-        usersQ = new ArrayBlockingQueue(100);
+        q = new ArrayBlockingQueue(100);
     }
     
     /** Gets configuration builder for authentication */
@@ -209,7 +215,7 @@ public class TwitterFilterStream implements StatusListener {
      * @return true if twitter stream is enabled.
      */
     public boolean isRunning() {
-        return ENABLED;
+        return status != StreamStatus.DISABLED;
     }
     
     /**
@@ -235,7 +241,7 @@ public class TwitterFilterStream implements StatusListener {
      */
     public void enable() {
         
-        if(!ENABLED) {
+        if(status == StreamStatus.DISABLED) {
             // Check if at least 1 keyword exists.
             if(keywords.isEmpty()) {
                 JDialog.setDefaultLookAndFeelDecorated(true);
@@ -299,8 +305,8 @@ public class TwitterFilterStream implements StatusListener {
                     JDialog.setDefaultLookAndFeelDecorated(true);
                     JOptionPane.showMessageDialog(null, "Unable to connect to MySQL database.", 
                             "Error", JOptionPane.ERROR_MESSAGE);
-                    ENABLED = true;
-                    disable();
+                    status = StreamStatus.ENABLED;
+                    disable(true);
                     return;
                 }
             }
@@ -319,8 +325,8 @@ public class TwitterFilterStream implements StatusListener {
                         JDialog.setDefaultLookAndFeelDecorated(true);
                         JOptionPane.showMessageDialog(null, "Could not translate keyword '"+key+"'.", 
                                 "Error", JOptionPane.ERROR_MESSAGE);
-                        ENABLED = true;
-                        disable();
+                        status = StreamStatus.ENABLED;
+                        disable(true);
                         return;
                     }
                 }
@@ -334,7 +340,7 @@ public class TwitterFilterStream implements StatusListener {
             twitterStream.filter(fq);
 
             // Set twitter stream running status.
-            listener.setRunningStatus(ENABLED = true);
+            listener.setRunningStatus(status = StreamStatus.ENABLED);
             logger.info("Twitter Stream Started");
             new Thread(processTweets).start();
         }
@@ -342,20 +348,15 @@ public class TwitterFilterStream implements StatusListener {
 
     /**
      * Stop reading the twitter stream.
+     * @param error if an error occurred or not.
      */
-    public void disable() {
-        
-        if(ENABLED) {
-            // Stop the twitter stream.
-            twitterStream.shutdown();
-            
+    public void disable(boolean error) {
+                
+        if(status == StreamStatus.PROCESSING) {
             // close the file output streams.
             tweets_writer.close();
             users_writer.close();
             fh.close();
-            
-            // write the number of retrieved tweets to log file.
-            logger.log(Level.INFO, "Retrieved {0} tweet(s)", tweets_count);
             
             if(twitterDatabase != null && useDatabase) {
                 try {
@@ -366,8 +367,7 @@ public class TwitterFilterStream implements StatusListener {
             }
             
             // Set twitter stream running status.
-            listener.setRunningStatus(ENABLED = false);
-            logger.info("Twitter Stream Stopped.");
+            listener.setRunningStatus(status = StreamStatus.DISABLED);
             
             // When logging has completed, save the file to user-defined location.
             JFileChooser fc = new JFileChooser();
@@ -393,6 +393,20 @@ public class TwitterFilterStream implements StatusListener {
                     }
                 }
             }while(!confirmed);
+        }
+        
+        if(status == StreamStatus.ENABLED) {
+            // Stop the twitter stream.
+            twitterStream.shutdown();
+            
+            // write the number of retrieved tweets to log file.
+            logger.log(Level.INFO, "Retrieved {0} tweet(s)", tweets_count);
+            
+            // Set twitter stream running status.
+            logger.info("Twitter Stream Stopped.");
+            
+            // Set the twitter status to processing.
+            listener.setRunningStatus(status = StreamStatus.PROCESSING);
         }
     }
 
@@ -420,7 +434,7 @@ public class TwitterFilterStream implements StatusListener {
     @Override
     public void onStatus(Status status) {
         if (runTime != 0 && System.currentTimeMillis() >= startTime + runTime) {
-            disable();
+            disable(false);
             return;
         }
         
@@ -428,10 +442,9 @@ public class TwitterFilterStream implements StatusListener {
         TweetEntity te = new TweetEntity(status, getRelatedKeyword(status.getText()));
         UserEntity ue = new UserEntity(status.getUser());
         try {
-            tweetsQ.put(te);
-            usersQ.put(ue);
+            q.put(new Object[]{te, ue});
         } catch (InterruptedException ex) {
-            Logger.getLogger(TwitterFilterStream.class.getName()).log(Level.SEVERE, null, ex);
+            logger.severe("Adding tweet to processing queue was interrupted.");
         }
     }
 
@@ -450,7 +463,7 @@ public class TwitterFilterStream implements StatusListener {
     @Override
     public void onException(Exception excptn) {
         logger.severe("Connection to Twitter public stream failed.");
-        disable();
+        disable(true);
     }
     
     /** Runnable to process tweets on separate thread. */
@@ -463,20 +476,18 @@ public class TwitterFilterStream implements StatusListener {
             UserEntity ue = null;
             String coordinates;
             
-            while(ENABLED || !tweetsQ.isEmpty() || !usersQ.isEmpty()) {
-                
+            while(status == StreamStatus.ENABLED || !q.isEmpty()) {
                 try {
-                    te = (TweetEntity) tweetsQ.take();
-                    ue = (UserEntity) usersQ.take();
+                    Object[] o = (Object[]) q.take();
+                    te = (TweetEntity) o[0];
+                    ue = (UserEntity) o[1];
                 } catch (InterruptedException ex) {
                     logger.severe("Concurrent taking of tweet interrupted.");
                 }
-                
-                if(te == null || ue == null)
-                    continue;
+                System.out.println("Hi");
                 
                 // Notify listeners of new coordinates
-                if((coordinates = te.getGeoLocation()) != null) {
+                if(!(coordinates = te.getGeoLocation()).equals("und")) {
                     int commaIndex = coordinates.indexOf(",");
                     String lat = coordinates.substring(1, commaIndex);
                     String lon = coordinates.substring(commaIndex+1, coordinates.length()-1);
@@ -504,7 +515,7 @@ public class TwitterFilterStream implements StatusListener {
                                 + "," + ue.getFavCount()+ "," + ue.getNrOfFriends() + ")");
                     } catch (SQLException ex) {
                         logger.severe("Failed to write the twitter data to the MySQL database properly.");
-                        disable();
+                        disable(true);
                         return;
                     }
                 }
@@ -518,9 +529,11 @@ public class TwitterFilterStream implements StatusListener {
                 // Stop the twitter stream if any error(s) while writing to file.
                 if(tweets_writer.checkError() || users_writer.checkError()) {
                     logger.severe("Failed to write stream data to file.");
-                    disable();
+                    disable(true);
                 }
             }
+            
+            disable(false);
         }
     };
 }

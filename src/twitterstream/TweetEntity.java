@@ -2,6 +2,7 @@ package twitterstream;
 
 import java.util.List;
 import java.util.Objects;
+import twitter4j.GeoLocation;
 import twitter4j.Place;
 import twitter4j.Status;
 import twitterstream.parser.Autolink;
@@ -30,10 +31,10 @@ public class TweetEntity {
     private int sentiment;
     
     public TweetEntity(Status status, String keywords) {
-        this(status, status.getPlace(), status.getRetweetedStatus(), keywords);
+        this(status, status.getPlace(), status.getGeoLocation(), status.getRetweetedStatus(), keywords);
     }
     
-    private TweetEntity(Status status, Place place, Status retweet, String keywords) {
+    private TweetEntity(Status status, Place place, GeoLocation geo, Status retweet, String keywords) {
         this.id = status.getId();
         this.retweet_id = retweet == null ? -1 : retweet.getId();
         this.retweet_count = status.getRetweetCount();
@@ -41,7 +42,7 @@ public class TweetEntity {
         this.text = cleanText(status.getText());
         this.creation_time = status.getCreatedAt().getTime();
         this.country_code = place == null ? "und" : place.getCountryCode();
-        this.geoLocation = status.getGeoLocation().toString();
+        this.geoLocation = geo == null ? "und" : geo.toString();
         this.language_code = status.getLang() == null ? "und" : status.getLang();
         this.user_id = status.getUser().getId();
         this.keywords = keywords;
@@ -126,7 +127,7 @@ public class TweetEntity {
     
     public static void main(String[] args) {
         String text = "Amnesty pleit voor Europese opvang honderdduizend Syriërs: http://bit.ly/1KhSyYQ";
-        text = " Hi my voornam is Suraj.. http://t.co url www.twitter.com ";
+        text = " Hi my name is Suraj.. http://t.co url www.twitter.com ";
         text = "www.twitter.com, www.yahoo.co.jp, t.co/blahblah, www.poloshirts.uk.com";
         System.out.println(getFormattedText(text));
     }

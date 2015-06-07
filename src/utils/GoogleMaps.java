@@ -110,14 +110,6 @@ public class GoogleMaps {
     }
     
     /**
-     * Remove all markers loaded from a file.
-     * @param browser 
-     */
-    public static void clearFileMarkers(Browser browser) {
-        browser.executeJavaScriptAndReturnValue("clearFileMarkers()");
-    }
-    
-    /**
      * Remove all markers on the map.
      * @param browser 
      */
