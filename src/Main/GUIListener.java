@@ -1,16 +1,15 @@
-package Main;
-
-import utils.MySQL4j;
-
 /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
+package Main;
+
+import utils.MySQL4j;
 
 /**
  *
- * @author s139662
+ * @author S.S.Iyer
  */
 public interface GUIListener {
     
@@ -75,6 +74,8 @@ public interface GUIListener {
      */
     public void setTwitterCredentials(String CONSUMER_KEY, String CONSUMER_SECRET, 
             String API_KEY, String API_SECRET);
+    
+    public String[] getTwitterCredentials();
     
     public MySQL4j getMySQLDatabase();
     

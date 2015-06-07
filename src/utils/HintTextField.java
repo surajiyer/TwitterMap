@@ -13,7 +13,7 @@ import javax.swing.JTextField;
 
 /**
  *
- * @author s139662
+ * @author S.S.Iyer
  */
 public class HintTextField extends JTextField implements FocusListener {
 

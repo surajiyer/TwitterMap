@@ -4,8 +4,9 @@ import java.util.Objects;
 import twitter4j.User;
 
 /**
- *
- * @author s139662
+ * Twitter user
+ * 
+ * @author S.S.Iyer
  */
 public class UserEntity {
     

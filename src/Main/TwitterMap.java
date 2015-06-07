@@ -7,6 +7,7 @@ package Main;
 
 import twitterstream.TwitterFilterStream;
 import utils.MySQL4j;
+import utils.NLP;
 
 /**
  * Main class
@@ -19,10 +20,14 @@ public class TwitterMap implements GUIListener {
     
     public TwitterMap() {
         
-        // initialize the twitter stream.
+        // initializes the twitter stream.
         tStream = new TwitterFilterStream();
         
-        // create a login frame to input the twitter credentials.
+        // initializes the sentiment analysis pipeline.
+        NLP.init();
+        
+        /* creates a login frame to input the twitter dev credentials prior to 
+           loading the frame. */
         twitterLoginFrame tlf = new twitterLoginFrame(this);
         tlf.setVisible(true);
     }
@@ -118,5 +123,9 @@ public class TwitterMap implements GUIListener {
     public void loadMainFrame() {
         run();
     }
-    
+
+    @Override
+    public String[] getTwitterCredentials() {
+       return tStream.getTwitterCredentials();
+    }
 }

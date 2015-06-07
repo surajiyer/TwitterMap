@@ -12,10 +12,13 @@ import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.logging.FileHandler;
+import java.util.logging.Formatter;
 import java.util.logging.Level;
+import java.util.logging.LogRecord;
 import java.util.logging.Logger;
-import java.util.logging.SimpleFormatter;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
@@ -44,7 +47,7 @@ public class TwitterFilterStream implements StatusListener {
     TwitterStream twitterStream;
 
     /** Date formats for file naming and console output. */
-    private final SimpleDateFormat console_format, file_name_format;
+    private final SimpleDateFormat file_name_format;
 
     /** List of keywords to search for. */
     private final ArrayList<String> keywords;
@@ -66,6 +69,7 @@ public class TwitterFilterStream implements StatusListener {
     private PrintWriter tweets_writer, users_writer;
     
     /** Logger to log twitter filter stream data. */
+    private File logfile;
     private final Logger logger;
     private FileHandler fh;
     
@@ -78,18 +82,22 @@ public class TwitterFilterStream implements StatusListener {
     
     /** Count of number of tweets retrieved. */
     private long tweets_count;
+    
+    /** FIFO tweets buffer for processing tweets on concurrent thread. */
+    BlockingQueue q;
 
     public TwitterFilterStream() {
         twitterStream = null;
         keywords = new ArrayList<>();
-        console_format = new SimpleDateFormat("hh:mm:ss");
         file_name_format = new SimpleDateFormat("dd-MM-yy_HH-mm");
         ENABLED = false;
         twitterDatabase = null;
         translate_codes = null;
-        logger = Logger.getLogger("StreamLog");
+        logfile = null;
+        logger = Logger.getLogger("TwitterStreamLog");
         fh = null;
         useDatabase = false;
+        q = new ArrayBlockingQueue(100);
     }
     
     /** Gets configuration builder for authentication */
@@ -154,8 +162,8 @@ public class TwitterFilterStream implements StatusListener {
      */
     public void setTwitterCredentials(String CONSUMER_KEY, String CONSUMER_SECRET, 
             String API_KEY, String API_SECRET) {
-        twitterStream = new TwitterStreamFactory(getAuth(CONSUMER_KEY, CONSUMER_SECRET, 
-            API_KEY, API_SECRET)).getInstance();
+        twitterStream = new TwitterStreamFactory(getAuth(CONSUMER_KEY, 
+                CONSUMER_SECRET, API_KEY, API_SECRET)).getInstance();
         twitterStream.addListener(this);
     }
     
@@ -210,6 +218,16 @@ public class TwitterFilterStream implements StatusListener {
     public boolean existsStream() {
         return twitterStream != null;
     }
+    
+    /**
+     * Return the credentials used to activate the twitter stream.
+     * @return CONSUMER_KEY, CONSUMER_SECRET, API_KEY, API_SECRET 
+     */
+    public String[] getTwitterCredentials() {
+        Configuration c = twitterStream.getConfiguration();
+        return new String[] {c.getOAuthConsumerKey(), c.getOAuthConsumerSecret(), 
+            c.getOAuthAccessToken(), c.getOAuthAccessTokenSecret()};
+    }
  
     /**
      * Start reading the twitter stream.
@@ -227,21 +245,31 @@ public class TwitterFilterStream implements StatusListener {
 
             // Create new files to write the data to.
             startTime = System.currentTimeMillis();
-            try {
-                fh = new FileHandler(System.getenv("TMP")+"\\StreamLog_"+
+            logfile = new File(System.getenv("TMP")+"\\"+logger.getName()+"_"+
                         file_name_format.format(new Date(startTime)) + ".log");
+            try {
+                fh = new FileHandler(logfile.getAbsolutePath());
             } catch (Exception ex) {
                 JDialog.setDefaultLookAndFeelDecorated(true);
                 JOptionPane.showMessageDialog(null, "Failed to build stream log. ", 
                         "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            fh.setFormatter(new SimpleFormatter());
+            fh.setFormatter(new Formatter() {
+                @Override
+                public String format(LogRecord record) {
+                  return new SimpleDateFormat("hh:mm:ss").format(new Date(record.getMillis())) + " "
+                          + record.getLevel() + ":  "
+                          + record.getSourceClassName() + " -:- "
+                          + record.getSourceMethodName() + " -:- "
+                          + record.getMessage() + "\n";
+                }
+              });
             logger.addHandler(fh);
             tweets_file = new File(System.getenv("TMP")+"\\Tweets_"+
-                                   file_name_format.format(new Date(startTime)) + ".csv");
+                    file_name_format.format(new Date(startTime)) + ".csv");
             users_file = new File(System.getenv("TMP")+"\\Users_"+
-                                  file_name_format.format(new Date(startTime)) + ".csv");
+                    file_name_format.format(new Date(startTime)) + ".csv");
 
             try {
                 tweets_writer = new PrintWriter(tweets_file);
@@ -258,6 +286,7 @@ public class TwitterFilterStream implements StatusListener {
                 tweets_file.delete();
                 users_writer.close();
                 users_file.delete();
+                logfile.delete();
                 return;
             }
             
@@ -292,6 +321,7 @@ public class TwitterFilterStream implements StatusListener {
                         return;
                     }
                 }
+                fq.language(translate_codes);
             }
             fq.track(keys);
 
@@ -316,33 +346,10 @@ public class TwitterFilterStream implements StatusListener {
             // close the file output streams.
             tweets_writer.close();
             users_writer.close();
+            fh.close();
             
             // write the number of retrieved tweets to log file.
             logger.log(Level.INFO, "Retrieved {0} tweet(s)", tweets_count);
-            
-            // When logging has completed, save the file to user-defined location.
-            JFileChooser fc = new JFileChooser();
-            boolean confirmed;
-            do{
-                fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-                int retValue = fc.showSaveDialog(null);
-                if(retValue == JFileChooser.APPROVE_OPTION) {
-                    tweets_file.renameTo(new File(fc.getSelectedFile()+"\\"+tweets_file.getName()));
-                    users_file.renameTo(new File(fc.getSelectedFile()+"\\"+users_file.getName()));
-                    //fh.
-                    confirmed = true;
-                } else {
-                    JDialog.setDefaultLookAndFeelDecorated(true);
-                    int choice = JOptionPane.showConfirmDialog(null, "Are you sure you "
-                            + "don't want to save the file?", "Confirm", 
-                            JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
-                    confirmed = choice == JOptionPane.YES_OPTION;
-                    if(confirmed) {
-                        tweets_file.delete();
-                        users_file.delete();
-                    }
-                }
-            }while(!confirmed);
             
             if(twitterDatabase != null && useDatabase) {
                 try {
@@ -355,6 +362,31 @@ public class TwitterFilterStream implements StatusListener {
             // Set twitter stream running status.
             listener.setRunningStatus(ENABLED = false);
             logger.info("Twitter Stream Stopped.");
+            
+            // When logging has completed, save the file to user-defined location.
+            JFileChooser fc = new JFileChooser();
+            boolean confirmed;
+            do{
+                fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+                int retValue = fc.showSaveDialog(null);
+                if(retValue == JFileChooser.APPROVE_OPTION) {
+                    tweets_file.renameTo(new File(fc.getSelectedFile()+"\\"+tweets_file.getName()));
+                    users_file.renameTo(new File(fc.getSelectedFile()+"\\"+users_file.getName()));
+                    logfile.renameTo(new File(fc.getSelectedFile()+"\\"+logfile.getName()));
+                    confirmed = true;
+                } else {
+                    JDialog.setDefaultLookAndFeelDecorated(true);
+                    int choice = JOptionPane.showConfirmDialog(null, "Are you sure you "
+                            + "don't want to save the file?", "Confirm", 
+                            JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+                    confirmed = choice == JOptionPane.YES_OPTION;
+                    if(confirmed) {
+                        tweets_file.delete();
+                        users_file.delete();
+                        logfile.delete();
+                    }
+                }
+            }while(!confirmed);
         }
     }
 
@@ -390,7 +422,7 @@ public class TwitterFilterStream implements StatusListener {
         if(status.getGeoLocation() != null) {
             GeoLocation geo = status.getGeoLocation();
             listener.newTweet(Double.toString(geo.getLatitude()),
-                    Double.toString(geo.getLongitude()), status.getText());
+                    Double.toString(geo.getLongitude()), TweetEntity.getLinkedText(status.getText()));
         }
         
         TweetEntity te = new TweetEntity(DATA_SEPERATOR, status, getRelatedKeyword(status.getText()));
@@ -452,4 +484,12 @@ public class TwitterFilterStream implements StatusListener {
         logger.severe("Connection to Twitter public stream failed.");
         disable();
     }
+    
+    Thread processTweets = new Thread(new Runnable() {
+
+        @Override
+        public void run() {
+            
+        }
+    });
 }

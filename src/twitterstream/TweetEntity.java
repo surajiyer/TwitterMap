@@ -1,12 +1,17 @@
 package twitterstream;
 
+import java.util.List;
 import java.util.Objects;
 import twitter4j.Place;
 import twitter4j.Status;
+import twitterstream.parser.Autolink;
+import twitterstream.parser.Extractor;
+import utils.NLP;
 
 /**
- *
- * @author s139662
+ * Twitter tweets
+ * 
+ * @author S.S.Iyer
  */
 public class TweetEntity {
     
@@ -38,10 +43,11 @@ public class TweetEntity {
         this.text = cleanText(status.getText());
         this.creation_time = status.getCreatedAt().getTime();
         this.country_code = place == null ? "und" : place.getCountryCode();
+        this.geoLocation = status.getGeoLocation().toString();
         this.language_code = status.getLang() == null ? "und" : status.getLang();
         this.user_id = status.getUser().getId();
         this.keywords = keywords;
-        this.sentiment = analyseSentiment(text, keywords);
+        //this.sentiment = analyseSentiment(text, keywords);
     }
     
     /**
@@ -55,6 +61,7 @@ public class TweetEntity {
         text = text.replace("?", " ");
         text = text.replace("\n", " ");
         text = text.replace("\t", " ");
+        text = text.trim();
         return text;
     }
     
@@ -97,6 +104,33 @@ public class TweetEntity {
         if(escape)
             return escapeText(text);
         return text;
+    }
+    
+    /**
+     * Autolinks the URL links, hastags, mentions and cashtags in tweet texts.
+     * @return the autolinked tweet text.
+     */
+    public final static String getLinkedText(String text) {
+        text = new Autolink().autoLink(text);
+        return text;
+    }
+    
+    public final static String getFormattedText(String text) {
+        Extractor extractor =  new Extractor();
+        List<String> urls = extractor.extractURLs(text);
+        for(String url : urls) {
+            System.out.println(url);
+            text = text.replace(url, "");
+        }
+        text = text.replace("\t", " ");
+        return text;
+    }
+    
+    public static void main(String[] args) {
+        String text = "Amnesty pleit voor Europese opvang honderdduizend Syriërs: http://bit.ly/1KhSyYQ";
+        text = " Hi my voornam is Suraj.. http://t.co url www.twitter.com ";
+        text = "www.twitter.com, www.yahoo.co.jp, t.co/blahblah, www.poloshirts.uk.com";
+        System.out.println(getFormattedText(text));
     }
     
     public final long getTime() {
@@ -167,11 +201,9 @@ public class TweetEntity {
      * @param text the tweet text
      * @return a score ranging from 0 (Very bad) to 4 (Very good).
      */
-    private int analyseSentiment(String text, String keyword) {
+    private static int analyseSentiment(String text) {
         if(text == null)
             throw new IllegalArgumentException("Tweet text cannot be null.");
-        if(keyword == null)
-            throw new IllegalArgumentException("Keyword cannot be null.");
-        return 0;
+        return NLP.findSentiment(text);
     }
 }

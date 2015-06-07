@@ -5,11 +5,9 @@
  */
 package twitterstream;
 
-import java.io.File;
-
 /**
  *
- * @author s139662
+ * @author S.S.Iyer
  */
 public interface TweetListener {
     
@@ -23,12 +21,7 @@ public interface TweetListener {
     public void newTweet(String lat, String lon, String title);
     
     /**
-     * If it cannot establish a connection to the twitter stream.
-     */
-    //public void responseFailure();
-    
-    /**
-     * 
+     * Set whether the filter stream is running or not.
      * @param isRunning 
      */
     public void setRunningStatus(boolean isRunning);

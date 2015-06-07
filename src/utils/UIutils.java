@@ -13,7 +13,7 @@ import javax.swing.ImageIcon;
 
 /**
  *
- * @author s139662
+ * @author S.S.Iyer
  */
 public class UIutils {
 

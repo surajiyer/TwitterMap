@@ -5,6 +5,10 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
 
+/**
+ * 
+ * @author S.S.Iyer
+ */
 public class URLConnectionReader {
     public static String getText(String url) throws Exception {
         //String charset = java.nio.charset.StandardCharsets.UTF_8.name();//"UTF-8"

@@ -5,11 +5,16 @@
  */
 package Main;
 
+import javax.swing.ImageIcon;
 import javax.swing.JDialog;
 import javax.swing.JOptionPane;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
 /**
- *
+ * Ask the user to input their twitter developer credentials before running
+ * the Main frame.
+ * 
  * @author S.S.Iyer
  */
 public class twitterLoginFrame extends javax.swing.JFrame {
@@ -46,6 +51,26 @@ public class twitterLoginFrame extends javax.swing.JFrame {
         //</editor-fold>
         //</editor-fold>
         initComponents();
+        
+        DocumentListener dl = new DocumentListener() {
+
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                applyKeysButton.setEnabled(true);
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                applyKeysButton.setEnabled(true);
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {}
+        };
+        consumerKeyTextField.getDocument().addDocumentListener(dl);
+        consumerSecretTextField.getDocument().addDocumentListener(dl);
+        apiKeyTextField.getDocument().addDocumentListener(dl);
+        apiSecretTextField.getDocument().addDocumentListener(dl);
     }
 
     /**
@@ -72,6 +97,7 @@ public class twitterLoginFrame extends javax.swing.JFrame {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("TwitterMap");
+        setIconImage(new ImageIcon(getClass().getResource("/res/twitter_icon.png")).getImage());
         setResizable(false);
 
         consumerKeyLabel.setText("Enter your twitter Consumer key:");
@@ -85,6 +111,7 @@ public class twitterLoginFrame extends javax.swing.JFrame {
         apiSecretLabel.setText("Enter your twitter API secret:");
 
         applyKeysButton.setText("Apply");
+        applyKeysButton.setEnabled(false);
         applyKeysButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 applyKeysButtonActionPerformed(evt);
@@ -189,6 +216,7 @@ public class twitterLoginFrame extends javax.swing.JFrame {
             && apiKey.matches("^[a-zA-Z0-9]+\\-[a-zA-Z0-9]+$")
             && apiSecret.matches("^[a-zA-Z0-9]+$")) {
             loginListener.setTwitterCredentials(cKey, cSecret, apiKey, apiSecret);
+            applyKeysButton.setEnabled(false);
         } else {
             JDialog.setDefaultLookAndFeelDecorated(true);
             JOptionPane.showMessageDialog(null, "1 or more keys/secrets uses invalid characters.",

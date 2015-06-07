@@ -328,6 +328,9 @@
           <Value id="POPUP"/>
         </Property>
       </Properties>
+      <Events>
+        <EventHandler event="componentShown" listener="java.awt.event.ComponentListener" parameters="java.awt.event.ComponentEvent" handler="twitterKeysInputDialogComponentShown"/>
+      </Events>
       <AuxValues>
         <AuxValue name="JavaCodeGenerator_LayoutCodePost" type="java.lang.String" value="twitterKeysInputDialog.pack();&#xa;twitterKeysInputDialog.setLocationRelativeTo(this);"/>
       </AuxValues>

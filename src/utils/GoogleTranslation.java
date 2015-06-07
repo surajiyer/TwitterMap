@@ -2,6 +2,10 @@ package utils;
 
 import java.net.*;
 
+/**
+ * 
+ * @author S.S.Iyer
+ */
 public class GoogleTranslation {
     
     private static String[] language_codes = new String[]{"nl", "fr", "zh", "es",

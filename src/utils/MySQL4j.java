@@ -12,10 +12,13 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
- * required library:
+ * 
+ * Used to conenct to a MySQL database and execute SQL queries on it.
+ * 
+ * Required library:
  * http://www.java2s.com/Code/Jar/m/Downloadmysqlconnectorjavajar.htm
  * 
- * @author s139662
+ * @author S.S.Iyer
  */
 public class MySQL4j {
 

@@ -37,6 +37,8 @@ import javax.swing.ImageIcon;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
 import twitterstream.TweetListener;
 import utils.HintTextField;
@@ -100,7 +102,6 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         languageCodes.put("Korean", "ko");
         languageCodes.put("Vietnamese", "vi");
 
-
         // Create a browser, its associated UI view object and the browser listener.
         browser = new Browser();
         browserView = new BrowserView(browser);
@@ -156,6 +157,11 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         
         initComponents();
         
+        // Select english as a filter language by default.
+        String[] sel = new String[] {"English", "en"};
+        selectedLanguages.put(sel[0], sel[1]);
+        ((DefaultTableModel)selectedLangTable.getModel()).addRow(sel);
+        
         // Load certain variables.
         timeScale = 60000; // 1min = 60000ms
         
@@ -183,6 +189,47 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
             systrayCheckBox.setEnabled(false);
             systrayCheckBox.setToolTipText("OS does not support this function.");
         }
+        
+        // add a text field change listener to the twitter credentials input dialog. 
+        DocumentListener dl1 = new DocumentListener() {
+
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                applyKeysButton.setEnabled(true);
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                applyKeysButton.setEnabled(true);
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {}
+        };
+        consumerKeyTextField.getDocument().addDocumentListener(dl1);
+        consumerSecretTextField.getDocument().addDocumentListener(dl1);
+        apiKeyTextField.getDocument().addDocumentListener(dl1);
+        apiSecretTextField.getDocument().addDocumentListener(dl1);
+        
+        // add a text field change listener to the MySQL credentials input dialog.  
+        DocumentListener dl2 = new DocumentListener() {
+
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                sqlApplyButton.setEnabled(true);
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                sqlApplyButton.setEnabled(true);
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {}
+        };
+        sqlUserTextField.getDocument().addDocumentListener(dl2);
+        sqlPasswordField.getDocument().addDocumentListener(dl2);
+        sqlLinkTextField.getDocument().addDocumentListener(dl2);
         
         // Display the keywords dialog at start
         keywordsDialog.setVisible(true);
@@ -481,6 +528,11 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         twitterKeysInputDialog.setTitle("Enter twitter credentials");
         twitterKeysInputDialog.setResizable(false);
         twitterKeysInputDialog.setType(java.awt.Window.Type.POPUP);
+        twitterKeysInputDialog.addComponentListener(new java.awt.event.ComponentAdapter() {
+            public void componentShown(java.awt.event.ComponentEvent evt) {
+                twitterKeysInputDialogComponentShown(evt);
+            }
+        });
 
         consumerKeyLabel.setText("Enter your twitter Consumer key:");
 
@@ -1189,6 +1241,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
                 && apiKey.matches("^[a-zA-Z0-9]+\\-[a-zA-Z0-9]+$")
                 && apiSecret.matches("^[a-zA-Z0-9]+$")) {
             guiListener.setTwitterCredentials(cKey, cSecret, apiKey, apiSecret);
+            applyKeysButton.setEnabled(false);
         } else {
             JDialog.setDefaultLookAndFeelDecorated(true);
             JOptionPane.showMessageDialog(null, "1 or more keys/secrets uses invalid characters.", 
@@ -1208,7 +1261,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
 
     private void sqlApplyButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_sqlApplyButtonActionPerformed
         String user = sqlUserTextField.getText();
-        String pass = sqlPasswordField.getPassword().toString();
+        String pass = String.valueOf(sqlPasswordField.getPassword());
         String link = sqlLinkTextField.getText();
         if(user.equals("")||user.equals("\t")
                 ||pass.equals("")||pass.equals("\t")
@@ -1223,26 +1276,26 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         try {
             connectingLabel.setVisible(true);
             test.connect();
-            System.out.println("Hi");
             // create the twitter filter stream database
             test.executeSQLQuery("CREATE DATABASE IF NOT EXISTS `twitter_filter_stream` "
                     + "DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci");
             // set to use the twitter filter database
             test.executeSQLQuery("USE `twitter_filter_stream`");
             // create the tweets table
-            test.executeSQLQuery("CREATE TABLE IF NOT EXISTS `tweets` (" +
-                "  `id` bigint(20) NOT NULL COMMENT 'tweet id'," +
-                "  `retweet_id` bigint(20) NOT NULL COMMENT 'retweet id of the tweet if it is a retweet of another tweet'," +
-                "  `user_id` bigint(20) NOT NULL COMMENT 'user id of the user who tweeted the status'," +
-                "  `text` text NOT NULL COMMENT 'tweet status'," +
-                "  `fav_count` int(10) NOT NULL COMMENT 'favorite count'," +
-                "  `nr_retweets` int(10) NOT NULL COMMENT 'retweet count'," +
-                "  `creation_time` bigint(20) NOT NULL COMMENT 'creation time in (ms) since Jan 1st 1970 GMT'," +
-                "  `country_code` varchar(3) NOT NULL COMMENT 'two-letter country code about the place from where the tweet originated'," +
-                "  `geolocation` varchar(40) DEFAULT NULL COMMENT 'coordinates of tweet origin'," +
-                "  `lang_code` varchar(3) NOT NULL COMMENT 'two-letter code that represents the language detected in the status. ''und'' if not know.'," +
-                "  `keywords` varchar(200) DEFAULT NULL COMMENT 'keywords used in the status'" +
-                "  `sentiment` int(11) DEFAULT NULL COMMENT 'The sentiment of tweet text based on associated keyword'" +    
+            test.executeSQLQuery("CREATE TABLE IF NOT EXISTS `tweets` (\n" +
+                "  `id` bigint(20) NOT NULL COMMENT 'tweet id',\n" +
+                "  `retweet_id` bigint(20) NOT NULL COMMENT 'retweet id of the tweet if it is a retweet of another tweet',\n" +
+                "  `user_id` bigint(20) NOT NULL COMMENT 'user id of the user who tweeted the status',\n" +
+                "  `text` text NOT NULL COMMENT 'tweet status',\n" +
+                "  `fav_count` int(10) NOT NULL COMMENT 'favorite count',\n" +
+                "  `nr_retweets` int(10) NOT NULL COMMENT 'retweet count',\n" +
+                "  `creation_time` bigint(20) NOT NULL COMMENT 'creation time in (ms) since Jan 1st 1970 GMT',\n" +
+                "  `country_code` varchar(3) NOT NULL COMMENT 'two-letter country code about the place from where the tweet originated',\n" +
+                "  `geolocation` varchar(40) DEFAULT NULL COMMENT 'coordinates of tweet origin',\n" +
+                "  `lang_code` varchar(3) NOT NULL COMMENT 'two-letter code that represents the language detected in the status. ''und'' if not know.',\n" +
+                "  `keywords` varchar(200) DEFAULT NULL COMMENT 'keywords used in the status',\n" +
+                "  `sentiment` int(11) DEFAULT NULL COMMENT 'The sentiment of tweet text based on associated keyword',\n" +
+                "  PRIMARY KEY(`id`)\n" +
                 ") ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Stores tweets from the twitter filter stream API'");
             // create the tweet users table
             test.executeSQLQuery("CREATE TABLE IF NOT EXISTS `users` (" +
@@ -1252,10 +1305,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
                 "  `fav_count` int(10) NOT NULL COMMENT 'number of favorites'," +
                 "  `nr_of_friends` int(10) NOT NULL COMMENT 'number of friends'" +
                 ") ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='users'");
-            // alter tweets table to set primary key
-            test.executeSQLQuery("ALTER TABLE `tweets` ADD PRIMARY KEY (`id`) COMMENT 'tweet id'");
             sqlApplyButton.setEnabled(false);
-            sqlOkButton.setEnabled(false);
             connectingLabel.setVisible(false);
             test.close();
             
@@ -1313,6 +1363,17 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         sqlApplyButton.setEnabled(selected);
         guiListener.useDatabase(selected);
     }//GEN-LAST:event_useDBCheckBoxActionPerformed
+
+    private void twitterKeysInputDialogComponentShown(java.awt.event.ComponentEvent evt) {//GEN-FIRST:event_twitterKeysInputDialogComponentShown
+        String[] keys = guiListener.getTwitterCredentials();
+        if(keys == null) {
+            keys = new String[]{"", "", "", ""};
+        }
+        consumerKeyTextField.setText(keys[0]);
+        consumerSecretTextField.setText(keys[1]);
+        apiKeyTextField.setText(keys[2]);
+        apiSecretTextField.setText(keys[3]);
+    }//GEN-LAST:event_twitterKeysInputDialogComponentShown
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton OkKeysButton;
@@ -1422,6 +1483,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
             removeTwitterMarkersButton.setEnabled(false);
             twitterKeysMenuItem.setEnabled(false);
             databaseKeysMenuItem.setEnabled(false);
+            addLangButton.setEnabled(false);
             databaseKeysInputDialog.setVisible(false);
             twitterKeysInputDialog.setVisible(false);
         }
@@ -1438,6 +1500,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
             removeTwitterMarkersButton.setEnabled(true);
             twitterKeysMenuItem.setEnabled(true);
             databaseKeysMenuItem.setEnabled(true);
+            addLangButton.setEnabled(true);
         }
     }
     

@@ -11,7 +11,7 @@ import com.teamdev.jxbrowser.chromium.Browser;
  * Contains all methods necessary for executing JavaScript commands on google 
  * maps.
  * 
- * @author s139662
+ * @author S.S.Iyer
  */
 public class GoogleMaps {
     
