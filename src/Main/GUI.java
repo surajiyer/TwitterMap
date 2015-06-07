@@ -65,7 +65,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
      */
     private final Browser browser;
     private final BrowserView browserView;
-    private final GUIListener guiListener;
+    private final GUIListener listener;
 
     /**
      * GUI frame width and height.
@@ -121,7 +121,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         // Create a browser, its associated UI view object and the browser listener.
         browser = new Browser();
         browserView = new BrowserView(browser);
-        guiListener = gl;
+        listener = gl;
         browser.addLoadListener(new LoadListener() {
 
             @Override
@@ -1080,7 +1080,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
                                           "Warning", JOptionPane.WARNING_MESSAGE);
             return;
         }
-        guiListener.setRunningTime((long) l * timeScale);
+        listener.setRunningTime((long) l * timeScale);
         enterRunTextField.setText("");
         String s = enterRunTextField.getToolTipText();
         s = s.substring(0, s.lastIndexOf(":") + 2);
@@ -1098,7 +1098,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
 
     private void clearAllKeywordsButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_clearAllKeywordsButtonActionPerformed
         for (int i = keywordsListModel.getSize() - 1; i >= 0; i--) {
-            guiListener.removeKeyword(keywordsListModel.remove(i));
+            listener.removeKeyword(keywordsListModel.remove(i));
         }
     }//GEN-LAST:event_clearAllKeywordsButtonActionPerformed
 
@@ -1121,7 +1121,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
 
     private void enterKeywordTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_enterKeywordTextFieldActionPerformed
         String keyword = enterKeywordTextField.getText();
-        guiListener.addKeyword(keyword);
+        listener.addKeyword(keyword);
         keywordsListModel.addElement(keyword);
         enterKeywordTextField.setText("");
     }//GEN-LAST:event_enterKeywordTextFieldActionPerformed
@@ -1143,7 +1143,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
     private void removeKeywordsButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_removeKeywordsButtonActionPerformed
         int[] selectedIndices = loadedKeywordsList.getSelectedIndices();
         for (int i = selectedIndices.length - 1; i >= 0; i--) {
-            guiListener.removeKeyword(keywordsListModel.remove(selectedIndices[i]));
+            listener.removeKeyword(keywordsListModel.remove(selectedIndices[i]));
         }
     }//GEN-LAST:event_removeKeywordsButtonActionPerformed
 
@@ -1170,12 +1170,12 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         // Start/Stop the twitter stream.
         switch (startStopButton1.getText()) {
         case "Stop":
-            guiListener.stopTwitterStream();
+            listener.stopTwitterStream();
             break;
         case "Start":
             if (UIutils.isConnected()) {
-                guiListener.translate(selectedLanguages.values().toArray(new String[0]));
-                guiListener.startTwitterStream();
+                listener.translate(selectedLanguages.values().toArray(new String[0]));
+                listener.startTwitterStream();
             }
             break;
         }
@@ -1242,7 +1242,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
                 && cSecret.matches("^[a-zA-Z0-9]+$")
                 && apiKey.matches("^[a-zA-Z0-9]+\\-[a-zA-Z0-9]+$")
                 && apiSecret.matches("^[a-zA-Z0-9]+$")) {
-            guiListener.setTwitterCredentials(cKey, cSecret, apiKey, apiSecret);
+            listener.setTwitterCredentials(cKey, cSecret, apiKey, apiSecret);
             applyKeysButton.setEnabled(false);
         } else {
             JDialog.setDefaultLookAndFeelDecorated(true);
@@ -1312,7 +1312,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
             test.close();
 
             // Pass the new database link to the twitter stream.
-            guiListener.setMySQLDatabase(test);
+            listener.setMySQLDatabase(test);
         } catch (Exception ex) {
             connectingLabel.setVisible(false);
             JDialog.setDefaultLookAndFeelDecorated(true);
@@ -1334,7 +1334,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
     }//GEN-LAST:event_clearAllKeysButtonActionPerformed
 
     private void OkKeysButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_OkKeysButtonActionPerformed
-        if (guiListener.existsStream()) {
+        if (listener.existsStream()) {
             twitterKeysInputDialog.setVisible(false);
         } else {
             JDialog.setDefaultLookAndFeelDecorated(true);
@@ -1344,7 +1344,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
     }//GEN-LAST:event_OkKeysButtonActionPerformed
 
     private void dbInputDialogShown(java.awt.event.ComponentEvent evt) {//GEN-FIRST:event_dbInputDialogShown
-        MySQL4j db = guiListener.getMySQLDatabase();
+        MySQL4j db = listener.getMySQLDatabase();
         String user = "", pass = "", url = "";
         if (db != null) {
             user = db.getUsername();
@@ -1363,7 +1363,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         sqlPasswordField.setEnabled(selected);
         sqlLinkTextField.setEnabled(selected);
         sqlApplyButton.setEnabled(selected);
-        guiListener.useDatabase(selected);
+        listener.useDatabase(selected);
     }//GEN-LAST:event_useDBCheckBoxActionPerformed
 
     /**

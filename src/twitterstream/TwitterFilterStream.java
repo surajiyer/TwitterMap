@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.FileHandler;
 import java.util.logging.Formatter;
 import java.util.logging.Level;
@@ -90,8 +91,9 @@ public class TwitterFilterStream implements StatusListener {
     private long tweets_count;
     
     /** FIFO tweets buffer for processing tweets on concurrent thread. */
-    BlockingQueue q;
-
+    private final BlockingQueue q;
+    private final Object stop = -1;
+    
     public TwitterFilterStream() {
         twitterStream = null;
         keywords = new ArrayList<>();
@@ -103,7 +105,7 @@ public class TwitterFilterStream implements StatusListener {
         logger = Logger.getLogger("TwitterStreamLog");
         fh = null;
         useDatabase = false;
-        q = new ArrayBlockingQueue(100);
+        q = new ArrayBlockingQueue(20);
     }
     
     /** Gets configuration builder for authentication */
@@ -341,10 +343,14 @@ public class TwitterFilterStream implements StatusListener {
             // Set twitter stream running status.
             listener.setRunningStatus(status = StreamStatus.ENABLED);
             logger.info("Twitter Stream Started");
-            new Thread(processTweets).start();
+            
+            // Start processing tweets on a seperate thread.
+            Thread t = new Thread(processTweets);
+            t.setDaemon(true);
+            t.start();
         }
     }
-
+    
     /**
      * Stop reading the twitter stream.
      * @param error if an error occurred or not.
@@ -364,7 +370,10 @@ public class TwitterFilterStream implements StatusListener {
             // Set the twitter status to processing.
             if(!error) {
                 listener.setRunningStatus(status = StreamStatus.PROCESSING);
-                System.out.println("Processing now");
+                logger.info("Processing remaining tweets now.");
+                try {
+                    q.put(stop);
+                } catch (InterruptedException ex) {}
                 return;
             }
         }
@@ -386,8 +395,7 @@ public class TwitterFilterStream implements StatusListener {
             
             // Set twitter stream running status.
             listener.setRunningStatus(status = StreamStatus.DISABLED);
-            
-            System.out.println("Disabling now");
+            logger.info("All tweets processed. Shutting down.");
                     
             // When logging has completed, save the file to user-defined location.
             JFileChooser fc = new JFileChooser();
@@ -430,8 +438,13 @@ public class TwitterFilterStream implements StatusListener {
      * @return related keyword or null if no related keyword found
      */
     public String getRelatedKeyword(String tweet) {
+        tweet = tweet.toLowerCase();
         String related = "";
-        related = keywords.stream().filter((keyword) -> (tweet.contains(keyword))).map((keyword) -> DATA_SEPERATOR + keyword).reduce(related, String::concat);
+        for(String key : keywords) {
+            if(tweet.contains(key.toLowerCase())) {
+                related += DATA_SEPERATOR + key;
+            }
+        }
         if(related.equals(""))
             return null;
         return related.substring(1);
@@ -482,13 +495,16 @@ public class TwitterFilterStream implements StatusListener {
             UserEntity ue = null;
             String coordinates;
             
-            while(status == StreamStatus.ENABLED || !q.isEmpty()) {
+            while(true) {
                 try {
-                    Object[] o = (Object[]) q.take();
-                    te = (TweetEntity) o[0];
-                    ue = (UserEntity) o[1];
+                    Object o = q.take();
+                    if(o == stop)
+                        break;
+                    Object[] entities = (Object[]) o;
+                    te = (TweetEntity) entities[0];
+                    ue = (UserEntity) entities[1];
                 } catch (InterruptedException ex) {
-                    logger.severe("Concurrent taking of tweet interrupted.");
+                    logger.severe("Concurrent processing of tweet interrupted.");
                 }
                 
                 // Notify listeners of new coordinates
@@ -502,14 +518,6 @@ public class TwitterFilterStream implements StatusListener {
 
                 if(twitterDatabase != null && useDatabase) {
                     try {
-                        System.out.println("INSERT tweets VALUES(" + te.getID() 
-                                + "," + te.getRetweetID() + "," + te.getRetweetCount() + "," + te.getFavCount()
-                                + ",'" + te.getText(true) + "'," + te.getTime() + ",'" + te.getCountry() + "','"
-                                + te.getLanguage() + "'," + te.getUserID() + "," + (te.getKeywords() == null
-                                ? "NULL" : "'"+te.getKeywords()+"'") + "," + te.getSentiment() + ")");
-                        System.out.println("INSERT users VALUES(" + ue.getID() 
-                                + ",'" + ue.getName(true) + "'," + ue.getNrOfFollowers() 
-                                + "," + ue.getFavCount()+ "," + ue.getNrOfFriends() + ")");
                         twitterDatabase.executeSQLQuery("INSERT tweets VALUES(" + te.getID() 
                                 + "," + te.getRetweetID() + "," + te.getRetweetCount() + "," + te.getFavCount()
                                 + ",'" + te.getText(true) + "'," + te.getTime() + ",'" + te.getCountry() + "','"
@@ -525,7 +533,7 @@ public class TwitterFilterStream implements StatusListener {
                     }
                 }
 
-                // Writer tweet data to csv file.
+                // Write tweet data to CSV file.
                 tweets_writer.write(te.toString());
                 tweets_writer.println();
                 users_writer.write(ue.toString());
@@ -538,8 +546,9 @@ public class TwitterFilterStream implements StatusListener {
                 }
             }
             
-            System.out.println("NULLZ");
+            System.out.println(status);
             disable(false);
+            System.out.println(status);
         }
     };
 }
