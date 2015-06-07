@@ -25,7 +25,9 @@ public class TwitterMap implements GUIListener {
         
         // initializes the sentiment analysis pipeline.
         NLP.init();
-        
+    }
+    
+    public void init() {
         /* creates a login frame to input the twitter dev credentials prior to 
            loading the frame. */
         twitterLoginFrame tlf = new twitterLoginFrame(this);
@@ -33,7 +35,6 @@ public class TwitterMap implements GUIListener {
     }
     
     public void run() {
-        
         // Initialize the main frame.
         final GUI gui = new GUI(this);
         
@@ -51,7 +52,7 @@ public class TwitterMap implements GUIListener {
     }
 
     public static void main(String[] args) {
-        TwitterMap twitterMap = new TwitterMap();
+        new TwitterMap().init();
     }
 
     @Override

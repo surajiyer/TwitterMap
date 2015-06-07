@@ -40,42 +40,57 @@ import javax.swing.JOptionPane;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
+import twitterstream.TweetEntity;
 import twitterstream.TweetListener;
 import utils.HintTextField;
 import utils.MySQL4j;
+import utils.UIutils;
 import static utils.UIutils.createImageIcon;
 
 /**
  * Main frame of the app.
- * 
+ *
  * @author S.S.Iyer
  */
 public class GUI extends javax.swing.JFrame implements TweetListener {
 
-    /** Load the map.html file. */
+    /**
+     * Load the map.html file.
+     */
     private final String map;
-    
-    /** Browser object from JxBrowser library */
+
+    /**
+     * Browser object from JxBrowser library
+     */
     private final Browser browser;
     private final BrowserView browserView;
     private final GUIListener guiListener;
-    
-    /** GUI frame width and height. */
+
+    /**
+     * GUI frame width and height.
+     */
     private final Dimension MIN_FRAME_DIM;
     private Dimension CUR_FRAME_DIM;
-    
-    /** Image icons for the start/stop button. */
+
+    /**
+     * Image icons for the start/stop button.
+     */
     private ImageIcon start, stop;
-    
-    /** time scale unit for setting running time. */
+
+    /**
+     * time scale unit for setting running time.
+     */
     private long timeScale;
-    
-    /** System tray icon stuff. */
+
+    /**
+     * System tray icon stuff.
+     */
     private final PopupMenu popup;
     private final TrayIcon trayIcon;
-    
+
     /**
      * Creates new form Map
+     *
      * @param gl GUI listener object
      */
     public GUI(GUIListener gl) {
@@ -109,10 +124,12 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         browser.addLoadListener(new LoadListener() {
 
             @Override
-            public void onStartLoadingFrame(StartLoadingEvent sle) {}
+            public void onStartLoadingFrame(StartLoadingEvent sle) {
+            }
 
             @Override
-            public void onProvisionalLoadingFrame(ProvisionalLoadingEvent ple) {}
+            public void onProvisionalLoadingFrame(ProvisionalLoadingEvent ple) {
+            }
 
             @Override
             public void onFinishLoadingFrame(FinishLoadingEvent fle) {
@@ -122,19 +139,22 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
             }
 
             @Override
-            public void onFailLoadingFrame(FailLoadingEvent fle) {}
+            public void onFailLoadingFrame(FailLoadingEvent fle) {
+            }
 
             @Override
-            public void onDocumentLoadedInFrame(FrameLoadEvent fle) {}
+            public void onDocumentLoadedInFrame(FrameLoadEvent fle) {
+            }
 
             @Override
-            public void onDocumentLoadedInMainFrame(LoadEvent le) {}
+            public void onDocumentLoadedInMainFrame(LoadEvent le) {
+            }
         });
-        
+
         /* Set the Windows look and feel and initialize all the GUI components. */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
         /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html
          */
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
@@ -154,25 +174,25 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         }
         //</editor-fold>
         //</editor-fold>
-        
+
         initComponents();
-        
+
         // Select english as a filter language by default.
         String[] sel = new String[] {"English", "en"};
         selectedLanguages.put(sel[0], sel[1]);
-        ((DefaultTableModel)selectedLangTable.getModel()).addRow(sel);
-        
+        ((DefaultTableModel) selectedLangTable.getModel()).addRow(sel);
+
         // Load certain variables.
         timeScale = 60000; // 1min = 60000ms
-        
+
         // Add the map view to the GUI frame and load the map URL.
         browser.loadURL(map);
-        
+
         // Adding support for minimizing window to system tray if supported.
         if (SystemTray.isSupported()) {
             systrayCheckBox.setEnabled(true);
             systrayCheckBox.setToolTipText("Enable/Disable minimizing to system tray.");
-            
+
             // Context menu items to system tray icon.
             final MenuItem exitItem = new MenuItem("Exit");
             exitItem.addActionListener((ActionEvent e) -> {
@@ -189,8 +209,8 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
             systrayCheckBox.setEnabled(false);
             systrayCheckBox.setToolTipText("OS does not support this function.");
         }
-        
-        // add a text field change listener to the twitter credentials input dialog. 
+
+        // add a text field change listener to the twitter credentials input dialog.
         DocumentListener dl1 = new DocumentListener() {
 
             @Override
@@ -204,14 +224,15 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
             }
 
             @Override
-            public void changedUpdate(DocumentEvent e) {}
+            public void changedUpdate(DocumentEvent e) {
+            }
         };
         consumerKeyTextField.getDocument().addDocumentListener(dl1);
         consumerSecretTextField.getDocument().addDocumentListener(dl1);
         apiKeyTextField.getDocument().addDocumentListener(dl1);
         apiSecretTextField.getDocument().addDocumentListener(dl1);
-        
-        // add a text field change listener to the MySQL credentials input dialog.  
+
+        // add a text field change listener to the MySQL credentials input dialog.
         DocumentListener dl2 = new DocumentListener() {
 
             @Override
@@ -225,12 +246,13 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
             }
 
             @Override
-            public void changedUpdate(DocumentEvent e) {}
+            public void changedUpdate(DocumentEvent e) {
+            }
         };
         sqlUserTextField.getDocument().addDocumentListener(dl2);
         sqlPasswordField.getDocument().addDocumentListener(dl2);
         sqlLinkTextField.getDocument().addDocumentListener(dl2);
-        
+
         // Display the keywords dialog at start
         keywordsDialog.setVisible(true);
     }
@@ -320,7 +342,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         runMenu = new javax.swing.JMenu();
         startStopButton1 = new javax.swing.JMenuItem();
 
-        fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("Normal text file (*.txt)", "txt"));
+        fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("CSV (Comma Delimited) (*.csv)", "csv"));
 
         keywordsDialog.setTitle("Twitter Keywords");
         keywordsDialog.setIconImage(new javax.swing.ImageIcon(getClass().getResource("/res/keyboard_24.png")).getImage());
@@ -405,19 +427,19 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
             selectLangPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGap(0, 0, Short.MAX_VALUE)
             .addGroup(selectLangPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, selectLangPanelLayout.createSequentialGroup()
-                    .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(selectedLangScrollPane, javax.swing.GroupLayout.PREFERRED_SIZE, 256, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGap(184, 184, 184)))
+                .addGroup(selectLangPanelLayout.createSequentialGroup()
+                    .addContainerGap()
+                    .addComponent(selectedLangScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 255, Short.MAX_VALUE)
+                    .addGap(12, 12, 12)))
         );
         selectLangPanelLayout.setVerticalGroup(
             selectLangPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGap(0, 159, Short.MAX_VALUE)
             .addGroup(selectLangPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, selectLangPanelLayout.createSequentialGroup()
-                    .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(selectedLangScrollPane, javax.swing.GroupLayout.PREFERRED_SIZE, 133, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                    .addContainerGap()
+                    .addComponent(selectedLangScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 133, Short.MAX_VALUE)
+                    .addContainerGap()))
         );
 
         removeLangButton.setText("Clear");
@@ -434,18 +456,18 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
             .addGroup(keywordsDialogLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(keywordsDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(selectLangPanel, javax.swing.GroupLayout.DEFAULT_SIZE, 0, Short.MAX_VALUE)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, keywordsDialogLayout.createSequentialGroup()
-                        .addComponent(removeKeywordsButton)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(clearAllKeywordsButton))
                     .addGroup(keywordsDialogLayout.createSequentialGroup()
                         .addComponent(langSelectionComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, 159, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(addLangButton, javax.swing.GroupLayout.PREFERRED_SIZE, 55, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(removeLangButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                    .addComponent(loadedKeywordsPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(selectLangPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(loadedKeywordsPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, keywordsDialogLayout.createSequentialGroup()
+                        .addComponent(removeKeywordsButton)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(clearAllKeywordsButton)))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         keywordsDialogLayout.setVerticalGroup(
@@ -528,11 +550,6 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         twitterKeysInputDialog.setTitle("Enter twitter credentials");
         twitterKeysInputDialog.setResizable(false);
         twitterKeysInputDialog.setType(java.awt.Window.Type.POPUP);
-        twitterKeysInputDialog.addComponentListener(new java.awt.event.ComponentAdapter() {
-            public void componentShown(java.awt.event.ComponentEvent evt) {
-                twitterKeysInputDialogComponentShown(evt);
-            }
-        });
 
         consumerKeyLabel.setText("Enter your twitter Consumer key:");
 
@@ -1031,7 +1048,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
 
     private void loadFileMarkersButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loadFileMarkersButtonActionPerformed
         int retValue = fileChooser.showOpenDialog(null);
-        if(retValue == JFileChooser.APPROVE_OPTION) {
+        if (retValue == JFileChooser.APPROVE_OPTION) {
             // Clear markers already loaded from a previous file.
             GoogleMaps.clearFileMarkers(browser);
             // Load the coordinates from the selected file.
@@ -1065,25 +1082,25 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
 
     private void enterRunTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_enterRunTextFieldActionPerformed
         double l;
-        try{
+        try {
             l = Double.parseDouble(enterRunTextField.getText());
-        } catch(NumberFormatException e) {
+        } catch (NumberFormatException e) {
             JDialog.setDefaultLookAndFeelDecorated(true);
-            JOptionPane.showMessageDialog(null, "Please enter a positive number.", 
-                    "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(null, "Please enter a positive number.",
+                                          "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
-        if(l < 0) {
+        if (l < 0) {
             JDialog.setDefaultLookAndFeelDecorated(true);
-            JOptionPane.showMessageDialog(null, "Negative input not allowed. Please enter a positive number.", 
-                    "Warning", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(null, "Negative input not allowed. Please enter a positive number.",
+                                          "Warning", JOptionPane.WARNING_MESSAGE);
             return;
         }
-        guiListener.setRunningTime((long)l*timeScale);
+        guiListener.setRunningTime((long) l * timeScale);
         enterRunTextField.setText("");
         String s = enterRunTextField.getToolTipText();
-        s = s.substring(0, s.lastIndexOf(":")+2);
-        enterRunTextField.setToolTipText(s+(l == 0 ? "forever" : l*timeScale/1000d+"s"));
+        s = s.substring(0, s.lastIndexOf(":") + 2);
+        enterRunTextField.setToolTipText(s + (l == 0 ? "forever" : l * timeScale / 1000d + "s"));
     }//GEN-LAST:event_enterRunTextFieldActionPerformed
 
     private void clearButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_clearButton2ActionPerformed
@@ -1096,7 +1113,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
     }//GEN-LAST:event_clearButton1ActionPerformed
 
     private void clearAllKeywordsButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_clearAllKeywordsButtonActionPerformed
-        for(int i = keywordsListModel.getSize()-1; i >=0; i--) {
+        for (int i = keywordsListModel.getSize() - 1; i >= 0; i--) {
             guiListener.removeKeyword(keywordsListModel.remove(i));
         }
     }//GEN-LAST:event_clearAllKeywordsButtonActionPerformed
@@ -1107,8 +1124,8 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
             longTextField.commitEdit();
         } catch (ParseException ex) {
             JDialog.setDefaultLookAndFeelDecorated(true);
-            JOptionPane.showMessageDialog(null, "Please only enter a number", 
-                    "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(null, "Please only enter a number",
+                                          "Error", JOptionPane.ERROR_MESSAGE);
         }
         System.out.println(latTextField.getValue());
         String latitude = latTextField.getValue().toString();
@@ -1126,39 +1143,40 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
     }//GEN-LAST:event_enterKeywordTextFieldActionPerformed
 
     private void timeSpinnerStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_timeSpinnerStateChanged
-        switch((String)timeSpinner.getValue()) {
-            case "min" :
-                timeScale = 60000;
-                break;
-            case "s" :
-                timeScale = 1000;
-                break;
-            case "ms" :
-                timeScale = 1;
-                break;
+        switch ((String) timeSpinner.getValue()) {
+        case "min":
+            timeScale = 60000;
+            break;
+        case "s":
+            timeScale = 1000;
+            break;
+        case "ms":
+            timeScale = 1;
+            break;
         }
     }//GEN-LAST:event_timeSpinnerStateChanged
 
     private void removeKeywordsButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_removeKeywordsButtonActionPerformed
         int[] selectedIndices = loadedKeywordsList.getSelectedIndices();
-        for(int i = selectedIndices.length-1; i >= 0; i--) {
+        for (int i = selectedIndices.length - 1; i >= 0; i--) {
             guiListener.removeKeyword(keywordsListModel.remove(selectedIndices[i]));
         }
     }//GEN-LAST:event_removeKeywordsButtonActionPerformed
 
     private void displayMapButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_displayMapButtonActionPerformed
         boolean isVisible = mapPanel.isVisible();
-        if(isVisible)
+        if (isVisible) {
             CUR_FRAME_DIM = getSize();
+        }
         mapPanel.setVisible(isVisible = !isVisible);
         revalidate();
         repaint();
-        if(isVisible) {
+        if (isVisible) {
             setMinimumSize(MIN_FRAME_DIM);
             setSize(CUR_FRAME_DIM);
         } else {
-            setMinimumSize(new Dimension(controlPanel.getMinimumSize().width+46, 
-                    controlPanel.getMinimumSize().height + menuBar.getMinimumSize().height+46));
+            setMinimumSize(new Dimension(controlPanel.getMinimumSize().width + 46,
+                                         controlPanel.getMinimumSize().height + menuBar.getMinimumSize().height + 46));
             setSize(getMinimumSize());
         }
         setResizable(isVisible);
@@ -1167,16 +1185,16 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
     private void startStopButtonPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startStopButtonPerformed
         // Start/Stop the twitter stream.
         switch (startStopButton1.getText()) {
-            case "Stop":
-                guiListener.stopTwitterStream();
-                break;
-            case "Start":
-                if(isConnected()) {
-                    guiListener.translate(selectedLanguages.values().toArray(new String[0]));
-                    guiListener.startTwitterStream();
-                }
-                break;
-        } 
+        case "Stop":
+            guiListener.stopTwitterStream();
+            break;
+        case "Start":
+            if (UIutils.isConnected()) {
+                guiListener.translate(selectedLanguages.values().toArray(new String[0]));
+                guiListener.startTwitterStream();
+            }
+            break;
+        }
     }//GEN-LAST:event_startStopButtonPerformed
 
     private void exitMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_exitMenuItemActionPerformed
@@ -1185,38 +1203,38 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
     }//GEN-LAST:event_exitMenuItemActionPerformed
 
     private void formWindowIconified(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowIconified
-        if(systrayCheckBox.isSelected()) {
+        if (systrayCheckBox.isSelected()) {
             // minimize the window
             this.setVisible(false);
-            
+
             // add tray icon
             try {
                 SystemTray.getSystemTray().add(trayIcon);
-                trayIcon.displayMessage("Attention", "TwitterMap has been minimized to the system tray. ", 
-                        TrayIcon.MessageType.INFO);
+                trayIcon.displayMessage("Attention", "TwitterMap has been minimized to the system tray. ",
+                                        TrayIcon.MessageType.INFO);
             } catch (AWTException ex) {
                 JDialog.setDefaultLookAndFeelDecorated(true);
                 JOptionPane.showMessageDialog(null, "Oops! Something went wrong. "
-                        + "Could not minimize to system tray.",
-                        "Error", JOptionPane.WARNING_MESSAGE);
+                                              + "Could not minimize to system tray.",
+                                              "Error", JOptionPane.WARNING_MESSAGE);
             }
         }
     }//GEN-LAST:event_formWindowIconified
 
     private void addLangButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addLangButtonActionPerformed
-        String selected = (String)langSelectionComboBox.getSelectedItem();
-        if(!selectedLanguages.containsKey(selected)) {
+        String selected = (String) langSelectionComboBox.getSelectedItem();
+        if (!selectedLanguages.containsKey(selected)) {
             String[] sel = new String[] {selected, languageCodes.get(selected)};
             selectedLanguages.put(sel[0], sel[1]);
-            ((DefaultTableModel)selectedLangTable.getModel()).addRow(sel);
+            ((DefaultTableModel) selectedLangTable.getModel()).addRow(sel);
         }
     }//GEN-LAST:event_addLangButtonActionPerformed
 
     private void removeLangButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_removeLangButtonActionPerformed
         int[] selectedIndices = selectedLangTable.getSelectedRows();
-        for(int i = selectedIndices.length-1; i >= 0; i--) {
+        for (int i = selectedIndices.length - 1; i >= 0; i--) {
             selectedLanguages.remove(selectedLangTable.getValueAt(selectedIndices[i], 0));
-            ((DefaultTableModel)selectedLangTable.getModel()).removeRow(selectedIndices[i]);
+            ((DefaultTableModel) selectedLangTable.getModel()).removeRow(selectedIndices[i]);
         }
     }//GEN-LAST:event_removeLangButtonActionPerformed
 
@@ -1225,18 +1243,18 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         String cSecret = consumerSecretTextField.getText();
         String apiKey = apiKeyTextField.getText();
         String apiSecret = apiSecretTextField.getText();
-        
-        if(cKey.equals("")||cKey.equals("\t")
-                || cSecret.equals("")||cSecret.equals("\t")
-                || apiKey.equals("")||apiKey.equals("\t")
-                || apiSecret.equals("")||apiSecret.equals("\t")) {
+
+        if (cKey.equals("") || cKey.equals("\t")
+                || cSecret.equals("") || cSecret.equals("\t")
+                || apiKey.equals("") || apiKey.equals("\t")
+                || apiSecret.equals("") || apiSecret.equals("\t")) {
             JDialog.setDefaultLookAndFeelDecorated(true);
-            JOptionPane.showMessageDialog(null, "Please fill in all the fields.", 
-                    "Empty Fields", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(null, "Please fill in all the fields.",
+                                          "Empty Fields", JOptionPane.WARNING_MESSAGE);
             return;
         }
-        
-        if(cKey.matches("^[a-zA-Z0-9]+$")
+
+        if (cKey.matches("^[a-zA-Z0-9]+$")
                 && cSecret.matches("^[a-zA-Z0-9]+$")
                 && apiKey.matches("^[a-zA-Z0-9]+\\-[a-zA-Z0-9]+$")
                 && apiSecret.matches("^[a-zA-Z0-9]+$")) {
@@ -1244,8 +1262,8 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
             applyKeysButton.setEnabled(false);
         } else {
             JDialog.setDefaultLookAndFeelDecorated(true);
-            JOptionPane.showMessageDialog(null, "1 or more keys/secrets uses invalid characters.", 
-                    "Invalid input", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(null, "1 or more keys/secrets uses invalid characters.",
+                                          "Invalid input", JOptionPane.WARNING_MESSAGE);
         }
     }//GEN-LAST:event_applyKeysButtonActionPerformed
 
@@ -1263,60 +1281,60 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         String user = sqlUserTextField.getText();
         String pass = String.valueOf(sqlPasswordField.getPassword());
         String link = sqlLinkTextField.getText();
-        if(user.equals("")||user.equals("\t")
-                ||pass.equals("")||pass.equals("\t")
-                ||link.equals("")||link.equals("\t")) {
+        if (user.equals("") || user.equals("\t")
+                || pass.equals("") || pass.equals("\t")
+                || link.equals("") || link.equals("\t")) {
             JDialog.setDefaultLookAndFeelDecorated(true);
-            JOptionPane.showMessageDialog(null, "Please fill in all the fields.", 
-                    "Empty Fields", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(null, "Please fill in all the fields.",
+                                          "Empty Fields", JOptionPane.WARNING_MESSAGE);
             return;
         }
-        
+
         MySQL4j test = new MySQL4j(user, pass, link);
         try {
             connectingLabel.setVisible(true);
             test.connect();
             // create the twitter filter stream database
             test.executeSQLQuery("CREATE DATABASE IF NOT EXISTS `twitter_filter_stream` "
-                    + "DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci");
+                                 + "DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci");
             // set to use the twitter filter database
             test.executeSQLQuery("USE `twitter_filter_stream`");
             // create the tweets table
-            test.executeSQLQuery("CREATE TABLE IF NOT EXISTS `tweets` (\n" +
-                "  `id` bigint(20) NOT NULL COMMENT 'tweet id',\n" +
-                "  `retweet_id` bigint(20) NOT NULL COMMENT 'retweet id of the tweet if it is a retweet of another tweet',\n" +
-                "  `user_id` bigint(20) NOT NULL COMMENT 'user id of the user who tweeted the status',\n" +
-                "  `text` text NOT NULL COMMENT 'tweet status',\n" +
-                "  `fav_count` int(10) NOT NULL COMMENT 'favorite count',\n" +
-                "  `nr_retweets` int(10) NOT NULL COMMENT 'retweet count',\n" +
-                "  `creation_time` bigint(20) NOT NULL COMMENT 'creation time in (ms) since Jan 1st 1970 GMT',\n" +
-                "  `country_code` varchar(3) NOT NULL COMMENT 'two-letter country code about the place from where the tweet originated',\n" +
-                "  `geolocation` varchar(40) DEFAULT NULL COMMENT 'coordinates of tweet origin',\n" +
-                "  `lang_code` varchar(3) NOT NULL COMMENT 'two-letter code that represents the language detected in the status. ''und'' if not know.',\n" +
-                "  `keywords` varchar(200) DEFAULT NULL COMMENT 'keywords used in the status',\n" +
-                "  `sentiment` int(11) DEFAULT NULL COMMENT 'The sentiment of tweet text based on associated keyword',\n" +
-                "  PRIMARY KEY(`id`)\n" +
-                ") ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Stores tweets from the twitter filter stream API'");
+            test.executeSQLQuery("CREATE TABLE IF NOT EXISTS `tweets` (\n"
+                                 + "  `id` bigint(20) NOT NULL COMMENT 'tweet id',\n"
+                                 + "  `retweet_id` bigint(20) NOT NULL COMMENT 'retweet id of the tweet if it is a retweet of another tweet',\n"
+                                 + "  `user_id` bigint(20) NOT NULL COMMENT 'user id of the user who tweeted the status',\n"
+                                 + "  `text` text NOT NULL COMMENT 'tweet status',\n"
+                                 + "  `fav_count` int(10) NOT NULL COMMENT 'favorite count',\n"
+                                 + "  `nr_retweets` int(10) NOT NULL COMMENT 'retweet count',\n"
+                                 + "  `creation_time` bigint(20) NOT NULL COMMENT 'creation time in (ms) since Jan 1st 1970 GMT',\n"
+                                 + "  `country_code` varchar(3) NOT NULL COMMENT 'two-letter country code about the place from where the tweet originated',\n"
+                                 + "  `geolocation` varchar(40) DEFAULT NULL COMMENT 'coordinates of tweet origin',\n"
+                                 + "  `lang_code` varchar(3) NOT NULL COMMENT 'two-letter code that represents the language detected in the status. ''und'' if not know.',\n"
+                                 + "  `keywords` varchar(200) DEFAULT NULL COMMENT 'keywords used in the status',\n"
+                                 + "  `sentiment` int(11) DEFAULT NULL COMMENT 'The sentiment of tweet text based on associated keyword',\n"
+                                 + "  PRIMARY KEY(`id`)\n"
+                                 + ") ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Stores tweets from the twitter filter stream API'");
             // create the tweet users table
-            test.executeSQLQuery("CREATE TABLE IF NOT EXISTS `users` (" +
-                "  `id` bigint(20) NOT NULL COMMENT 'user id'," +
-                "  `username` varchar(30) NOT NULL COMMENT 'username'," +
-                "  `nr_of_followers` int(10) NOT NULL COMMENT 'number of followers fo the user'," +
-                "  `fav_count` int(10) NOT NULL COMMENT 'number of favorites'," +
-                "  `nr_of_friends` int(10) NOT NULL COMMENT 'number of friends'" +
-                ") ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='users'");
+            test.executeSQLQuery("CREATE TABLE IF NOT EXISTS `users` ("
+                                 + "  `id` bigint(20) NOT NULL COMMENT 'user id',"
+                                 + "  `username` varchar(30) NOT NULL COMMENT 'username',"
+                                 + "  `nr_of_followers` int(10) NOT NULL COMMENT 'number of followers fo the user',"
+                                 + "  `fav_count` int(10) NOT NULL COMMENT 'number of favorites',"
+                                 + "  `nr_of_friends` int(10) NOT NULL COMMENT 'number of friends'"
+                                 + ") ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='users'");
             sqlApplyButton.setEnabled(false);
             connectingLabel.setVisible(false);
             test.close();
-            
+
             // Pass the new database link to the twitter stream.
             guiListener.setMySQLDatabase(test);
         } catch (Exception ex) {
             connectingLabel.setVisible(false);
             JDialog.setDefaultLookAndFeelDecorated(true);
             JOptionPane.showMessageDialog(null, "Oops! Unable to connect to database. Make sure the "
-                    + "username/password/url provided are correct and that the link is reachable.", 
-                    "Error", JOptionPane.ERROR_MESSAGE);
+                                          + "username/password/url provided are correct and that the link is reachable.",
+                                          "Error", JOptionPane.ERROR_MESSAGE);
         }
     }//GEN-LAST:event_sqlApplyButtonActionPerformed
 
@@ -1332,19 +1350,19 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
     }//GEN-LAST:event_clearAllKeysButtonActionPerformed
 
     private void OkKeysButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_OkKeysButtonActionPerformed
-        if(guiListener.existsStream())
+        if (guiListener.existsStream()) {
             twitterKeysInputDialog.setVisible(false);
-        else {
+        } else {
             JDialog.setDefaultLookAndFeelDecorated(true);
-            JOptionPane.showMessageDialog(null, "You to specify valid twitter credentials.", 
-                    "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(null, "You to specify valid twitter credentials.",
+                                          "Error", JOptionPane.ERROR_MESSAGE);
         }
     }//GEN-LAST:event_OkKeysButtonActionPerformed
 
     private void dbInputDialogShown(java.awt.event.ComponentEvent evt) {//GEN-FIRST:event_dbInputDialogShown
         MySQL4j db = guiListener.getMySQLDatabase();
         String user = "", pass = "", url = "";
-        if(db != null) {
+        if (db != null) {
             user = db.getUsername();
             pass = db.getPassword();
             url = db.getURL();
@@ -1364,17 +1382,104 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         guiListener.useDatabase(selected);
     }//GEN-LAST:event_useDBCheckBoxActionPerformed
 
-    private void twitterKeysInputDialogComponentShown(java.awt.event.ComponentEvent evt) {//GEN-FIRST:event_twitterKeysInputDialogComponentShown
-        String[] keys = guiListener.getTwitterCredentials();
-        if(keys == null) {
-            keys = new String[]{"", "", "", ""};
-        }
-        consumerKeyTextField.setText(keys[0]);
-        consumerSecretTextField.setText(keys[1]);
-        apiKeyTextField.setText(keys[2]);
-        apiSecretTextField.setText(keys[3]);
-    }//GEN-LAST:event_twitterKeysInputDialogComponentShown
+    /**
+     * Create a new map marker when a new tweet with Geo-location comes in.
+     */
+    @Override
+    public void newTweet(String lat, String lon, String title) {
+        GoogleMaps.setMarker(browser, lat, lon, title, "tweet");
+    }
 
+    /**
+     * Enables, disables and modifies certain UI elements based on the running
+     * status of the twitter stream.
+     */
+    @Override
+    public void setRunningStatus(boolean isRunning) {
+        if (isRunning) {
+            startStopButton1.setIcon(stop);
+            startStopButton1.setText("Stop");
+            startStopButton2.setIcon(stop);
+            startStopButton2.setText("Stop");
+            enterKeywordTextField.setEnabled(false);
+            enterRunTextField.setEnabled(false);
+            removeKeywordsButton.setEnabled(false);
+            clearAllKeywordsButton.setEnabled(false);
+            removeAllMarkersButton.setEnabled(false);
+            removeTwitterMarkersButton.setEnabled(false);
+            twitterKeysMenuItem.setEnabled(false);
+            databaseKeysMenuItem.setEnabled(false);
+            addLangButton.setEnabled(false);
+            databaseKeysInputDialog.setVisible(false);
+            twitterKeysInputDialog.setVisible(false);
+        } else {
+            startStopButton1.setIcon(start);
+            startStopButton1.setText("Start");
+            startStopButton2.setIcon(start);
+            startStopButton2.setText("Start");
+            enterKeywordTextField.setEnabled(true);
+            enterRunTextField.setEnabled(true);
+            removeKeywordsButton.setEnabled(true);
+            clearAllKeywordsButton.setEnabled(true);
+            removeAllMarkersButton.setEnabled(true);
+            removeTwitterMarkersButton.setEnabled(true);
+            twitterKeysMenuItem.setEnabled(true);
+            databaseKeysMenuItem.setEnabled(true);
+            addLangButton.setEnabled(true);
+        }
+    }
+
+    /**
+     * Load coordinates from the given file.
+     *
+     * @param f file containing coordinates to load.
+     */
+    public void loadCoordinatesFromFile(File f) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                final BufferedReader in;
+                try {
+                    in = new BufferedReader(new FileReader(f));
+                } catch (FileNotFoundException ex) {
+                    JDialog.setDefaultLookAndFeelDecorated(true);
+                    JOptionPane.showMessageDialog(null, "Oops! No such file exists.",
+                                                  "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                // Read and set markers.
+                String tweet;
+                try {
+                    // Read the CSV header to skip it.
+                    if(!TweetEntity.getCSVHeader(";").equals(in.readLine()))
+                            throw new Exception("Incorrect file.");
+                    while (((tweet = in.readLine()) != null)) {
+                        String coordinates = tweet.substring(tweet.indexOf(";[")+1, tweet.indexOf("];"));
+                        int commaIndex = coordinates.indexOf(",");
+                        String lat = coordinates.substring(1, commaIndex);
+                        String lon = coordinates.substring(commaIndex + 1, coordinates.length()-1);
+                        String text = tweet.substring(UIutils.nthOccurrence(tweet, ";", 3)+1, UIutils.nthOccurrence(tweet, ";", 4));
+                        newTweet(lat, lon, text);
+                    }
+                } catch (IOException ex) {
+                    JDialog.setDefaultLookAndFeelDecorated(true);
+                    JOptionPane.showMessageDialog(null, "Cannot read file.",
+                                                  "Error", JOptionPane.ERROR_MESSAGE);
+                } catch (Exception e) {
+                    JDialog.setDefaultLookAndFeelDecorated(true);
+                    JOptionPane.showMessageDialog(null, "Unknown error occured. "
+                                                  + "Possibly loaded an incorrectly parsed file.",
+                                                  "Error", JOptionPane.ERROR_MESSAGE);
+                } finally {
+                    try {
+                        in.close();
+                    } catch (IOException ignore) {}
+                }
+            }
+        }).start();
+    }
+    
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton OkKeysButton;
     private javax.swing.JButton addLangButton;
@@ -1455,122 +1560,4 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
     private javax.swing.JMenuItem twitterKeysMenuItem;
     private javax.swing.JCheckBox useDBCheckBox;
     // End of variables declaration//GEN-END:variables
-
-    /**
-     * Create a new map marker when a new tweet with Geo-location comes in.
-     */
-    @Override
-    public void newTweet(String lat, String lon, String title) {
-        GoogleMaps.setMarker(browser, lat, lon, title, "tweet");
-    }
-
-    /**
-     * Enables, disables and modifies certain UI elements based on the running 
-     * status of the twitter stream.
-     */
-    @Override
-    public void setRunningStatus(boolean isRunning) {
-        if(isRunning) {
-            startStopButton1.setIcon(stop);
-            startStopButton1.setText("Stop");
-            startStopButton2.setIcon(stop);
-            startStopButton2.setText("Stop");
-            enterKeywordTextField.setEnabled(false);
-            enterRunTextField.setEnabled(false);
-            removeKeywordsButton.setEnabled(false);
-            clearAllKeywordsButton.setEnabled(false);
-            removeAllMarkersButton.setEnabled(false);
-            removeTwitterMarkersButton.setEnabled(false);
-            twitterKeysMenuItem.setEnabled(false);
-            databaseKeysMenuItem.setEnabled(false);
-            addLangButton.setEnabled(false);
-            databaseKeysInputDialog.setVisible(false);
-            twitterKeysInputDialog.setVisible(false);
-        }
-        else {
-            startStopButton1.setIcon(start);
-            startStopButton1.setText("Start");
-            startStopButton2.setIcon(start);
-            startStopButton2.setText("Start");
-            enterKeywordTextField.setEnabled(true);
-            enterRunTextField.setEnabled(true);
-            removeKeywordsButton.setEnabled(true);
-            clearAllKeywordsButton.setEnabled(true);
-            removeAllMarkersButton.setEnabled(true);
-            removeTwitterMarkersButton.setEnabled(true);
-            twitterKeysMenuItem.setEnabled(true);
-            databaseKeysMenuItem.setEnabled(true);
-            addLangButton.setEnabled(true);
-        }
-    }
-    
-    /**
-     * Load coordinates from the given file.
-     * 
-     * @param f file containing coordinates to load.
-     */
-    public void loadCoordinatesFromFile(File f) {
-        
-        // Load the file
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                final BufferedReader in;
-                try {
-                    in = new BufferedReader(new FileReader(f));
-                } catch (FileNotFoundException ex) {
-                    JDialog.setDefaultLookAndFeelDecorated(true);
-                    JOptionPane.showMessageDialog(null, "Oops! No such file exists.", 
-                            "Error", JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
-
-                // Read and set markers.
-                String coordinate;
-                try {
-                    while(((coordinate = in.readLine()) != null)) {
-                        int commaIndex = coordinate.indexOf(",");
-                        String lat = coordinate.substring(0, commaIndex);
-                        String lon = coordinate.substring(commaIndex+1, coordinate.length());
-                        GoogleMaps.setMarker(browser, lat, lon, "Marker loaded from "+f.getName(), "file");
-                    }
-                } catch (IOException ex) {
-                    JDialog.setDefaultLookAndFeelDecorated(true);
-                    JOptionPane.showMessageDialog(null, "Cannot read file.", 
-                                "Error", JOptionPane.ERROR_MESSAGE);
-                } catch (Exception e) {
-                    JDialog.setDefaultLookAndFeelDecorated(true);
-                    JOptionPane.showMessageDialog(null, "Unknown error occured. "
-                            + "Possibly loaded an incorrectly parsed file.", 
-                                "Error", JOptionPane.ERROR_MESSAGE);
-                } finally {
-                    try { in.close(); } catch (IOException ignore) { }
-                }
-                
-            }
-        }).start();
-        
-    }
-    
-    /**
-     * Checks if basic network connection is present and returns true if it does.
-     * @return true if network connection exists, otherwise false.
-     */
-    public boolean isConnected() {
-        boolean reachable = false;
-        try {
-            Process p1 = java.lang.Runtime.getRuntime().exec("ping www.google.com");
-            // return code for p1 will be 0 if internet is connected, else it will be 1
-            reachable = p1.waitFor() == 0;
-        } catch (IOException ex) {
-            Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (InterruptedException ex) {
-            Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        if(!reachable) {
-            JOptionPane.showMessageDialog(null, "No Internet Connection.",
-                    "Error", JOptionPane.ERROR_MESSAGE);
-        }
-        return reachable;
-    }
 }

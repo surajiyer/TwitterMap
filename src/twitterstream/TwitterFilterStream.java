@@ -84,7 +84,7 @@ public class TwitterFilterStream implements StatusListener {
     private long tweets_count;
     
     /** FIFO tweets buffer for processing tweets on concurrent thread. */
-    BlockingQueue q;
+    BlockingQueue tweetsQ, usersQ;
 
     public TwitterFilterStream() {
         twitterStream = null;
@@ -97,7 +97,8 @@ public class TwitterFilterStream implements StatusListener {
         logger = Logger.getLogger("TwitterStreamLog");
         fh = null;
         useDatabase = false;
-        q = new ArrayBlockingQueue(100);
+        tweetsQ = new ArrayBlockingQueue(100);
+        usersQ = new ArrayBlockingQueue(100);
     }
     
     /** Gets configuration builder for authentication */
@@ -264,7 +265,7 @@ public class TwitterFilterStream implements StatusListener {
                           + record.getSourceMethodName() + " -:- "
                           + record.getMessage() + "\n";
                 }
-              });
+            });
             logger.addHandler(fh);
             tweets_file = new File(System.getenv("TMP")+"\\Tweets_"+
                     file_name_format.format(new Date(startTime)) + ".csv");
@@ -290,6 +291,7 @@ public class TwitterFilterStream implements StatusListener {
                 return;
             }
             
+            // Connect to the MySQL database if there exists one.
             if(twitterDatabase != null && useDatabase) {
                 try {
                     twitterDatabase.connect();
@@ -303,6 +305,7 @@ public class TwitterFilterStream implements StatusListener {
                 }
             }
             
+            // Reset the tweets count.
             tweets_count = 0;
 
             // Create a new streaming filter query (i.e. keywords to track, locations etc.)
@@ -322,6 +325,8 @@ public class TwitterFilterStream implements StatusListener {
                     }
                 }
                 fq.language(translate_codes);
+            } else {
+                fq.language(new String[]{"en"});
             }
             fq.track(keys);
 
@@ -331,6 +336,7 @@ public class TwitterFilterStream implements StatusListener {
             // Set twitter stream running status.
             listener.setRunningStatus(ENABLED = true);
             logger.info("Twitter Stream Started");
+            new Thread(processTweets).start();
         }
     }
 
@@ -417,53 +423,15 @@ public class TwitterFilterStream implements StatusListener {
             disable();
             return;
         }
-
-        // Notify listeners of new coordinates
-        if(status.getGeoLocation() != null) {
-            GeoLocation geo = status.getGeoLocation();
-            listener.newTweet(Double.toString(geo.getLatitude()),
-                    Double.toString(geo.getLongitude()), TweetEntity.getLinkedText(status.getText()));
-        }
         
-        TweetEntity te = new TweetEntity(DATA_SEPERATOR, status, getRelatedKeyword(status.getText()));
-        UserEntity ue = new UserEntity(DATA_SEPERATOR, status.getUser());
         tweets_count++;
-        
-        if(twitterDatabase != null && useDatabase) {
-            try {
-                System.out.println("INSERT tweets VALUES(" + te.getID() 
-                        + "," + te.getRetweetID() + "," + te.getRetweetCount() + "," + te.getFavCount()
-                        + ",'" + te.getText(true) + "'," + te.getTime() + ",'" + te.getCountry() + "','"
-                        + te.getLanguage() + "'," + te.getUserID() + "," + (te.getKeywords() == null
-                        ? "NULL" : "'"+te.getKeywords()+"'") + "," + te.getSentiment() + ")");
-                System.out.println("INSERT users VALUES(" + ue.getID() 
-                        + ",'" + ue.getName(true) + "'," + ue.getNrOfFollowers() 
-                        + "," + ue.getFavCount()+ "," + ue.getNrOfFriends() + ")");
-                twitterDatabase.executeSQLQuery("INSERT tweets VALUES(" + te.getID() 
-                        + "," + te.getRetweetID() + "," + te.getRetweetCount() + "," + te.getFavCount()
-                        + ",'" + te.getText(true) + "'," + te.getTime() + ",'" + te.getCountry() + "','"
-                        + te.getLanguage() + "'," + te.getUserID() + "," + (te.getKeywords() == null
-                        ? "NULL" : "'"+te.getKeywords()+"'") + "," + te.getSentiment() + ")");
-                twitterDatabase.executeSQLQuery("INSERT users VALUES(" + ue.getID() 
-                        + ",'" + ue.getName(true) + "'," + ue.getNrOfFollowers() 
-                        + "," + ue.getFavCount()+ "," + ue.getNrOfFriends() + ")");
-            } catch (SQLException ex) {
-                logger.severe("Failed to write the twitter data to the MySQL database properly.");
-                disable();
-                return;
-            }
-        }
-
-        // Writer tweet data to csv file.
-        tweets_writer.write(te.toString());
-        tweets_writer.println();
-        users_writer.write(ue.toString());
-        users_writer.println();
-        
-        // Stop the twitter stream if any error(s) while writing to file.
-        if(tweets_writer.checkError() || users_writer.checkError()) {
-            logger.severe("Failed to write stream data to file.");
-            disable();
+        TweetEntity te = new TweetEntity(status, getRelatedKeyword(status.getText()));
+        UserEntity ue = new UserEntity(status.getUser());
+        try {
+            tweetsQ.put(te);
+            usersQ.put(ue);
+        } catch (InterruptedException ex) {
+            Logger.getLogger(TwitterFilterStream.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -485,11 +453,74 @@ public class TwitterFilterStream implements StatusListener {
         disable();
     }
     
-    Thread processTweets = new Thread(new Runnable() {
+    /** Runnable to process tweets on separate thread. */
+    Runnable processTweets = new Runnable() {
 
         @Override
         public void run() {
             
+            TweetEntity te = null;
+            UserEntity ue = null;
+            String coordinates;
+            
+            while(ENABLED || !tweetsQ.isEmpty() || !usersQ.isEmpty()) {
+                
+                try {
+                    te = (TweetEntity) tweetsQ.take();
+                    ue = (UserEntity) usersQ.take();
+                } catch (InterruptedException ex) {
+                    logger.severe("Concurrent taking of tweet interrupted.");
+                }
+                
+                if(te == null || ue == null)
+                    continue;
+                
+                // Notify listeners of new coordinates
+                if((coordinates = te.getGeoLocation()) != null) {
+                    int commaIndex = coordinates.indexOf(",");
+                    String lat = coordinates.substring(1, commaIndex);
+                    String lon = coordinates.substring(commaIndex+1, coordinates.length()-1);
+                    System.out.println(lat+" "+ lon);
+                    listener.newTweet(lat, lon, TweetEntity.getLinkedText(te.getText(false)));
+                }
+
+                if(twitterDatabase != null && useDatabase) {
+                    try {
+                        System.out.println("INSERT tweets VALUES(" + te.getID() 
+                                + "," + te.getRetweetID() + "," + te.getRetweetCount() + "," + te.getFavCount()
+                                + ",'" + te.getText(true) + "'," + te.getTime() + ",'" + te.getCountry() + "','"
+                                + te.getLanguage() + "'," + te.getUserID() + "," + (te.getKeywords() == null
+                                ? "NULL" : "'"+te.getKeywords()+"'") + "," + te.getSentiment() + ")");
+                        System.out.println("INSERT users VALUES(" + ue.getID() 
+                                + ",'" + ue.getName(true) + "'," + ue.getNrOfFollowers() 
+                                + "," + ue.getFavCount()+ "," + ue.getNrOfFriends() + ")");
+                        twitterDatabase.executeSQLQuery("INSERT tweets VALUES(" + te.getID() 
+                                + "," + te.getRetweetID() + "," + te.getRetweetCount() + "," + te.getFavCount()
+                                + ",'" + te.getText(true) + "'," + te.getTime() + ",'" + te.getCountry() + "','"
+                                + te.getLanguage() + "'," + te.getUserID() + "," + (te.getKeywords() == null
+                                ? "NULL" : "'"+te.getKeywords()+"'") + "," + te.getSentiment() + ")");
+                        twitterDatabase.executeSQLQuery("INSERT users VALUES(" + ue.getID() 
+                                + ",'" + ue.getName(true) + "'," + ue.getNrOfFollowers() 
+                                + "," + ue.getFavCount()+ "," + ue.getNrOfFriends() + ")");
+                    } catch (SQLException ex) {
+                        logger.severe("Failed to write the twitter data to the MySQL database properly.");
+                        disable();
+                        return;
+                    }
+                }
+
+                // Writer tweet data to csv file.
+                tweets_writer.write(te.toString());
+                tweets_writer.println();
+                users_writer.write(ue.toString());
+                users_writer.println();
+
+                // Stop the twitter stream if any error(s) while writing to file.
+                if(tweets_writer.checkError() || users_writer.checkError()) {
+                    logger.severe("Failed to write stream data to file.");
+                    disable();
+                }
+            }
         }
-    });
+    };
 }

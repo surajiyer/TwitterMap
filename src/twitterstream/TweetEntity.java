@@ -15,7 +15,7 @@ import utils.NLP;
  */
 public class TweetEntity {
     
-    private String dataSeperator = ";";
+    private final String DATA_SEPERATOR = ";";
     private long id;
     private long retweet_id;
     private int retweet_count;
@@ -29,13 +29,11 @@ public class TweetEntity {
     private String keywords;
     private int sentiment;
     
-    public TweetEntity(String dataSeperator, Status status, String keywords) {
-        this(dataSeperator, status, status.getPlace(), status.getRetweetedStatus(), keywords);
+    public TweetEntity(Status status, String keywords) {
+        this(status, status.getPlace(), status.getRetweetedStatus(), keywords);
     }
     
-    private TweetEntity(String dataSeperator, Status status, Place place, 
-            Status retweet, String keywords) {
-        this.dataSeperator = dataSeperator;
+    private TweetEntity(Status status, Place place, Status retweet, String keywords) {
         this.id = status.getId();
         this.retweet_id = retweet == null ? -1 : retweet.getId();
         this.retweet_count = status.getRetweetCount();
@@ -47,7 +45,7 @@ public class TweetEntity {
         this.language_code = status.getLang() == null ? "und" : status.getLang();
         this.user_id = status.getUser().getId();
         this.keywords = keywords;
-        //this.sentiment = analyseSentiment(text, keywords);
+        this.sentiment = analyseSentiment(text);
     }
     
     /**
@@ -141,6 +139,10 @@ public class TweetEntity {
         return country_code;
     }
     
+    public final String getGeoLocation() {
+        return geoLocation;
+    }
+    
     public final String getLanguage() {
         return language_code;
     }
@@ -157,8 +159,8 @@ public class TweetEntity {
         return sentiment;
     }
     
-    public static final String getCSVHeader(String dataSeperator) {
-        final String s = dataSeperator;
+    public static final String getCSVHeader(String DATA_SEPERATOR) {
+        final String s = DATA_SEPERATOR;
         return "ID"+s+"Retweet ID"+s+"User ID"+s+"Text"+s+"Favorite Count"+s+
                 "Retweet Count"+s+"Creation time"+s+"Country Code"+s+"Geolocation"
                 +s+"Language Code"+s+"Keywords"+s+"Sentiment";
@@ -166,7 +168,7 @@ public class TweetEntity {
     
     @Override
     public String toString() {
-        final String s = dataSeperator;
+        final String s = DATA_SEPERATOR;
         return id + s + retweet_id + s + user_id + s + text + s + fav_count + s 
                 + retweet_count + s + creation_time + s + country_code + s 
                 + geoLocation + s + language_code + s + keywords + s + sentiment;

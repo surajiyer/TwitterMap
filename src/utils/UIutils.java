@@ -5,11 +5,14 @@
  */
 package utils;
 
+import Main.GUI;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.ImageIcon;
+import javax.swing.JOptionPane;
 
 /**
  *
@@ -30,6 +33,43 @@ public class UIutils {
             Logger.getLogger(UIutils.class.getName()).log(Level.SEVERE, null, ex);
         }
         return new ImageIcon(url);
+    }
+
+    /**
+     * Checks if basic network connection is present and returns true if it
+     * does.
+     *
+     * @return true if network connection exists, otherwise false.
+     */
+    public static boolean isConnected() {
+        boolean reachable = false;
+        try {
+            Process p1 = Runtime.getRuntime().exec("ping www.google.com");
+            reachable = p1.waitFor() == 0;
+        } catch (IOException ex) {
+            Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (InterruptedException ex) {
+            Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        if (!reachable) {
+            JOptionPane.showMessageDialog(null, "No Internet Connection.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+        return reachable;
+    }
+
+    /**
+     * Find the {@code n}th occurrence of a string {@code s} in a string {@code str}.
+     * @param str the string in which to search for.
+     * @param s the string to search for.
+     * @param n the nth occurrence of said string.
+     * @return the position of the nth occurrence of {@code s}
+     */
+    public static int nthOccurrence(String str, String s, int n) {
+        int pos = str.indexOf(s, 0);
+        while (--n > 0 && pos != -1) {
+            pos = str.indexOf(s, pos + 1);
+        }
+        return pos;
     }
     
 }
