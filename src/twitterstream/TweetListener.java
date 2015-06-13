@@ -20,7 +20,7 @@ public interface TweetListener {
      * @param lon the longitude of the coordinate.
      * @param title the message within the tweet.
      */
-    public void newTweet(String lat, String lon, String title);
+    public void newTweet(double lat, double lon, String title);
     
     /**
      * Set whether the filter stream is running or not.

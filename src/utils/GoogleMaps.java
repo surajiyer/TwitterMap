@@ -33,26 +33,22 @@ public class GoogleMaps {
      * @param tag Loaded from file (file), user defined (user) or twitter 
      * generated (tweet)
      */
-    public static void setMarker(Browser browser, String latitude, 
-            String longitude, String title, String iconName, String tag) throws 
+    public static void setMarker(Browser browser, double latitude, 
+            double longitude, String title, String iconName, String tag) throws 
             NumberFormatException, IllegalArgumentException {
         
-        // Parse the longitude and latitude
-        Double lat = Double.parseDouble(latitude);
-        Double lon = Double.parseDouble(longitude);
-        
-        if(lat < -90d || lat > 90d) {
+        if(latitude < -90d || latitude > 90d) {
             throw new IllegalArgumentException("Latitude out of range.");
         }
         
-        if(lon < -180d || lon > 180d) {
+        if(longitude < -180d || longitude > 180d) {
             throw new IllegalArgumentException("Longitude out of range.");
         }
         
         // Wait until browser has finished loading.
         while(browser.isLoading()) {}
         
-        browser.executeJavaScript("addMarker("+lat+","+lon+",'"+title+"','"+
+        browser.executeJavaScript("addMarker("+latitude+","+longitude+",'"+title+"','"+
                 GoogleMaps.class.getClass().getResource("/res/").toString()+iconName+"','"+tag+"')");
     }
     
@@ -66,8 +62,8 @@ public class GoogleMaps {
      * @param tag Loaded from file (file), user defined (user) or twitter 
      * generated (tweet)
      */
-    public static void setMarker(Browser browser, String latitude, 
-            String longitude, String title, String tag) {
+    public static void setMarker(Browser browser, double latitude, 
+            double longitude, String title, String tag) {
         setMarker(browser, latitude, longitude, title, "map_marker_24.png", tag);
     }
     

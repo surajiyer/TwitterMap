@@ -12,9 +12,9 @@ import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Properties;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.FileHandler;
 import java.util.logging.Formatter;
 import java.util.logging.Level;
@@ -25,6 +25,7 @@ import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import org.apache.commons.lang3.ArrayUtils;
 import twitter4j.FilterQuery;
+import twitter4j.GeoLocation;
 import twitter4j.StallWarning;
 import twitter4j.Status;
 import twitter4j.StatusDeletionNotice;
@@ -163,27 +164,29 @@ public class TwitterFilterStream implements StatusListener {
     /**
      * Load new twitter credentials.
      * 
-     * @param CONSUMER_KEY
-     * @param CONSUMER_SECRET
-     * @param API_KEY
-     * @param API_SECRET 
+     * @param p configuration property containing the necessary twitter developer
+     * credentials.
      */
-    public void setTwitterCredentials(String CONSUMER_KEY, String CONSUMER_SECRET, 
-            String API_KEY, String API_SECRET) {
-        twitterStream = new TwitterStreamFactory(getAuth(CONSUMER_KEY, 
-                CONSUMER_SECRET, API_KEY, API_SECRET)).getInstance();
+    public void setTwitterCredentials(Properties p) {
+        twitterStream = new TwitterStreamFactory(getAuth(
+                p.getProperty("CONSUMER_KEY"), 
+                p.getProperty("CONSUMER_SECRET"), 
+                p.getProperty("API_KEY"), 
+                p.getProperty("API_SECRET"))).getInstance();
         twitterStream.addListener(this);
     }
     
     /**
      * Sets the MySQL database to which to write data to.
      * 
-     * @param username
-     * @param password
-     * @param url
+     * @param p configuration property containing the necessary MySQL database 
+     * credentials.
      */
-    public void setDatabase(String username, String password, String url) {
-        setDatabase(new MySQL4j(username, password, url));
+    public void setDatabase(Properties p) {
+        setDatabase(new MySQL4j(
+                p.getProperty("SQL_USERNAME"), 
+                p.getProperty("SQL_PASSWORD"), 
+                p.getProperty("SQL_URL")));
     }
     
     /**
@@ -229,12 +232,17 @@ public class TwitterFilterStream implements StatusListener {
     
     /**
      * Return the credentials used to activate the twitter stream.
-     * @return CONSUMER_KEY, CONSUMER_SECRET, API_KEY, API_SECRET 
+     * @return a properties object containing the CONSUMER_KEY, CONSUMER_SECRET,
+     * API_KEY and API_SECRET.
      */
-    public String[] getTwitterCredentials() {
+    public Properties getTwitterCredentials() {
         Configuration c = twitterStream.getConfiguration();
-        return new String[] {c.getOAuthConsumerKey(), c.getOAuthConsumerSecret(), 
-            c.getOAuthAccessToken(), c.getOAuthAccessTokenSecret()};
+        Properties twitterProps = new Properties();
+        twitterProps.setProperty("CONSUMER_KEY", c.getOAuthConsumerKey());
+        twitterProps.setProperty("CONSUMER_SECRET", c.getOAuthConsumerSecret());
+        twitterProps.setProperty("API_KEY", c.getOAuthAccessToken());
+        twitterProps.setProperty("API_SECRET", c.getOAuthAccessTokenSecret());
+        return twitterProps;
     }
  
     /**
@@ -266,7 +274,8 @@ public class TwitterFilterStream implements StatusListener {
             fh.setFormatter(new Formatter() {
                 @Override
                 public String format(LogRecord record) {
-                  return new SimpleDateFormat("hh:mm:ss").format(new Date(record.getMillis())) + " "
+                  return new SimpleDateFormat("hh:mm:ss").format(new Date(
+                          record.getMillis())) + " "
                           + record.getLevel() + ":  "
                           + record.getSourceClassName() + " -:- "
                           + record.getSourceMethodName() + " -:- "
@@ -362,7 +371,7 @@ public class TwitterFilterStream implements StatusListener {
             twitterStream.shutdown();
             
             // write the number of retrieved tweets to log file.
-            logger.log(Level.INFO, "Retrieved {0} tweet(s)", tweets_count);
+            logger.log(Level.INFO, new StringBuilder("Retrieved ").append(tweets_count).append(" tweet(s)").toString());
             
             // Set twitter stream running status.
             logger.info("Twitter Stream Stopped.");
@@ -379,11 +388,6 @@ public class TwitterFilterStream implements StatusListener {
         }
         
         if(status == StreamStatus.PROCESSING || error) {
-            // close the file output streams.
-            tweets_writer.close();
-            users_writer.close();
-            fh.close();
-            
             // close the MySQL database connection.
             if(twitterDatabase != null && useDatabase) {
                 try {
@@ -396,6 +400,11 @@ public class TwitterFilterStream implements StatusListener {
             // Set twitter stream running status.
             listener.setRunningStatus(status = StreamStatus.DISABLED);
             logger.info("All tweets processed. Shutting down.");
+            
+            // close the file output streams.
+            tweets_writer.close();
+            users_writer.close();
+            fh.close();
                     
             // When logging has completed, save the file to user-defined location.
             JFileChooser fc = new JFileChooser();
@@ -422,6 +431,13 @@ public class TwitterFilterStream implements StatusListener {
                 }
             }while(!confirmed);
         }
+        
+        // if there was some error, stop the concurrent processing thread.
+        if(error) {
+            try {
+                q.put(stop);
+            } catch (InterruptedException ex) {}
+        }
     }
 
     /**
@@ -442,7 +458,7 @@ public class TwitterFilterStream implements StatusListener {
         String related = "";
         for(String key : keywords) {
             if(tweet.contains(key.toLowerCase())) {
-                related += DATA_SEPERATOR + key;
+                related += "," + key;
             }
         }
         if(related.equals(""))
@@ -481,6 +497,7 @@ public class TwitterFilterStream implements StatusListener {
 
     @Override
     public void onException(Exception excptn) {
+        excptn.printStackTrace();
         logger.severe("Connection to Twitter public stream failed.");
         disable(true);
     }
@@ -493,7 +510,8 @@ public class TwitterFilterStream implements StatusListener {
             
             TweetEntity te = null;
             UserEntity ue = null;
-            String coordinates;
+            GeoLocation geo;
+            String sql = "NULL";
             
             while(true) {
                 try {
@@ -508,28 +526,26 @@ public class TwitterFilterStream implements StatusListener {
                 }
                 
                 // Notify listeners of new coordinates
-                if(!(coordinates = te.getGeoLocation()).equals("und")) {
-                    int commaIndex = coordinates.indexOf(",");
-                    String lat = coordinates.substring(1, commaIndex);
-                    String lon = coordinates.substring(commaIndex+1, coordinates.length()-1);
-                    System.out.println(lat+" "+ lon);
-                    listener.newTweet(lat, lon, TweetEntity.getLinkedText(te.getText(false)));
+                if(( geo = te.getGeoLocation()) != null) {
+                    listener.newTweet(geo.getLatitude(), geo.getLongitude(), 
+                            TweetEntity.getLinkedText(te.getText()));
                 }
 
                 if(twitterDatabase != null && useDatabase) {
                     try {
-                        twitterDatabase.executeSQLQuery("INSERT tweets VALUES(" + te.getID() 
-                                + "," + te.getRetweetID() + "," + te.getRetweetCount() + "," + te.getFavCount()
-                                + ",'" + te.getText(true) + "'," + te.getTime() + ",'" + te.getCountry() + "','"
-                                + te.getLanguage() + "'," + te.getUserID() + "," + (te.getKeywords() == null
-                                ? "NULL" : "'"+te.getKeywords()+"'") + "," + te.getSentiment() + ")");
-                        twitterDatabase.executeSQLQuery("INSERT users VALUES(" + ue.getID() 
-                                + ",'" + ue.getName(true) + "'," + ue.getNrOfFollowers() 
-                                + "," + ue.getFavCount()+ "," + ue.getNrOfFriends() + ")");
+                        sql = te.getSQLInsertQuery();
+                        twitterDatabase.executeSQLQuery(te.getSQLInsertQuery());
+                        sql = ue.getSQLInsertQuery();
+                        twitterDatabase.executeSQLQuery(ue.getSQLInsertQuery());
                     } catch (SQLException ex) {
-                        logger.severe("Failed to write the twitter data to the MySQL database properly.");
-                        disable(true);
-                        return;
+                        // code 1062 corresponds to insertion of tuple with duplicate primary key.
+                        // code 0 corresponds to no connection.
+                        if(ex.getErrorCode() != 1062) {
+                            logger.log(Level.SEVERE, new StringBuilder("Error Query: ").append(sql).toString());
+                            logger.severe("Failed to write the twitter data to the MySQL database properly.");
+                            disable(true);
+                            return;
+                        }
                     }
                 }
 
@@ -546,9 +562,7 @@ public class TwitterFilterStream implements StatusListener {
                 }
             }
             
-            System.out.println(status);
             disable(false);
-            System.out.println(status);
         }
     };
 }

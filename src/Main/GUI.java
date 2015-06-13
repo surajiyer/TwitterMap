@@ -6,6 +6,8 @@
 package Main;
 
 import com.teamdev.jxbrowser.chromium.Browser;
+import com.teamdev.jxbrowser.chromium.DefaultLoadHandler;
+import com.teamdev.jxbrowser.chromium.LoadParams;
 import com.teamdev.jxbrowser.chromium.events.FailLoadingEvent;
 import com.teamdev.jxbrowser.chromium.events.FinishLoadingEvent;
 import com.teamdev.jxbrowser.chromium.events.FrameLoadEvent;
@@ -28,10 +30,10 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.text.ParseException;
 import java.util.HashMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.Properties;
 import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
 import javax.swing.JDialog;
@@ -122,34 +124,28 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         browser = new Browser();
         browserView = new BrowserView(browser);
         listener = gl;
-        browser.addLoadListener(new LoadListener() {
+        
+        /* set link load handler to load all links in the running system's 
+        default browser.*/
+        browser.setLoadHandler(new DefaultLoadHandler(){
 
             @Override
-            public void onStartLoadingFrame(StartLoadingEvent sle) {
+            public boolean onLoad(LoadParams lp) {
+                String url = lp.getURL();
+                boolean cancel = !url.endsWith("map.html");
+                if(cancel) {
+                    try {
+                        // open up any other link on the system's default browser.
+                        UIutils.openWebpage(new java.net.URL(url));
+                    } catch (MalformedURLException ex) {
+                        JDialog.setDefaultLookAndFeelDecorated(true);
+                        JOptionPane.showMessageDialog(null, "Could not open link.",
+                                                      "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+                return cancel;
             }
-
-            @Override
-            public void onProvisionalLoadingFrame(ProvisionalLoadingEvent ple) {
-            }
-
-            @Override
-            public void onFinishLoadingFrame(FinishLoadingEvent fle) {
-                mapPanel.add(browserView, BorderLayout.CENTER);
-                revalidate();
-                repaint();
-            }
-
-            @Override
-            public void onFailLoadingFrame(FailLoadingEvent fle) {
-            }
-
-            @Override
-            public void onDocumentLoadedInFrame(FrameLoadEvent fle) {
-            }
-
-            @Override
-            public void onDocumentLoadedInMainFrame(LoadEvent le) {
-            }
+            
         });
 
         /* Set the Windows look and feel and initialize all the GUI components. */
@@ -187,11 +183,16 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         timeScale = 60000; // 1min = 60000ms
 
         // Add the map view to the GUI frame and load the map URL.
+        mapPanel.add(browserView, BorderLayout.CENTER);
         browser.loadURL(map);
 
         // Adding support for minimizing window to system tray if supported.
         if (SystemTray.isSupported()) {
             systrayCheckBox.setEnabled(true);
+            try {
+                systrayCheckBox.setSelected(Boolean.parseBoolean(
+                        listener.getProperties().getProperty("MINIMIZE_TO_TRAY")));
+            } catch (Exception ex) {}
             systrayCheckBox.setToolTipText("Enable/Disable minimizing to system tray.");
 
             // Context menu items to system tray icon.
@@ -253,6 +254,16 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         sqlUserTextField.getDocument().addDocumentListener(dl2);
         sqlPasswordField.getDocument().addDocumentListener(dl2);
         sqlLinkTextField.getDocument().addDocumentListener(dl2);
+        
+        // Set and start the connection to the MySQL database if USE_MYSQL is true.
+        try {
+            Properties p = listener.getProperties();
+            boolean isSelected = Boolean.parseBoolean(p.getProperty("USE_MYSQL"));
+            useDBCheckBox.setSelected(isSelected);
+            dbInputDialogShown(null);
+            if(isSelected)
+                sqlApplyButtonActionPerformed(null);
+        } catch (Exception ex) {}
 
         // Display the keywords dialog at start
         keywordsDialog.setVisible(true);
@@ -286,6 +297,8 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         latTextField = new javax.swing.JFormattedTextField();
         longTextField = new javax.swing.JFormattedTextField();
         setUserMarkerButton = new javax.swing.JButton();
+        markerTextField = new javax.swing.JTextField();
+        enterLatitudeLabel1 = new javax.swing.JLabel();
         twitterKeysInputDialog = new javax.swing.JDialog();
         consumerKeyLabel = new javax.swing.JLabel();
         consumerKeyTextField = new javax.swing.JTextField();
@@ -512,6 +525,8 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
             }
         });
 
+        enterLatitudeLabel1.setText("Enter Marker Text:");
+
         javax.swing.GroupLayout setMarkerDialogLayout = new javax.swing.GroupLayout(setMarkerDialog.getContentPane());
         setMarkerDialog.getContentPane().setLayout(setMarkerDialogLayout);
         setMarkerDialogLayout.setHorizontalGroup(
@@ -520,26 +535,32 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
                 .addContainerGap()
                 .addGroup(setMarkerDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(enterLongitudeLabel)
-                    .addComponent(enterLatitudeLabel))
-                .addGap(18, 18, 18)
-                .addGroup(setMarkerDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(enterLatitudeLabel)
+                    .addComponent(enterLatitudeLabel1))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(setMarkerDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(setUserMarkerButton)
-                    .addComponent(latTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 160, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(longTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 160, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(latTextField)
+                    .addComponent(longTextField)
+                    .addComponent(markerTextField, javax.swing.GroupLayout.DEFAULT_SIZE, 160, Short.MAX_VALUE))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         setMarkerDialogLayout.setVerticalGroup(
             setMarkerDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(setMarkerDialogLayout.createSequentialGroup()
                 .addContainerGap()
+                .addGroup(setMarkerDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(markerTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(enterLatitudeLabel1))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(setMarkerDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(enterLatitudeLabel)
                     .addComponent(latTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(18, 18, 18)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(setMarkerDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(enterLongitudeLabel)
                     .addComponent(longTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(setUserMarkerButton)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
@@ -550,6 +571,11 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         twitterKeysInputDialog.setTitle("Enter twitter credentials");
         twitterKeysInputDialog.setResizable(false);
         twitterKeysInputDialog.setType(java.awt.Window.Type.POPUP);
+        twitterKeysInputDialog.addComponentListener(new java.awt.event.ComponentAdapter() {
+            public void componentShown(java.awt.event.ComponentEvent evt) {
+                twitterKeysInputDialogComponentShown(evt);
+            }
+        });
 
         consumerKeyLabel.setText("Enter your twitter Consumer key:");
 
@@ -746,6 +772,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         );
 
         databaseKeysInputDialog.pack();
+        databaseKeysInputDialog.setLocationRelativeTo(this);
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Twitter Map");
@@ -926,6 +953,11 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         systrayCheckBox.setSelected(true);
         systrayCheckBox.setText("Minimize to system tray");
         systrayCheckBox.setToolTipText("Enable/Disable minimizing to system tray.");
+        systrayCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                systrayCheckBoxStateChanged(evt);
+            }
+        });
         fileMenu.add(systrayCheckBox);
         fileMenu.add(jSeparator1);
 
@@ -1111,10 +1143,10 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
             JOptionPane.showMessageDialog(null, "Please only enter a number",
                                           "Error", JOptionPane.ERROR_MESSAGE);
         }
-        System.out.println(latTextField.getValue());
-        String latitude = latTextField.getValue().toString();
-        String longitude = longTextField.getValue().toString();
-        GoogleMaps.setMarker(browser, latitude, longitude, "User defined Marker", "user");
+        System.out.println((double) latTextField.getValue());
+        GoogleMaps.setMarker(browser, (double) latTextField.getValue(), 
+                (double) longTextField.getValue(), markerTextField.getText(), "user");
+        markerTextField.setText("");
         longTextField.setText("");
         latTextField.setText("");
     }//GEN-LAST:event_setUserMarkerButtonActionPerformed
@@ -1169,15 +1201,15 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
     private void startStopButtonPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startStopButtonPerformed
         // Start/Stop the twitter stream.
         switch (startStopButton1.getText()) {
-        case "Stop":
-            listener.stopTwitterStream();
-            break;
-        case "Start":
-            if (UIutils.isConnected()) {
-                listener.translate(selectedLanguages.values().toArray(new String[0]));
-                listener.startTwitterStream();
-            }
-            break;
+            case "Stop":
+                listener.stopTwitterStream();
+                break;
+            case "Start":
+                if (UIutils.isConnected()) {
+                    listener.translate(selectedLanguages.values().toArray(new String[0]));
+                    listener.startTwitterStream();
+                }
+                break;
         }
     }//GEN-LAST:event_startStopButtonPerformed
 
@@ -1194,13 +1226,13 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
             // add tray icon
             try {
                 SystemTray.getSystemTray().add(trayIcon);
-                trayIcon.displayMessage("Attention", "TwitterMap has been minimized to the system tray. ",
-                                        TrayIcon.MessageType.INFO);
+                trayIcon.displayMessage("Attention", "TwitterMap has been "
+                        + "minimized to the system tray. ", TrayIcon.MessageType.INFO);
             } catch (AWTException ex) {
                 JDialog.setDefaultLookAndFeelDecorated(true);
                 JOptionPane.showMessageDialog(null, "Oops! Something went wrong. "
-                                              + "Could not minimize to system tray.",
-                                              "Error", JOptionPane.WARNING_MESSAGE);
+                        + "Could not minimize to system tray.",
+                        "Error", JOptionPane.WARNING_MESSAGE);
             }
         }
     }//GEN-LAST:event_formWindowIconified
@@ -1234,7 +1266,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
                 || apiSecret.equals("") || apiSecret.equals("\t")) {
             JDialog.setDefaultLookAndFeelDecorated(true);
             JOptionPane.showMessageDialog(null, "Please fill in all the fields.",
-                                          "Empty Fields", JOptionPane.WARNING_MESSAGE);
+                    "Empty Fields", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
@@ -1242,7 +1274,12 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
                 && cSecret.matches("^[a-zA-Z0-9]+$")
                 && apiKey.matches("^[a-zA-Z0-9]+\\-[a-zA-Z0-9]+$")
                 && apiSecret.matches("^[a-zA-Z0-9]+$")) {
-            listener.setTwitterCredentials(cKey, cSecret, apiKey, apiSecret);
+            Properties twitterProps = new Properties();
+            twitterProps.setProperty("CONSUMER_KEY", cKey);
+            twitterProps.setProperty("CONSUMER_SECRET", cSecret);
+            twitterProps.setProperty("API_KEY", apiKey);
+            twitterProps.setProperty("API_SECRET", apiSecret);
+            listener.setTwitterCredentials(twitterProps);
             applyKeysButton.setEnabled(false);
         } else {
             JDialog.setDefaultLookAndFeelDecorated(true);
@@ -1278,47 +1315,53 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         try {
             connectingLabel.setVisible(true);
             test.connect();
-            // create the twitter filter stream database
+            // create the tweets database
             test.executeSQLQuery("CREATE DATABASE IF NOT EXISTS `twitter_filter_stream` "
-                                 + "DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci");
-            // set to use the twitter filter database
+                    + "DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci");
+            // use the tweets database to execute the following queries.
             test.executeSQLQuery("USE `twitter_filter_stream`");
             // create the tweets table
             test.executeSQLQuery("CREATE TABLE IF NOT EXISTS `tweets` (\n"
-                                 + "  `id` bigint(20) NOT NULL COMMENT 'tweet id',\n"
-                                 + "  `retweet_id` bigint(20) NOT NULL COMMENT 'retweet id of the tweet if it is a retweet of another tweet',\n"
-                                 + "  `user_id` bigint(20) NOT NULL COMMENT 'user id of the user who tweeted the status',\n"
-                                 + "  `text` text NOT NULL COMMENT 'tweet status',\n"
-                                 + "  `fav_count` int(10) NOT NULL COMMENT 'favorite count',\n"
-                                 + "  `nr_retweets` int(10) NOT NULL COMMENT 'retweet count',\n"
-                                 + "  `creation_time` bigint(20) NOT NULL COMMENT 'creation time in (ms) since Jan 1st 1970 GMT',\n"
-                                 + "  `country_code` varchar(3) NOT NULL COMMENT 'two-letter country code about the place from where the tweet originated',\n"
-                                 + "  `geolocation` varchar(40) DEFAULT NULL COMMENT 'coordinates of tweet origin',\n"
-                                 + "  `lang_code` varchar(3) NOT NULL COMMENT 'two-letter code that represents the language detected in the status. ''und'' if not know.',\n"
-                                 + "  `keywords` varchar(200) DEFAULT NULL COMMENT 'keywords used in the status',\n"
-                                 + "  `sentiment` int(11) DEFAULT NULL COMMENT 'The sentiment of tweet text based on associated keyword',\n"
-                                 + "  PRIMARY KEY(`id`)\n"
-                                 + ") ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Stores tweets from the twitter filter stream API'");
-            // create the tweet users table
-            test.executeSQLQuery("CREATE TABLE IF NOT EXISTS `users` ("
-                                 + "  `id` bigint(20) NOT NULL COMMENT 'user id',"
-                                 + "  `username` varchar(30) NOT NULL COMMENT 'username',"
-                                 + "  `nr_of_followers` int(10) NOT NULL COMMENT 'number of followers fo the user',"
-                                 + "  `fav_count` int(10) NOT NULL COMMENT 'number of favorites',"
-                                 + "  `nr_of_friends` int(10) NOT NULL COMMENT 'number of friends'"
-                                 + ") ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='users'");
+                    + "  `id` bigint(20) NOT NULL COMMENT 'tweet id',\n"
+                    + "  `retweet_id` bigint(20) NOT NULL COMMENT 'retweet id of the tweet if it is a retweet of another tweet',\n"
+                    + "  `user_id` bigint(20) NOT NULL COMMENT 'user id of the user who tweeted the status',\n" 
+                    + "  `text` varchar(255) COLLATE utf8_unicode_ci NOT NULL COMMENT 'tweet status',\n" 
+                    + "  `fav_count` int(10) NOT NULL COMMENT 'favorite count',\n"
+                    + "  `nr_retweets` int(10) NOT NULL COMMENT 'retweet count',\n"
+                    + "  `creation_time` bigint(20) NOT NULL COMMENT 'creation time in (ms) since Jan 1st 1970 GMT',\n"
+                    + "  `country_code` varchar(3) CHARACTER SET utf8 NOT NULL COMMENT 'two-letter country code about the place from where the tweet originated',\n"
+                    + "  `geolocation` varchar(40) CHARACTER SET utf8 DEFAULT NULL COMMENT '[latitude,longitude]',\n"
+                    + "  `lang_code` varchar(3) CHARACTER SET utf8 NOT NULL COMMENT 'two-letter code that represents the language detected in the status. ''und'' if not known.',\n"
+                    + "  `keywords` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL COMMENT 'keywords used in the status',\n"
+                    + "  `sentiment` tinyint(2) NOT NULL COMMENT 'sentiment score',\n"
+                    + "   PRIMARY KEY(`id`)\n"
+                    + ") ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci COMMENT='Stores tweets from the twitter filter stream API'");
+            // create the users table
+            test.executeSQLQuery("CREATE TABLE IF NOT EXISTS `users` (\n"
+                    + "  `id` bigint(20) NOT NULL COMMENT 'user id',\n"
+                    + "  `username` varchar(30) NOT NULL COMMENT 'username',\n"
+                    + "  `nr_of_followers` int(10) NOT NULL COMMENT 'number of followers fo the user',\n"
+                    + "  `fav_count` int(10) NOT NULL COMMENT 'number of favorites',\n"
+                    + "  `nr_of_friends` int(10) NOT NULL COMMENT 'number of friends',\n"
+                    + "   PRIMARY KEY(`id`)\n"
+                    + ") ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='users'");
             sqlApplyButton.setEnabled(false);
             connectingLabel.setVisible(false);
             test.close();
 
             // Pass the new database link to the twitter stream.
-            listener.setMySQLDatabase(test);
+            Properties p = new Properties();
+            p.setProperty("SQL_USERNAME", user);
+            p.setProperty("SQL_PASSWORD", pass);
+            p.setProperty("SQL_URL", link);
+            listener.setMySQL(p);
         } catch (Exception ex) {
+            ex.printStackTrace();
             connectingLabel.setVisible(false);
             JDialog.setDefaultLookAndFeelDecorated(true);
             JOptionPane.showMessageDialog(null, "Oops! Unable to connect to database. Make sure the "
-                                          + "username/password/url provided are correct and that the link is reachable.",
-                                          "Error", JOptionPane.ERROR_MESSAGE);
+                    + "username/password/url provided are correct and that the link is reachable.",
+                    "Error", JOptionPane.ERROR_MESSAGE);
         }
     }//GEN-LAST:event_sqlApplyButtonActionPerformed
 
@@ -1339,21 +1382,20 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         } else {
             JDialog.setDefaultLookAndFeelDecorated(true);
             JOptionPane.showMessageDialog(null, "You to specify valid twitter credentials.",
-                                          "Error", JOptionPane.ERROR_MESSAGE);
+                    "Error", JOptionPane.ERROR_MESSAGE);
         }
     }//GEN-LAST:event_OkKeysButtonActionPerformed
 
     private void dbInputDialogShown(java.awt.event.ComponentEvent evt) {//GEN-FIRST:event_dbInputDialogShown
-        MySQL4j db = listener.getMySQLDatabase();
-        String user = "", pass = "", url = "";
-        if (db != null) {
-            user = db.getUsername();
-            pass = db.getPassword();
-            url = db.getURL();
+        Properties p;
+        try {
+            p = listener.getProperties();
+        } catch (Exception ex) {
+            p = new Properties();
         }
-        sqlUserTextField.setText(user);
-        sqlPasswordField.setText(pass);
-        sqlLinkTextField.setText(url);
+        sqlUserTextField.setText(p.getProperty("SQL_USERNAME", ""));
+        sqlPasswordField.setText(p.getProperty("SQL_PASSWORD", ""));
+        sqlLinkTextField.setText(p.getProperty("SQL_URL", ""));
         useDBCheckBoxActionPerformed(null);
     }//GEN-LAST:event_dbInputDialogShown
 
@@ -1366,11 +1408,31 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         listener.useDatabase(selected);
     }//GEN-LAST:event_useDBCheckBoxActionPerformed
 
+    private void twitterKeysInputDialogComponentShown(java.awt.event.ComponentEvent evt) {//GEN-FIRST:event_twitterKeysInputDialogComponentShown
+        // Load existing twitter dev credentials from saved properties file.
+        Properties p;
+        try {
+            p = listener.getProperties();
+        } catch (Exception ex) {
+            p = new Properties();
+        }
+        consumerKeyTextField.setText(p.getProperty("CONSUMER_KEY", ""));
+        consumerSecretTextField.setText(p.getProperty("CONSUMER_SECRET", ""));
+        apiKeyTextField.setText(p.getProperty("API_KEY", ""));
+        apiSecretTextField.setText(p.getProperty("API_SECRET", ""));
+    }//GEN-LAST:event_twitterKeysInputDialogComponentShown
+
+    private void systrayCheckBoxStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_systrayCheckBoxStateChanged
+        Properties p = new Properties();
+        p.setProperty("MINIMIZE_TO_TRAY", ""+systrayCheckBox.isSelected());
+        listener.updateProperties(p);
+    }//GEN-LAST:event_systrayCheckBoxStateChanged
+
     /**
      * Create a new map marker when a new tweet with Geo-location comes in.
      */
     @Override
-    public void newTweet(String lat, String lon, String title) {
+    public void newTweet(double lat, double lon, String title) {
         GoogleMaps.setMarker(browser, lat, lon, title, "tweet");
     }
 
@@ -1455,8 +1517,9 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
                         if(coordinates.equals("und"))
                             continue;
                         int commaIndex = coordinates.indexOf(",");
-                        String lat = coordinates.substring(1, commaIndex);
-                        String lon = coordinates.substring(commaIndex + 1, coordinates.length()-1);
+                        double lat = Double.parseDouble(coordinates.substring(1, commaIndex));
+                        double lon = Double.parseDouble(coordinates.substring(commaIndex + 1, 
+                                coordinates.length()-1));
                         String text = tweet.substring(UIutils.nthOccurrence(tweet, ";", 3)+1, 
                                 UIutils.nthOccurrence(tweet, ";", 4));
                         newTweet(lat, lon, text);
@@ -1502,6 +1565,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
     private javax.swing.JButton displayMapButton;
     private javax.swing.JTextField enterKeywordTextField;
     private javax.swing.JLabel enterLatitudeLabel;
+    private javax.swing.JLabel enterLatitudeLabel1;
     private javax.swing.JLabel enterLongitudeLabel;
     private javax.swing.JTextField enterRunTextField;
     private javax.swing.JMenuItem exitMenuItem;
@@ -1523,6 +1587,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
     private javax.swing.JScrollPane loadedKeywordsScrollPane;
     private javax.swing.JFormattedTextField longTextField;
     private javax.swing.JPanel mapPanel;
+    private javax.swing.JTextField markerTextField;
     private javax.swing.JMenu markersMenu;
     private javax.swing.JMenuBar menuBar;
     private javax.swing.JSeparator panelSeparator;

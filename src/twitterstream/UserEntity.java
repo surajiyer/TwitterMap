@@ -10,7 +10,7 @@ import twitter4j.User;
  */
 public class UserEntity {
     
-    private final String DATA_SEPARATOR = ";";
+    private static final String DATA_SEPARATOR = ";";
     private final long id;
     private final String username;
     private final int nr_of_followers;
@@ -31,25 +31,17 @@ public class UserEntity {
     }
     
     private String cleanText(String text) {
-        text = text.replace("?", " ");
-        text = text.replace("\n", " ");
-        text = text.replace("\t", " ");
-        return text;
-    }
-    
-    public String escapeText(String text) {
-        text = text.replace("\'", "\\\'");
-        text = text.replace("\"", "\\\"");
-        return text;
+        return text.replaceAll("\\P{Print}", "")
+                .replace("\n", " ")
+                .replaceAll(" +", " ")
+                .trim();
     }
     
     public final long getID() {
         return id;
     }
     
-    public final String getName(boolean escape) {
-        if(escape)
-            return escapeText(username);
+    public final String getName() {
         return username;
     }
     
@@ -69,6 +61,15 @@ public class UserEntity {
         final String s = DATA_SEPERATOR;
         return "ID"+s+"Username"+s+"Number of followers"+s+"Favourite Count"+s
                 +"Number of friends";
+    }
+    
+    public String getSQLInsertQuery() {
+        return "INSERT users VALUES(" 
+                + id + ",'" 
+                + username.replace("\'", "\\\'").replace("\"", "\\\"") + "'," 
+                + nr_of_followers + ","
+                + fav_count + "," 
+                + nr_of_friends + ")";
     }
     
     @Override

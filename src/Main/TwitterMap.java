@@ -5,8 +5,15 @@
  */
 package Main;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import twitterstream.TwitterFilterStream;
-import utils.MySQL4j;
 import utils.NLP;
 
 /**
@@ -17,8 +24,12 @@ import utils.NLP;
 public class TwitterMap implements GUIListener {
     
     private final TwitterFilterStream tStream;
+    private final String WORKING_DIR;
     
     public TwitterMap() {
+        // Set the working directory (where the JAR file is running from).
+        WORKING_DIR = new File(TwitterMap.class.getProtectionDomain().
+                getCodeSource().getLocation().getPath()).getParent()+File.separator;
         
         // initializes the twitter stream.
         tStream = new TwitterFilterStream();
@@ -96,23 +107,32 @@ public class TwitterMap implements GUIListener {
     }
 
     @Override
-    public void setMySQLDatabase(MySQL4j db) {
-        tStream.setDatabase(db);
+    public void setMySQL(Properties p) {
+        tStream.setDatabase(p);
+        updateProperties(p);
     }
 
     @Override
-    public void setTwitterCredentials(String CONSUMER_KEY, String CONSUMER_SECRET, String API_KEY, String API_SECRET) {
-        tStream.setTwitterCredentials(CONSUMER_KEY, CONSUMER_SECRET, API_KEY, API_SECRET);
+    public void setTwitterCredentials(Properties p) {
+        tStream.setTwitterCredentials(p);
+        updateProperties(p);
     }
 
     @Override
-    public MySQL4j getMySQLDatabase() {
-        return tStream.getMySQLDatabase();
+    public Properties getProperties() throws FileNotFoundException, IOException {
+        FileInputStream fis;
+        fis = new FileInputStream(WORKING_DIR+"settings.ini");
+        Properties p = new Properties();
+        p.load(fis);
+        return p;
     }
 
     @Override
     public void useDatabase(boolean use) {
         tStream.useDatabase(use);
+        Properties p = new Properties();
+        p.setProperty("USE_MYSQL", Boolean.toString(use));
+        updateProperties(p);
     }
 
     @Override
@@ -124,9 +144,31 @@ public class TwitterMap implements GUIListener {
     public void loadMainFrame() {
         run();
     }
-
+    
     @Override
-    public String[] getTwitterCredentials() {
-       return tStream.getTwitterCredentials();
+    public void updateProperties(Properties p) {
+        Properties p1 = null;
+        FileOutputStream fos = null;
+        try {
+            p1 = getProperties();
+        } catch (FileNotFoundException ex) {
+            try {
+                fos = new FileOutputStream(new File(WORKING_DIR+"settings.ini"));
+            } catch (FileNotFoundException ex1) {}
+        } catch (IOException ex) {}
+        if(p1 == null)
+            p1 = new Properties();
+        p1.putAll(p);
+        if(fos == null) {
+            try {
+                fos = new FileOutputStream(WORKING_DIR+"settings.ini");
+            } catch (FileNotFoundException ex) {}
+        }
+        if(fos != null) {
+            try {
+                p1.store(fos, "preferences");
+                fos.close();
+            } catch (IOException ex) {}
+        }
     }
 }

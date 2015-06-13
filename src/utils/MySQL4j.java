@@ -10,6 +10,8 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * 
@@ -103,8 +105,8 @@ public class MySQL4j {
      */
     public void executeSQLQuery(String query) throws SQLException {
         conn.createStatement().executeUpdate(query);
-        System.out.println(console_format.format(new Date(System.currentTimeMillis())) 
-                + " INFO: SQL query executed successfully");
+//        System.out.println(console_format.format(new Date(System.currentTimeMillis())) 
+//                + " INFO: SQL query executed successfully");
     }
 
     /**
@@ -118,14 +120,22 @@ public class MySQL4j {
                 + " INFO: Connection to database terminated successfully");
     }
     
-    public static void main(String[] args) throws Exception {
-        // test
+    public static void main(String[] args) {
         MySQL4j sql = new MySQL4j("s139662", "rvH6X6a7rN9bJtUD", 
                 "jdbc:mysql://surajiyer96.synology.me:3306/twitter_filter_stream");
-        sql.connect();
-        sql.executeSQLQuery("INSERT tweets VALUES(602145169886969857,602036363181993986,"
-                + "0,0,'RT @DrKumarVishwas: अच्छे दिन for corrupt officers 😜 #ModiMurdersDemocracy  http://t.co/EGwbwmQ1WH',"
-                + "1432397570000,'und','hi',2371691228,NULL)");
-        sql.close();
+        try {
+            sql.connect();
+            sql.executeSQLQuery("INSERT tweets VALUES(609703946257469443,"
+                    + "609689826439213056,1237509450,'RT @ygent__officiaI: BIGBANG TAKES "
+                    + "OVER CHINA\\'S LARGEST MUSIC PORTAL QQ Music 1 #BANGBANGBANG  2 "
+                    + "#WELIKE2PARTY  3 #LOSER 6 #BAEBAE ht…',0,0,1434199723000,"
+                    + "'und',NULL,'en','china',1)");
+            sql.close();
+        } catch (SQLException ex) {
+            System.out.println(ex.getErrorCode());
+        } catch (Exception ex) {
+            Logger.getLogger(MySQL4j.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
     }
 }

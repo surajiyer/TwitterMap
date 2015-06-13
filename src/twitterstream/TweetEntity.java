@@ -16,7 +16,7 @@ import utils.NLP;
  */
 public class TweetEntity {
     
-    private final String DATA_SEPERATOR = ";";
+    private static final String DATA_SEPERATOR = ";";
     private long id;
     private long retweet_id;
     private int retweet_count;
@@ -24,7 +24,7 @@ public class TweetEntity {
     private String text;
     private long creation_time;
     private String country_code;
-    private String geoLocation;
+    private GeoLocation geoLocation;
     private String language_code;
     private long user_id;
     private String keywords;
@@ -37,14 +37,14 @@ public class TweetEntity {
     private TweetEntity(Status status, Place place, GeoLocation geo, Status retweet, String keywords) {
         this.id = status.getId();
         this.retweet_id = retweet == null ? -1 : retweet.getId();
-        this.retweet_count = status.getRetweetCount();
-        this.fav_count = status.getFavoriteCount();
+        this.user_id = status.getUser().getId();
         this.text = cleanText(status.getText());
+        this.fav_count = status.getFavoriteCount();
+        this.retweet_count = status.getRetweetCount();
         this.creation_time = status.getCreatedAt().getTime();
         this.country_code = place == null ? "und" : place.getCountryCode();
-        this.geoLocation = geo == null ? "und" : geo.toString();
+        this.geoLocation = geo;
         this.language_code = status.getLang() == null ? "und" : status.getLang();
-        this.user_id = status.getUser().getId();
         this.keywords = keywords;
         this.sentiment = analyseSentiment(text);
     }
@@ -57,24 +57,10 @@ public class TweetEntity {
      * @return the cleaned text
      */
     private String cleanText(String text) {
-        text = text.replace("?", " ");
-        text = text.replace("\n", " ");
-        text = text.replace("\t", " ");
-        text = text.trim();
-        return text;
-    }
-    
-    /**
-     * Used to escape single and double quotes to add them properly to the 
-     * MySQL database.
-     * 
-     * @param text the tweet text
-     * @return the escaped text
-     */
-    public String escapeText(String text) {
-        text = text.replace("\'", "\\\'");
-        text = text.replace("\"", "\\\"");
-        return text;
+        return text.replaceAll("\\P{Print}", "")
+                .replace("\n", " ")
+                .replaceAll(" +", " ")
+                .trim();
     }
     
     public final long getID() {
@@ -85,28 +71,21 @@ public class TweetEntity {
         return retweet_id;
     }
     
-    public final int getRetweetCount() {
-        return retweet_count;
-    }
-    
-    public final int getFavCount() {
-        return fav_count;
+    public final long getUserID() {
+        return user_id;
     }
     
     /**
      * Returns the text (the actual message) of the tweet.
-     * @param escape true if all special characters must be escaped in the output
-     * for cleaner printing/writing.
      * @return the tweet status text
      */
-    public final String getText(boolean escape) {
-        if(escape)
-            return escapeText(text);
+    public final String getText() {
         return text;
     }
     
     /**
      * Autolinks the URL links, hastags, mentions and cashtags in tweet texts.
+     * @param text
      * @return the autolinked tweet text.
      */
     public final static String getLinkedText(String text) {
@@ -121,35 +100,39 @@ public class TweetEntity {
             System.out.println(url);
             text = text.replace(url, "");
         }
-        text = text.replace("\t", " ");
+        text = text.replaceAll(" +", " ").trim();
         return text;
     }
     
     public static void main(String[] args) {
         String text = "Amnesty pleit voor Europese opvang honderdduizend Syriërs: http://bit.ly/1KhSyYQ";
         text = " Hi my name is Suraj.. http://t.co url www.twitter.com ";
-        text = "www.twitter.com, www.yahoo.co.jp, t.co/blahblah, www.poloshirts.uk.com";
+        //text = "www.twitter.com, www.yahoo.co.jp, t.co/blahblah, www.poloshirts.uk.com";
         System.out.println(getFormattedText(text));
+    }
+    
+    public final int getFavCount() {
+        return fav_count;
+    }
+    
+    public final int getRetweetCount() {
+        return retweet_count;
     }
     
     public final long getTime() {
         return creation_time;
     }
     
-    public final String getCountry() {
+    public final String getCountryCode() {
         return country_code;
     }
     
-    public final String getGeoLocation() {
+    public final GeoLocation getGeoLocation() {
         return geoLocation;
     }
     
     public final String getLanguage() {
         return language_code;
-    }
-    
-    public final long getUserID() {
-        return user_id;
     }
     
     public final String getKeywords() {
@@ -165,6 +148,22 @@ public class TweetEntity {
         return "ID"+s+"Retweet ID"+s+"User ID"+s+"Text"+s+"Favorite Count"+s+
                 "Retweet Count"+s+"Creation time"+s+"Country Code"+s+"Geolocation"
                 +s+"Language Code"+s+"Keywords"+s+"Sentiment";
+    }
+    
+    public String getSQLInsertQuery() {
+        return "INSERT tweets VALUES(" 
+                + id + "," 
+                + retweet_id + "," 
+                + user_id + ",'" 
+                + text.replace("\'", "\\\'").replace("\"", "\\\"") + "'," 
+                + fav_count + "," 
+                + retweet_count + "," 
+                + creation_time + ",'" 
+                + country_code + "'," 
+                + (geoLocation == null ? "NULL" : "'["+geoLocation.getLatitude()+","+geoLocation.getLongitude()+"]'") + ",'" 
+                + language_code + "'," 
+                + (keywords == null ? "NULL" : "'"+keywords+"'") + "," 
+                + sentiment + ")";
     }
     
     @Override
@@ -200,7 +199,7 @@ public class TweetEntity {
     }
 
     /**
-     * Analyse the sentiment of tweet text based on given keyword.
+     * Analyze the sentiment of tweet text based on given keyword.
      * @param text the tweet text
      * @return a score ranging from 0 (Very bad) to 4 (Very good).
      */

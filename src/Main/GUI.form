@@ -254,12 +254,14 @@
                   <Group type="103" groupAlignment="1" attributes="0">
                       <Component id="enterLongitudeLabel" min="-2" max="-2" attributes="0"/>
                       <Component id="enterLatitudeLabel" min="-2" max="-2" attributes="0"/>
+                      <Component id="enterLatitudeLabel1" min="-2" max="-2" attributes="0"/>
                   </Group>
-                  <EmptySpace type="separate" max="-2" attributes="0"/>
-                  <Group type="103" groupAlignment="0" attributes="0">
+                  <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                  <Group type="103" groupAlignment="0" max="-2" attributes="0">
                       <Component id="setUserMarkerButton" min="-2" max="-2" attributes="0"/>
-                      <Component id="latTextField" min="-2" pref="160" max="-2" attributes="0"/>
-                      <Component id="longTextField" min="-2" pref="160" max="-2" attributes="0"/>
+                      <Component id="latTextField" max="32767" attributes="0"/>
+                      <Component id="longTextField" max="32767" attributes="0"/>
+                      <Component id="markerTextField" alignment="0" pref="160" max="32767" attributes="0"/>
                   </Group>
                   <EmptySpace max="32767" attributes="0"/>
               </Group>
@@ -269,16 +271,21 @@
           <Group type="103" groupAlignment="0" attributes="0">
               <Group type="102" alignment="0" attributes="0">
                   <EmptySpace max="-2" attributes="0"/>
+                  <Group type="103" groupAlignment="1" attributes="0">
+                      <Component id="markerTextField" min="-2" max="-2" attributes="0"/>
+                      <Component id="enterLatitudeLabel1" min="-2" max="-2" attributes="0"/>
+                  </Group>
+                  <EmptySpace max="-2" attributes="0"/>
                   <Group type="103" groupAlignment="3" attributes="0">
                       <Component id="enterLatitudeLabel" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="latTextField" alignment="3" min="-2" max="-2" attributes="0"/>
                   </Group>
-                  <EmptySpace type="separate" max="-2" attributes="0"/>
+                  <EmptySpace max="-2" attributes="0"/>
                   <Group type="103" groupAlignment="3" attributes="0">
                       <Component id="enterLongitudeLabel" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="longTextField" alignment="3" min="-2" max="-2" attributes="0"/>
                   </Group>
-                  <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                  <EmptySpace max="-2" attributes="0"/>
                   <Component id="setUserMarkerButton" min="-2" max="-2" attributes="0"/>
                   <EmptySpace max="32767" attributes="0"/>
               </Group>
@@ -318,6 +325,13 @@
             <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="setUserMarkerButtonActionPerformed"/>
           </Events>
         </Component>
+        <Component class="javax.swing.JTextField" name="markerTextField">
+        </Component>
+        <Component class="javax.swing.JLabel" name="enterLatitudeLabel1">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Enter Marker Text:"/>
+          </Properties>
+        </Component>
       </SubComponents>
     </Container>
     <Container class="javax.swing.JDialog" name="twitterKeysInputDialog">
@@ -328,6 +342,9 @@
           <Value id="POPUP"/>
         </Property>
       </Properties>
+      <Events>
+        <EventHandler event="componentShown" listener="java.awt.event.ComponentListener" parameters="java.awt.event.ComponentEvent" handler="twitterKeysInputDialogComponentShown"/>
+      </Events>
       <AuxValues>
         <AuxValue name="JavaCodeGenerator_LayoutCodePost" type="java.lang.String" value="twitterKeysInputDialog.pack();&#xa;twitterKeysInputDialog.setLocationRelativeTo(this);"/>
       </AuxValues>
@@ -479,7 +496,7 @@
         <EventHandler event="componentShown" listener="java.awt.event.ComponentListener" parameters="java.awt.event.ComponentEvent" handler="dbInputDialogShown"/>
       </Events>
       <AuxValues>
-        <AuxValue name="JavaCodeGenerator_LayoutCodePost" type="java.lang.String" value="databaseKeysInputDialog.pack();"/>
+        <AuxValue name="JavaCodeGenerator_LayoutCodePost" type="java.lang.String" value="databaseKeysInputDialog.pack();&#xa;databaseKeysInputDialog.setLocationRelativeTo(this);"/>
       </AuxValues>
 
       <Layout>
@@ -667,6 +684,9 @@
                 <Property name="text" type="java.lang.String" value="Minimize to system tray"/>
                 <Property name="toolTipText" type="java.lang.String" value="Enable/Disable minimizing to system tray."/>
               </Properties>
+              <Events>
+                <EventHandler event="stateChanged" listener="javax.swing.event.ChangeListener" parameters="javax.swing.event.ChangeEvent" handler="systrayCheckBoxStateChanged"/>
+              </Events>
             </MenuItem>
             <MenuItem class="javax.swing.JPopupMenu$Separator" name="jSeparator1">
             </MenuItem>

@@ -5,7 +5,9 @@
  */
 package Main;
 
-import utils.MySQL4j;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.Properties;
 
 /**
  *
@@ -61,23 +63,22 @@ public interface GUIListener {
     
     /**
      * Sets the MySQL database to use.
-     * @param db the MySQL database object
+     * @param db the MySQL database credentials configuration properties.
      */
-    public void setMySQLDatabase(MySQL4j db);
+    public void setMySQL(Properties db);
     
     /**
      * Load a new twitter stream instance with given twitter credentials.
-     * @param CONSUMER_KEY
-     * @param CONSUMER_SECRET
-     * @param API_KEY
-     * @param API_SECRET 
+     * @param p Properties containing the necessary twitter dev credentials.
      */
-    public void setTwitterCredentials(String CONSUMER_KEY, String CONSUMER_SECRET, 
-            String API_KEY, String API_SECRET);
+    public void setTwitterCredentials(Properties p);
     
-    public String[] getTwitterCredentials();
-    
-    public MySQL4j getMySQLDatabase();
+    /**
+     * Get current settings properties.
+     * @return MySQL object containing the database credentials.
+     * @throws java.io.FileNotFoundException if settings file not found.
+     */
+    public Properties getProperties() throws FileNotFoundException, IOException;
     
     /**
      * Set whether to use a MySQL database.
@@ -95,4 +96,10 @@ public interface GUIListener {
      * Load the main GUI.
      */
     public void loadMainFrame();
+    
+    /**
+     * Update existing properties with given set of properties (@code p}
+     * @param p properties to be updated.
+     */
+    public void updateProperties(Properties p);
 }

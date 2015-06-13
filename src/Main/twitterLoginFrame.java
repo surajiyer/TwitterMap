@@ -5,6 +5,10 @@
  */
 package Main;
 
+import java.io.IOException;
+import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.ImageIcon;
 import javax.swing.JDialog;
 import javax.swing.JOptionPane;
@@ -71,6 +75,18 @@ public class twitterLoginFrame extends javax.swing.JFrame {
         consumerSecretTextField.getDocument().addDocumentListener(dl);
         apiKeyTextField.getDocument().addDocumentListener(dl);
         apiSecretTextField.getDocument().addDocumentListener(dl);
+        
+        // Load existing twitter dev credentials from saved properties file.
+        Properties p;
+        try {
+            p = loginListener.getProperties();
+        } catch (IOException ex) {
+            p = new Properties();
+        }
+        consumerKeyTextField.setText(p.getProperty("CONSUMER_KEY", ""));
+        consumerSecretTextField.setText(p.getProperty("CONSUMER_SECRET", ""));
+        apiKeyTextField.setText(p.getProperty("API_KEY", ""));
+        apiSecretTextField.setText(p.getProperty("API_SECRET", ""));
     }
 
     /**
@@ -215,7 +231,12 @@ public class twitterLoginFrame extends javax.swing.JFrame {
             && cSecret.matches("^[a-zA-Z0-9]+$")
             && apiKey.matches("^[a-zA-Z0-9]+\\-[a-zA-Z0-9]+$")
             && apiSecret.matches("^[a-zA-Z0-9]+$")) {
-            loginListener.setTwitterCredentials(cKey, cSecret, apiKey, apiSecret);
+            Properties twitterProps = new Properties();
+            twitterProps.setProperty("CONSUMER_KEY", cKey);
+            twitterProps.setProperty("CONSUMER_SECRET", cSecret);
+            twitterProps.setProperty("API_KEY", apiKey);
+            twitterProps.setProperty("API_SECRET", apiSecret);
+            loginListener.setTwitterCredentials(twitterProps);
             applyKeysButton.setEnabled(false);
         } else {
             JDialog.setDefaultLookAndFeelDecorated(true);
