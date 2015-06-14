@@ -34,6 +34,6 @@ An application for mapping real-time tweets on google maps and also to write twe
 
 # Screenshots
 - Main window with a tweet marker + infowindow with clickable links, mentions and hashtags.
-  [screenshot] (screenshots/tweet marker info window.PNG)
+  [screenshot] (screenshots/tweet marker info window.PNG?raw=true)
 - Marker clustering
-  [screenshot](screenshots/marker clustering.PNG)
+  [screenshot](screenshots/marker clustering.PNG?raw=true)
