@@ -61,7 +61,7 @@ public class TwitterFilterStream implements StatusListener {
     private final ArrayList<String> keywords;
 
     /** File output column data delimeter. */
-    private final String DATA_SEPERATOR = ";";
+    private final String DATA_SEPERATOR = ";&;";
 
     /** A tweet arrival event sListener */
     private TweetListener listener;

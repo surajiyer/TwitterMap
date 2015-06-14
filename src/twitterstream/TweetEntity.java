@@ -16,7 +16,7 @@ import utils.NLP;
  */
 public class TweetEntity {
     
-    private static final String DATA_SEPERATOR = ";";
+    private static final String DATA_SEPERATOR = ";&;";
     private long id;
     private long retweet_id;
     private int retweet_count;

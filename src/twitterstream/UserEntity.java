@@ -10,7 +10,7 @@ import twitter4j.User;
  */
 public class UserEntity {
     
-    private static final String DATA_SEPARATOR = ";";
+    private static final String DATA_SEPARATOR = ";&;";
     private final long id;
     private final String username;
     private final int nr_of_followers;

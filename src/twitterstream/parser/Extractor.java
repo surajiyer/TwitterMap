@@ -305,7 +305,6 @@ public class Extractor {
                 }
             }
             String url = matcher.group(Regex.VALID_URL_GROUP_URL);
-            System.out.println("URL: "+url);
             int start = matcher.start(Regex.VALID_URL_GROUP_URL);
             int end = matcher.end(Regex.VALID_URL_GROUP_URL);
             Matcher tco_matcher = Regex.VALID_TCO_URL.matcher(url);

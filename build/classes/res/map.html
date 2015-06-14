@@ -47,6 +47,11 @@
             // Add listeners to trigger checkBounds(). bounds_changed deals with zoom changes.
             google.maps.event.addListener(map, 'center_changed', function() {checkBounds(); });
             //google.maps.event.addListener(map, 'bounds_changed', function() {checkBounds(); });
+            
+            // close the infowindow if the mouse clicks anywhere else.
+            google.maps.event.addListener(map, 'click', function() {
+                infowindow.close();
+            });
         }
         
         // Function to add a merker to the map.

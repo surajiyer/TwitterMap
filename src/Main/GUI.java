@@ -8,13 +8,6 @@ package Main;
 import com.teamdev.jxbrowser.chromium.Browser;
 import com.teamdev.jxbrowser.chromium.DefaultLoadHandler;
 import com.teamdev.jxbrowser.chromium.LoadParams;
-import com.teamdev.jxbrowser.chromium.events.FailLoadingEvent;
-import com.teamdev.jxbrowser.chromium.events.FinishLoadingEvent;
-import com.teamdev.jxbrowser.chromium.events.FrameLoadEvent;
-import com.teamdev.jxbrowser.chromium.events.LoadEvent;
-import com.teamdev.jxbrowser.chromium.events.LoadListener;
-import com.teamdev.jxbrowser.chromium.events.ProvisionalLoadingEvent;
-import com.teamdev.jxbrowser.chromium.events.StartLoadingEvent;
 import com.teamdev.jxbrowser.chromium.swing.BrowserView;
 import java.awt.AWTException;
 import utils.GoogleMaps;
@@ -1501,38 +1494,39 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
                 } catch (FileNotFoundException ex) {
                     JDialog.setDefaultLookAndFeelDecorated(true);
                     JOptionPane.showMessageDialog(null, "Oops! No such file exists.",
-                                                  "Error", JOptionPane.ERROR_MESSAGE);
+                            "Error", JOptionPane.ERROR_MESSAGE);
                     return;
                 }
 
                 // Read and set markers.
-                String tweet;
+                String tweet="", coordinates, text, sep = ";&;";
                 try {
                     // Read the CSV header to skip it.
-                    if(!TweetEntity.getCSVHeader(";").equals(in.readLine()))
+                    if(!TweetEntity.getCSVHeader(";&;").equals(in.readLine()))
                             throw new Exception("Incorrect file.");
                     while (((tweet = in.readLine()) != null)) {
-                        String coordinates = tweet.substring(UIutils.nthOccurrence(tweet, ";", 8)+1, 
-                                UIutils.nthOccurrence(tweet, ";", 9));
-                        if(coordinates.equals("und"))
+                        coordinates = tweet.substring(UIutils.nthOccurrence(tweet, sep, 8)+sep.length(), 
+                                UIutils.nthOccurrence(tweet, sep, 9));
+                        if(coordinates.equals("NULL"))
                             continue;
                         int commaIndex = coordinates.indexOf(",");
                         double lat = Double.parseDouble(coordinates.substring(1, commaIndex));
                         double lon = Double.parseDouble(coordinates.substring(commaIndex + 1, 
                                 coordinates.length()-1));
-                        String text = tweet.substring(UIutils.nthOccurrence(tweet, ";", 3)+1, 
-                                UIutils.nthOccurrence(tweet, ";", 4));
-                        newTweet(lat, lon, text);
+                        text = tweet.substring(UIutils.nthOccurrence(tweet, sep, 3)+sep.length(), 
+                                UIutils.nthOccurrence(tweet, sep, 4));
+                        newTweet(lat, lon, TweetEntity.getLinkedText(text));
                     }
                 } catch (IOException ex) {
                     JDialog.setDefaultLookAndFeelDecorated(true);
                     JOptionPane.showMessageDialog(null, "Cannot read file.",
-                                                  "Error", JOptionPane.ERROR_MESSAGE);
+                            "Error", JOptionPane.ERROR_MESSAGE);
                 } catch (Exception e) {
+                    System.out.println(tweet);
                     JDialog.setDefaultLookAndFeelDecorated(true);
                     JOptionPane.showMessageDialog(null, "Unknown error occured. "
-                                                  + "Possibly loaded an incorrectly parsed file.",
-                                                  "Error", JOptionPane.ERROR_MESSAGE);
+                            + "Possibly loaded an incorrectly parsed file.",
+                            "Error", JOptionPane.ERROR_MESSAGE);
                 } finally {
                     try {
                         in.close();
