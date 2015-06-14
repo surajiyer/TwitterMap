@@ -10,7 +10,6 @@ An application for mapping real-time tweets on google maps and also to write twe
 - Add all the libraries stated in the following Requirements section to the "lib" folder.
 
 # Requirements
-
 - JxBrowser Library with the license evaluation (http://www.teamdev.com/jxbrowser)
   - jxbrowser-5.1.jar
   - jxbrowser-linux32-5.1.jar
@@ -32,3 +31,9 @@ An application for mapping real-time tweets on google maps and also to write twe
   - twitter4j-stream-4.0.3.jar
 - JDBC Driver for MySQL (Connector/J) (https://www.mysql.com/products/connector/)
   - mysql-connector-java-5.1.35-bin.jar
+
+# Screenshots
+- Main window with a tweet marker + infowindow with clickable links, mentions and hashtags.
+  [screenshot] (screenshots/tweet marker info window.PNG)
+- Marker clustering
+  [screenshot](screenshots/marker clustering.PNG)
