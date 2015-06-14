@@ -169,9 +169,18 @@ public class TweetEntity {
     @Override
     public String toString() {
         final String s = DATA_SEPERATOR;
-        return id + s + retweet_id + s + user_id + s + text + s + fav_count + s 
-                + retweet_count + s + creation_time + s + country_code + s 
-                + geoLocation + s + language_code + s + keywords + s + sentiment;
+        return id + s 
+                + retweet_id + s 
+                + user_id + s 
+                + text + s 
+                + fav_count + s 
+                + retweet_count + s 
+                + creation_time + s 
+                + country_code + s 
+                + (geoLocation == null ? "NULL" : "["+geoLocation.getLatitude()+","+geoLocation.getLongitude()+"]") + s 
+                + language_code + s 
+                + (keywords == null ? "NULL" : keywords) + s 
+                + sentiment;
     }
     
     @Override

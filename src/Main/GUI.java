@@ -507,7 +507,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
 
         enterLongitudeLabel.setText("Enter Longitude:");
 
-        latTextField.setFormatterFactory(new javax.swing.text.DefaultFormatterFactory(new javax.swing.text.NumberFormatter(new java.text.DecimalFormat("#0.00000000"))));
+        latTextField.setFormatterFactory(new javax.swing.text.DefaultFormatterFactory(new javax.swing.text.NumberFormatter(new java.text.DecimalFormat("#0.00000"))));
 
         longTextField.setFormatterFactory(new javax.swing.text.DefaultFormatterFactory(new javax.swing.text.NumberFormatter(new java.text.DecimalFormat("#0.00000000"))));
 
@@ -562,6 +562,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         setMarkerDialog.setLocationRelativeTo(this);
 
         twitterKeysInputDialog.setTitle("Enter twitter credentials");
+        twitterKeysInputDialog.setIconImage(new javax.swing.ImageIcon(getClass().getResource("/res/key_24.png")).getImage());
         twitterKeysInputDialog.setResizable(false);
         twitterKeysInputDialog.setType(java.awt.Window.Type.POPUP);
         twitterKeysInputDialog.addComponentListener(new java.awt.event.ComponentAdapter() {
@@ -664,6 +665,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         twitterKeysInputDialog.setLocationRelativeTo(this);
 
         databaseKeysInputDialog.setTitle("MySQL Database");
+        databaseKeysInputDialog.setIconImage(new javax.swing.ImageIcon(getClass().getResource("/res/database_24.png")).getImage());
         databaseKeysInputDialog.setResizable(false);
         databaseKeysInputDialog.addComponentListener(new java.awt.event.ComponentAdapter() {
             public void componentShown(java.awt.event.ComponentEvent evt) {
@@ -927,6 +929,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         });
         fileMenu.add(keywordsMenuItem);
 
+        twitterKeysMenuItem.setIcon(new javax.swing.ImageIcon(getClass().getResource("/res/key_16.png"))); // NOI18N
         twitterKeysMenuItem.setText("Edit twitter credentials");
         twitterKeysMenuItem.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -935,6 +938,7 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
         });
         fileMenu.add(twitterKeysMenuItem);
 
+        databaseKeysMenuItem.setIcon(new javax.swing.ImageIcon(getClass().getResource("/res/database_16.png"))); // NOI18N
         databaseKeysMenuItem.setText("Edit MySQL database");
         databaseKeysMenuItem.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -1136,9 +1140,11 @@ public class GUI extends javax.swing.JFrame implements TweetListener {
             JOptionPane.showMessageDialog(null, "Please only enter a number",
                                           "Error", JOptionPane.ERROR_MESSAGE);
         }
-        System.out.println((double) latTextField.getValue());
-        GoogleMaps.setMarker(browser, (double) latTextField.getValue(), 
-                (double) longTextField.getValue(), markerTextField.getText(), "user");
+        System.out.println(latTextField.getValue());
+        GoogleMaps.setMarker(browser, 
+                Double.parseDouble(latTextField.getValue().toString()), 
+                Double.parseDouble(longTextField.getValue().toString()), 
+                TweetEntity.getLinkedText(markerTextField.getText()), "user");
         markerTextField.setText("");
         longTextField.setText("");
         latTextField.setText("");
